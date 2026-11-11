@@ -73,7 +73,7 @@ function startLiveDemo(){if(window.LiveTrip)window.LiveTrip.openDemo();else toas
 function renderSecurity(){let saved=null,known=false;try{saved=localStorage.getItem('rutasec-last-live');known=!!JSON.parse(localStorage.getItem('rutasec-live-keys')||'{}')[saved];const phone=localStorage.getItem('rutasec-emergency-contact')||'';$('securityContactStatus').textContent=phone?'Contacto guardado · •••• '+phone.slice(-4):'Sin contacto configurado'}catch{}$('securityStart').textContent=known?'Abrir mi viaje de demostración':'Iniciar viaje de demostración';$('securityNew').hidden=!known;}
 function startNewLiveDemo(){if(window.LiveTrip)window.LiveTrip.newDemo();else toast('El mapa está cargando. Reintenta en un momento.')}
 function configureEmergencyContact(){if(window.LiveTrip)window.LiveTrip.contact();else toast('El módulo de seguridad está cargando. Reintenta en un momento.')}
-function openPublicTracking(){const value=$('securityTrackingURL').value.trim(),match=value.match(/(?:#(?:seguimiento|viaje|operaciones)\/|^)([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})(?:[?\s]|$)/i);$('securityTrackingError').textContent='';if(!match){$('securityTrackingError').textContent='Pega un enlace de seguimiento válido de RutasEC.';return}if(!window.LiveTrip)return toast('El módulo de seguridad está cargando. Reintenta en un momento.');location.hash='seguimiento/'+match[1].toLowerCase();}
+
 $('liveSOSDialog').addEventListener('close',()=>{if($('security').classList.contains('active'))renderSecurity()});
 if(location.hash==='#seguridad')show('security');
 window.addEventListener('hashchange',()=>{if(location.hash==='#seguridad')show('security')});
