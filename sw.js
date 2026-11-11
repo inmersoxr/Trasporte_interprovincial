@@ -1,5 +1,5 @@
-const CACHE = 'rutasec-v6-cinematic-approved';
-const CORE = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icon.svg', './assets/guayaquil-cinematic.webp', './assets/road-cinematic.webp', './assets/sprinter.webp', './assets/suv.webp', './assets/minivan.webp', './assets/sedan.webp', './assets/icon-192.png', './assets/icon-512.png'];
+const CACHE = 'rutasec-v7-destination-carousel';
+const CORE = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icon.svg', './assets/guayaquil-cinematic.webp', './assets/cuenca-cinematic.webp', './assets/manta-cinematic.webp', './assets/babahoyo-cinematic.webp', './assets/quito-cinematic.webp', './assets/road-cinematic.webp', './assets/sprinter.webp', './assets/suv.webp', './assets/minivan.webp', './assets/sedan.webp', './assets/icon-192.png', './assets/icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
 });

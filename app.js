@@ -9,3 +9,56 @@ if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serv
 
 // Swipe and keyboard selection on the existing vehicle showroom.
 let swipeStart=null;const showroom=document.querySelector('.showroom');showroom.addEventListener('pointerdown',e=>{swipeStart=e.clientX});showroom.addEventListener('pointerup',e=>{if(swipeStart!==null&&Math.abs(e.clientX-swipeStart)>45)cycle(e.clientX<swipeStart?1:-1);swipeStart=null});showroom.addEventListener('pointercancel',()=>swipeStart=null);document.addEventListener('keydown',e=>{if($('detail').classList.contains('active')&&['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();cycle(e.key==='ArrowRight'?1:-1)}});
+
+// Rotate only the destination artwork; search fields retain their state.
+const destinationScenes = [
+  {city:'Guayaquil',landmark:'Malecón 2000'},
+  {city:'Cuenca',landmark:'Catedral Nueva'},
+  {city:'Manta',landmark:'Playa El Murciélago'},
+  {city:'Babahoyo',landmark:'Malecón 9 de Octubre'},
+  {city:'Quito',landmark:'Centro histórico'}
+];
+const destinationPhotos = [...document.querySelectorAll('.hero-slides .hero-photo')];
+const destinationDots = [...document.querySelectorAll('.hero-dot')];
+const reducedDestinationMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let destinationIndex = 0;
+let destinationPaused = reducedDestinationMotion.matches;
+let destinationTimer = null;
+let destinationBusy = false;
+function syncDestinationTimer() {
+  clearTimeout(destinationTimer);
+  if (destinationPaused || document.hidden || !$('home').classList.contains('active')) return;
+  destinationTimer = setTimeout(() => chooseDestination((destinationIndex + 1) % destinationScenes.length), 6000);
+}
+async function chooseDestination(index) {
+  if (destinationBusy) return;
+  destinationBusy = true;
+  try {
+    const photo = destinationPhotos[index];
+    // Decode before crossfading so a slow connection never exposes an empty scene.
+    if (!photo.complete || !photo.naturalWidth) await photo.decode();
+    if (!photo.naturalWidth) throw new Error('Destination unavailable');
+    destinationIndex = index;
+    destinationPhotos.forEach((image,i) => {image.classList.toggle('is-active',i===index);image.setAttribute('aria-hidden',String(i!==index));});
+    destinationDots.forEach((button,i) => {button.classList.toggle('is-active',i===index);button.setAttribute('aria-pressed',String(i===index));});
+    $('heroCity').textContent=destinationScenes[index].city;
+    $('heroLandmark').textContent=destinationScenes[index].landmark;
+  } catch { /* Keep the current photograph if another destination cannot load. */ }
+  finally { destinationBusy=false;syncDestinationTimer(); }
+}
+function syncDestinationPause() {
+  $('carouselPause').setAttribute('aria-label',destinationPaused?'Reanudar carrusel':'Pausar carrusel');
+  $('carouselPause').setAttribute('aria-pressed',String(destinationPaused));
+  $('carouselPause').innerHTML=destinationPaused?'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5 2 8 6-8 6Z" fill="currentColor"/></svg>':'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M11 3v10" stroke="currentColor" stroke-width="2"/></svg>';
+  syncDestinationTimer();
+}
+function toggleDestinations(){destinationPaused=!destinationPaused;syncDestinationPause();}
+reducedDestinationMotion.addEventListener('change',event=>{destinationPaused=event.matches;syncDestinationPause();});
+document.addEventListener('visibilitychange',syncDestinationTimer);
+new MutationObserver(syncDestinationTimer).observe($('home'),{attributes:true,attributeFilter:['class']});
+let destinationSwipe=null;
+const destinationArea=document.querySelector('.home-top');
+destinationArea.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;destinationSwipe={x:e.clientX,y:e.clientY};});
+destinationArea.addEventListener('pointerup',e=>{if(!destinationSwipe)return;const dx=e.clientX-destinationSwipe.x,dy=e.clientY-destinationSwipe.y;destinationSwipe=null;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.4)chooseDestination((destinationIndex+(dx<0?1:-1)+destinationScenes.length)%destinationScenes.length);});
+destinationArea.addEventListener('pointercancel',()=>destinationSwipe=null);
+syncDestinationPause();

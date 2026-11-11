@@ -30,3 +30,8 @@ Esta versión conserva el alcance de demostración del repositorio original. Los
 Se revisaron en navegador el inicio, resultados, filtros, cálculo de tarifa privada, selección, reserva, persistencia tras recargar, cancelación y publicación/eliminación de salidas. El inicio se comprobó a 360 × 800 sin desbordamiento horizontal y con altura exacta de pantalla. Se valida la publicación final en GitHub Pages.
 
 Comprobación de sintaxis: `node --check app.js` y `node --check sw.js`.
+
+
+## Carrusel turístico de inicio
+
+Guayaquil (Rotonda aprobada), Cuenca (Catedral Nueva), Manta (Playa El Murciélago), Babahoyo (Malecón 9 de Octubre) y Quito (San Francisco, centro histórico). Cambia cada seis segundos con fundido de 1,1 segundos. Incluye indicadores, selección manual, deslizamiento y pausa. Respeta movimiento reducido; suspende la rotación cuando la pestaña está oculta o se sale del inicio. Espera a que la siguiente imagen esté decodificada antes de mostrarla. Los campos del buscador conservan sus valores durante el cambio.
