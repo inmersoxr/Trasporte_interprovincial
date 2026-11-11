@@ -59,3 +59,7 @@ Se reanudó a 4× y se cerró la pestaña del pasajero: el destinatario siguió 
 La barra inferior recupera Inicio, Explorar, Mis viajes y Operadores, e incorpora Seguridad. Todos son botones con destino real y estado activo accesible. La barra permanece en las pantallas principales; durante el seguimiento inmersivo se oculta para dejar espacio a Compartir y SOS. Volver desde el mapa abre Seguridad. La pantalla permite configurar el contacto antes de iniciar el viaje, pegar un enlace público o acceder a operaciones.
 
 Se eliminó el menú hamburguesa. El botón Instalar app permanece en las cabeceras. Un aviso superior ofrece instalación y puede cerrarse durante 24 horas. Si el navegador expone beforeinstallprompt se usa el diálogo nativo; en caso contrario se muestran instrucciones para Android, iOS o escritorio. El aviso se oculta en modo instalado y durante el viaje. No se simula una instalación del sistema operativo.
+
+## Reservas confirmadas
+
+El módulo también admite salidas y boletos compartidos. El operador inicia el recorrido desde su panel; el boleto habilita el acceso al mismo viaje. Un pasajero confirmado puede compartirlo y activar/cerrar SOS, mientras que los controles del movimiento permanecen en el operador. La arquitectura y prueba completa están en [BOOKINGS-DEMO.md](BOOKINGS-DEMO.md). Las capacidades y límites descritos antes para la demo independiente se mantienen para los enlaces antiguos.

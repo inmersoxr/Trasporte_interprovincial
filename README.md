@@ -15,11 +15,11 @@ El sitio estático se publica desde la raíz de `main`. El frontend no necesita 
 - Filtros Todos / Auto / Furgoneta / SUV y capacidad disponible.
 - Modalidad compartida (precio por asiento) o privada (vehículo completo).
 - Selección con botones, gesto horizontal o flechas del teclado.
-- Reserva local, total por número de pasajeros, persistencia, cancelación y compartir resumen.
-- Panel de operadores con publicación y eliminación de salidas locales.
-- Menú, instalación y créditos de imágenes.
+- Reserva sincronizada, checkout ficticio, boletos, cancelaciones y mensajes de WhatsApp preparados.
+- Panel del operador con creación/edición/publicación, reservas, cupos, abordajes, estados y ventas simuladas.
+- Navegación inferior funcional, instalación y créditos de imágenes.
 
-Esta versión conserva el alcance de demostración del repositorio original. Los operadores, valoraciones y horarios son datos de ejemplo; no hay pagos, cupos transaccionales ni backend comercial. Las reservas y salidas creadas se guardan únicamente en el navegador.
+Esta versión conserva el alcance de demostración del repositorio original. Las salidas y reservas son de demostración: hay inventario compartido con control de concurrencia, pero no cobros bancarios reales ni backend operativo comercial. Las reservas y salidas nuevas se guardan en el servicio compartido; el navegador conserva sus accesos. Las reservas anteriores locales se identifican aparte.
 
 ## Archivos
 
@@ -38,8 +38,12 @@ Guayaquil (Rotonda aprobada), Cuenca (Catedral Nueva), Manta (Playa El Murciéla
 
 ## Viaje compartido y SOS
 
-Implementado un viaje Cuenca–Guayaquil con mapa OSM/Leaflet, ruta vial real, vehículo orientado, simulación de 3 minutos acelerable, seguimiento público entre dispositivos, SOS y centro de operaciones sincronizados. Se accede desde el menú o Tus viajes, sin reservas ni pagos. La arquitectura, API, instrucciones para dos teléfonos y pruebas están en [LIVE-DEMO.md](LIVE-DEMO.md). El servicio ligero desplegado usa Worker + R2; su fuente y pruebas se incluyen en `sync-service/`, separadas de las reservas locales.
+Implementado un viaje Cuenca–Guayaquil con mapa OSM/Leaflet, ruta vial real, vehículo orientado, simulación de 3 minutos acelerable, seguimiento público entre dispositivos, SOS y centro de operaciones sincronizados. Se accede desde Seguridad o Tus viajes, sin reservas ni pagos reales. La arquitectura, API, instrucciones para dos teléfonos y pruebas están en [LIVE-DEMO.md](LIVE-DEMO.md). El servicio ligero desplegado usa Worker + R2; su fuente y pruebas se incluyen en `sync-service/`, integradas con las reservas compartidas.
 
 ## Navegación inferior y Seguridad
 
 Inicio, Explorar, Mis viajes, Seguridad y Operadores son accesos funcionales y persistentes. Seguridad reúne el viaje de demostración, el contacto de emergencia, el seguimiento público y operaciones. No hay menú hamburguesa. Instalar app está disponible en las cabeceras, con aviso superior y diálogo nativo cuando el navegador lo admite; en otro caso muestra instrucciones específicas para el dispositivo.
+
+## Reservas y operador sincronizados
+
+El catálogo, el checkout ficticio y el panel del operador usan el servicio compartido Worker + R2. Los pagos simulados generan boletos y descuentan cupos con escrituras condicionales e idempotencia. El operador ve reservas, pasajeros, abordajes, cancelaciones, ventas y SOS sin recargar. WhatsApp se prepara para envío manual. Las reservas confirmadas acceden al mismo recorrido Cuenca–Guayaquil. Guía entre teléfonos, API, límites y evidencia en [BOOKINGS-DEMO.md](BOOKINGS-DEMO.md).
