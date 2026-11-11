@@ -1,5 +1,5 @@
-const CACHE = 'rutasec-v9-live-trip';
-const CORE = ['./trip-live.css?v=9', './trip-live.mjs?v=9', './shared/trip-core.mjs', './shared/live-config.mjs', './shared/route.json', './vendor/leaflet/leaflet.js', './vendor/leaflet/leaflet.css', './', './index.html', './styles.css', './app.js?v=9', './manifest.webmanifest', './icon.svg', './assets/guayaquil-cinematic.webp', './assets/cuenca-cinematic.webp', './assets/manta-cinematic.webp', './assets/babahoyo-cinematic.webp', './assets/quito-cinematic.webp', './assets/road-cinematic.webp', './assets/sprinter.webp', './assets/suv.webp', './assets/minivan.webp', './assets/sedan.webp', './assets/icon-192.png', './assets/icon-512.png'];
+const CACHE = 'rutasec-v10-live-trip';
+const CORE = ['./trip-live.css?v=9', './trip-live.mjs?v=10', './shared/trip-core.mjs', './shared/live-config.mjs', './shared/route.json', './vendor/leaflet/leaflet.js', './vendor/leaflet/leaflet.css', './', './index.html', './styles.css', './app.js?v=9', './manifest.webmanifest', './icon.svg', './assets/guayaquil-cinematic.webp', './assets/cuenca-cinematic.webp', './assets/manta-cinematic.webp', './assets/babahoyo-cinematic.webp', './assets/quito-cinematic.webp', './assets/road-cinematic.webp', './assets/sprinter.webp', './assets/suv.webp', './assets/minivan.webp', './assets/sedan.webp', './assets/icon-192.png', './assets/icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
 });
