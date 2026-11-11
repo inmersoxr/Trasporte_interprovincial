@@ -1,10 +1,10 @@
 # Viaje en curso: demostración compartida
 
-Entrada: menú → Iniciar viaje de demostración (también en Tus viajes), o `/#demo`. Crear e iniciar viaje genera un identificador y comienza Cuenca–Guayaquil. No necesita reserva ni pago. La duración por defecto es 3 minutos; 2×, 4×, 8×, 16× y 32× aceleran la demostración. Pausa, reanuda, reinicia, centra el vehículo o explora el mapa. El amarillo indica recorrido realizado y el gris lo pendiente.
+Entrada: barra inferior → Seguridad → Iniciar viaje de demostración (también en Tus viajes), o `/#demo`. Crear e iniciar viaje genera un identificador y comienza Cuenca–Guayaquil. No necesita reserva ni pago. La duración por defecto es 3 minutos; 2×, 4×, 8×, 16× y 32× aceleran la demostración. Pausa, reanuda, reinicia, centra el vehículo o explora el mapa. El amarillo indica recorrido realizado y el gris lo pendiente.
 
 ## Dos teléfonos y operaciones
 
-1. En el teléfono del pasajero, inicia la demo, configura el contacto de emergencia (código de país) y pulsa Compartir viaje. Abre WhatsApp o el menú nativo de compartir; el envío lo confirma la persona.
+1. En el teléfono del pasajero, entra en Seguridad desde la barra inferior, inicia la demo, configura el contacto de emergencia (código de país) y pulsa Compartir viaje. Abre WhatsApp o el menú nativo de compartir; el envío lo confirma la persona.
 2. Abre el enlace en el segundo teléfono. Es público y de solo lectura; no requiere cuenta ni instalación. Ambos muestran el mismo viaje, posición, progreso, ETA y SOS. Funciona aunque el navegador del pasajero se cierre.
 3. Para operaciones, pulsa Centro de operaciones desde el viaje y luego Enlace de operaciones. Copia ese enlace a una tercera sesión. Permite atender alertas, sin controlar la simulación. Consérvalo privado. Un enlace de seguimiento normal permite monitorear, pero no atender.
 4. SOS DEMO abre una confirmación con el contacto. Confirmar genera una alerta compartida con ID, hora y posición simulada. Si está marcada la opción WhatsApp, abre el mensaje preparado; nadie envía automáticamente. También hay un enlace Abrir WhatsApp en la alerta. No llama ni avisa a servicios de emergencia.
@@ -53,3 +53,9 @@ Las pruebas verifican carretera y orientación, permisos, revisión obsoleta, pa
 En GitHub Pages se crearon sesiones independientes de pasajero, destinatario y operaciones. En pausa coincidieron exactamente distancia (1,3 km), progreso (0,7 %), coordenadas y orientación. Se activó SOS con un número ficticio y sin enviar mensajes: el seguimiento recibió la misma alerta; otra sesión de operaciones la marcó atendida y el pasajero la cerró. Se comprobó el enlace de WhatsApp preparado con número, viaje, enlace y ubicación simulada.
 
 Se reanudó a 4× y se cerró la pestaña del pasajero: el destinatario siguió avanzando y llegó a Guayaquil con 100 %, 186,1 km recorridos y 0 km restantes. Se verificaron mapa, controles y SOS a 390 × 844 sobre la publicación real. No se realizó envío de WhatsApp ni prueba con dos teléfonos físicos.
+
+## Navegación e instalación · 11 de noviembre de 2026
+
+La barra inferior recupera Inicio, Explorar, Mis viajes y Operadores, e incorpora Seguridad. Todos son botones con destino real y estado activo accesible. La barra permanece en las pantallas principales; durante el seguimiento inmersivo se oculta para dejar espacio a Compartir y SOS. Volver desde el mapa abre Seguridad. La pantalla permite configurar el contacto antes de iniciar el viaje, pegar un enlace público o acceder a operaciones.
+
+Se eliminó el menú hamburguesa. El botón Instalar app permanece en las cabeceras. Un aviso superior ofrece instalación y puede cerrarse durante 24 horas. Si el navegador expone beforeinstallprompt se usa el diálogo nativo; en caso contrario se muestran instrucciones para Android, iOS o escritorio. El aviso se oculta en modo instalado y durante el viaje. No se simula una instalación del sistema operativo.

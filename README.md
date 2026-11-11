@@ -1,6 +1,6 @@
 # RutasEC · Conecta Ecuador
 
-Aplicación web móvil y PWA de transporte interprovincial. Continúa la implementación existente y reproduce la referencia visual aprobada: interfaz oscura, amarillo, splash de tres segundos, inicio de cinco partes (2 imagen / 2 buscador / 1 beneficios) y resultados con fotografías reales de vehículos (Sprinter, Hyundai H1, SUV Kia Sorento y sedán Toyota Corolla). El inicio usa la versión cinematográfica de la Rotonda aprobada durante esta sesión; el splash muestra la carretera hacia el Chimborazo en primer plano desde el vehículo.
+Aplicación web móvil y PWA de transporte interprovincial. Continúa la implementación existente y reproduce la referencia visual aprobada: interfaz oscura, amarillo, splash de tres segundos, inicio de cinco partes (2 imagen / 2 buscador / 1 navegación inferior) y resultados con fotografías reales de vehículos (Sprinter, Hyundai H1, SUV Kia Sorento y sedán Toyota Corolla). El inicio usa la versión cinematográfica de la Rotonda aprobada durante esta sesión; el splash muestra la carretera hacia el Chimborazo en primer plano desde el vehículo.
 
 ## Publicación
 
@@ -39,3 +39,7 @@ Guayaquil (Rotonda aprobada), Cuenca (Catedral Nueva), Manta (Playa El Murciéla
 ## Viaje compartido y SOS
 
 Implementado un viaje Cuenca–Guayaquil con mapa OSM/Leaflet, ruta vial real, vehículo orientado, simulación de 3 minutos acelerable, seguimiento público entre dispositivos, SOS y centro de operaciones sincronizados. Se accede desde el menú o Tus viajes, sin reservas ni pagos. La arquitectura, API, instrucciones para dos teléfonos y pruebas están en [LIVE-DEMO.md](LIVE-DEMO.md). El servicio ligero desplegado usa Worker + R2; su fuente y pruebas se incluyen en `sync-service/`, separadas de las reservas locales.
+
+## Navegación inferior y Seguridad
+
+Inicio, Explorar, Mis viajes, Seguridad y Operadores son accesos funcionales y persistentes. Seguridad reúne el viaje de demostración, el contacto de emergencia, el seguimiento público y operaciones. No hay menú hamburguesa. Instalar app está disponible en las cabeceras, con aviso superior y diálogo nativo cuando el navegador lo admite; en otro caso muestra instrucciones específicas para el dispositivo.
