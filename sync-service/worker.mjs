@@ -1,3 +1,4 @@
+import {handleBookings,handleLinkedTrip} from './bookings.mjs';
 import {prepareRoad, tripSnapshot, applyTripCommand, ROUTE_ID} from '../shared/trip-core.mjs';
 import route from '../shared/route.json' with {type:'json'};
 const road=prepareRoad(route);
@@ -16,6 +17,8 @@ export default {async fetch(request,env){
   if(path==='/health'||path==='/')return response(request,{service:'RutasEC Demo Sync',ok:!!env.BUCKET,source:'simulated',route:ROUTE_ID,pollIntervalMs:1800,expiresAfterHours:24});
   if(!env.BUCKET)return response(request,{error:'El almacenamiento compartido no está disponible.'},503);
   try {
+    const ctx={digest,snapshot:trip=>tripSnapshot(trip,road,Date.now()),command:(trip,cmd,now)=>applyTripCommand(trip,cmd,road,now),totalMeters:road.totalMeters,publicView};
+    const market=await handleBookings(request,env,ctx);if(market)return response(request,market.data,market.status||200);
     if(path==='/api/trips'&&request.method==='POST'){
       const body=await request.json();if(body.routeId!==ROUTE_ID)return response(request,{error:'Ruta no admitida.'},400);
       const id=crypto.randomUUID(),controllerToken=token(),operationsToken=token(),now=Date.now();
@@ -26,7 +29,7 @@ export default {async fetch(request,env){
     const match=path.match(/^\/api\/trips\/([0-9a-f-]{36})(\/commands)?$/);
     if(!match)return response(request,{error:'Recurso no encontrado.'},404);
     const key='trips/'+match[1]+'.json',object=await env.BUCKET.get(key);
-    if(!object)return response(request,{error:'Viaje no encontrado. Revisa el enlace.'},404);
+    if(!object){const linked=await handleLinkedTrip(request,env,match[1],ctx);if(linked)return response(request,linked.data,linked.status||200);return response(request,{error:'Viaje no encontrado. Revisa el enlace.'},404);}
     const trip=await object.json();if(Date.now()>trip.expiresAt)return response(request,{error:'El enlace de demostración ha caducado (24 horas).'},410);
     const access=await permissions(request,trip);
     if(request.method==='GET'&&!match[2])return response(request,publicView(trip,access));
@@ -43,5 +46,5 @@ export default {async fetch(request,env){
     const saved=await env.BUCKET.put(key,JSON.stringify(next),{onlyIf:{etagMatches:object.etag},httpMetadata:{contentType:'application/json'}});
     if(!saved)return response(request,{error:'Otro dispositivo actualizó el viaje. Reintenta.'},409);
     return response(request,publicView(next,access));
-  } catch(error){return response(request,{error:error instanceof SyntaxError?'Solicitud JSON no válida.':'No se pudo sincronizar el viaje. Reintenta.'},error instanceof SyntaxError?400:503);}
+  } catch(error){return response(request,{error:error instanceof SyntaxError?'Solicitud JSON no válida.':error.status?error.message:'No se pudo sincronizar el viaje. Reintenta.'},error instanceof SyntaxError?400:error.status||503);}
 }};
