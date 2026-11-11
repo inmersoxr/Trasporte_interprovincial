@@ -11,7 +11,8 @@ async function bWrite(env,fn){for(let attempt=0;attempt<8;attempt++){const {obje
 const bBearer=request=>request.headers.get('Authorization')?.replace(/^Bearer /,'')||'';
 async function bActor(request,ledger,ctx){const value=bBearer(request);if(!B_TOKEN.test(value))return {operator:null,booking:null};const hash=await ctx.digest(value);return {operator:ledger.operators.find(o=>o.tokenHash===hash)||null,booking:ledger.bookings.find(b=>b.tokenHash===hash)||null};}
 const bOccupied=(ledger,id)=>ledger.bookings.filter(b=>b.rideId===id&&b.status==='confirmed').reduce((sum,b)=>sum+b.seats,0);
-function bRide(ledger,ride,ctx){const operator=ledger.operators.find(o=>o.id===ride.operatorId),occupied=bOccupied(ledger,ride.id),status=ride.status==='running'&&ride.live&&ctx.snapshot(ride.live).status==='arrived'?'finished':ride.status;const {live,...data}=ride;return {...data,status,operatorName:operator.name,operatorWhatsApp:operator.whatsapp,occupied,available:ride.capacity-occupied,liveId:live?.id||null,liveStatus:live?ctx.snapshot(live).status:null,activeAlert:live?.alerts.findLast(a=>a.status!=='closed')||null};}
+function bPublicBrand(operator){const b=operator?.brand||{};return {description:b.description||'',logo:b.logo||'',cover:b.cover||'',photos:Array.isArray(b.photos)?b.photos:[],updatedAt:b.updatedAt||null};}
+function bRide(ledger,ride,ctx){const operator=ledger.operators.find(o=>o.id===ride.operatorId),occupied=bOccupied(ledger,ride.id),status=ride.status==='running'&&ride.live&&ctx.snapshot(ride.live).status==='arrived'?'finished':ride.status;const {live,...data}=ride;return {...data,status,operatorName:operator.name,operatorBrand:bPublicBrand(operator),operatorWhatsApp:operator.whatsapp,occupied,available:ride.capacity-occupied,liveId:live?.id||null,liveStatus:live?ctx.snapshot(live).status:null,activeAlert:live?.alerts.findLast(a=>a.status!=='closed')||null};}
 function bBooking(ledger,b,ctx){const {tokenHash,requestId,...data}=b;return {...data,ride:bRide(ledger,ledger.rides.find(r=>r.id===b.rideId),ctx)};}
 function bRideFields(body){const origin=bText(body.origin,2,60),destination=bText(body.destination,2,60);bAssert(origin!==destination,'Origen y destino deben ser distintos.');const date=bText(body.date,10,10),time=bText(body.time,5,5);bAssert(/^\d{4}-\d{2}-\d{2}$/.test(date)&&/^([01]\d|2[0-3]):[0-5]\d$/.test(time),'Fecha u hora no válidas.');const departsAt=Date.parse(date+'T'+time+':00-05:00');bAssert(Number.isFinite(departsAt)&&new Date(departsAt-5*3600000).toISOString().slice(0,10)===date,'Fecha no válida.');bAssert(['van','minivan','suv','auto'].includes(body.vehicleType),'Selecciona un vehículo.');const vehicle=bText(body.vehicle,2,80),capacity=Number(body.capacity),priceCents=Number(body.priceCents);bAssert(Number.isInteger(capacity)&&capacity>=1&&capacity<=30,'La capacidad debe estar entre 1 y 30.');bAssert(Number.isInteger(priceCents)&&priceCents>=100&&priceCents<=100000,'Precio no válido.');return {origin,destination,date,time,departsAt,vehicleType:body.vehicleType,vehicle,capacity,priceCents};}
 function bOwn(actor,ride){bAssert(actor.operator&&ride.operatorId===actor.operator.id,'Solo la operadora de esta salida puede gestionarla.',403);}
@@ -20,7 +21,7 @@ export async function handleBookings(request,env,ctx){const path=new URL(request
  if(!/^\/api\/(catalog|operators|operator|rides|bookings)(?:\/|$)/.test(path))return null;
  if(method==='GET'){
   const {ledger}=await bLoad(env),actor=await bActor(request,ledger,ctx);
-  if(path==='/api/catalog')return {data:{revision:ledger.revision,rides:ledger.rides.filter(r=>!['draft','cancelled'].includes(r.status)).map(r=>bRide(ledger,r,ctx)),serverNow:Date.now()}};
+  if(path==='/api/catalog')return {data:{revision:ledger.revision,operators:ledger.operators.map(o=>({id:o.id,name:o.name,brand:bPublicBrand(o)})),rides:ledger.rides.filter(r=>!['draft','cancelled'].includes(r.status)).map(r=>bRide(ledger,r,ctx)),serverNow:Date.now()}};
   if(path==='/api/operator'){bAssert(actor.operator,'Activa el panel de tu operadora en este teléfono.',403);const {tokenHash,...profile}=actor.operator;return {data:{revision:ledger.revision,profile,rides:ledger.rides.filter(r=>r.operatorId===profile.id).map(r=>bRide(ledger,r,ctx)),bookings:ledger.bookings.filter(b=>ledger.rides.find(r=>r.id===b.rideId)?.operatorId===profile.id).map(b=>bBooking(ledger,b,ctx)),serverNow:Date.now()}};}
   const match=path.match(/^\/api\/bookings\/([a-f0-9-]{36})$/);if(match){const b=ledger.bookings.find(b=>b.id===match[1]);bAssert(b,'Reserva no encontrada.',404);const r=ledger.rides.find(r=>r.id===b.rideId);bAssert(actor.booking?.id===b.id||actor.operator?.id===r.operatorId,'Este boleto requiere su enlace privado.',403);return {data:{booking:bBooking(ledger,b,ctx),serverNow:Date.now()}};}
   throw bError('Recurso no encontrado.',404);
@@ -29,6 +30,14 @@ export async function handleBookings(request,env,ctx){const path=new URL(request
  if(path==='/api/operators'){
   bAssert(B_UUID.test(body.id)&&B_TOKEN.test(bBearer(request)),'Identidad de demostración no válida.');const tokenHash=await ctx.digest(bBearer(request)),name=bText(body.name,2,80),whatsapp=bPhone(body.whatsapp);
   return {data:await bWrite(env,ledger=>{const existing=ledger.operators.find(o=>o.id===body.id);if(existing){bAssert(existing.tokenHash===tokenHash,'Esta operadora pertenece a otro acceso.',403);existing.name=name;existing.whatsapp=whatsapp;existing.updatedAt=Date.now();}else{bAssert(ledger.operators.length<100,'Límite de operadoras de la demo.',503);ledger.operators.push({id:body.id,name,whatsapp,tokenHash,createdAt:Date.now(),updatedAt:Date.now()});}return {data:{ok:true,operatorId:body.id}};})};
+ }
+ if(path==='/api/operator/brand'){
+  const description=bText(String(body.description||''),0,1200);
+  const validUrl=value=>{const u=String(value||'').trim();bAssert(!u||(/^https:\/\//i.test(u)&&u.length<=1000),'Las imágenes requieren enlaces HTTPS válidos.');return u;};
+  const logo=validUrl(body.logo),cover=validUrl(body.cover);
+  bAssert(Array.isArray(body.photos)&&body.photos.length<=8,'Máximo ocho fotografías.');
+  const photos=body.photos.map(validUrl).filter(Boolean);
+  return {data:await bWrite(env,async ledger=>{const actor=await bActor(request,ledger,ctx);bAssert(actor.operator,'Solo la operadora puede editar su marca.',403);actor.operator.brand={description,logo,cover,photos,updatedAt:Date.now()};actor.operator.updatedAt=Date.now();return {data:{ok:true,brand:bPublicBrand(actor.operator),revision:ledger.revision+1}};})};
  }
  if(path==='/api/rides'){
   const fields=bRideFields(body);bAssert(B_UUID.test(body.requestId),'Identificador de solicitud no válido.');const id=crypto.randomUUID();
