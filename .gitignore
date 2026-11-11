@@ -2,3 +2,4 @@
 /dist/
 /.openai/
 /assets/*.jpg
+/sync-service/out/

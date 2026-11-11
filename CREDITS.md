@@ -28,3 +28,10 @@ Las cuatro escenas nuevas se regeneraron con IA a partir de las fotografías ind
 - `assets/babahoyo-cinematic.webp` — BABAHOYO (34910312172).jpg. Agencia de Noticias ANDES. [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0). [Fuente](https://commons.wikimedia.org/wiki/File:BABAHOYO_(34910312172).jpg).
 
 - `assets/quito-cinematic.webp` — Iglesia San Francisco Quito.JPG. Dr. Carlos Costales Terán /     . [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0). [Fuente](https://commons.wikimedia.org/wiki/File:Iglesia_San_Francisco_Quito.JPG).
+
+## Seguimiento en mapa
+
+- Leaflet 1.9.4, BSD-2-Clause: https://leafletjs.com — licencia incluida en `vendor/leaflet/LICENSE`.
+- Datos cartográficos © OpenStreetMap contributors, ODbL: https://www.openstreetmap.org/copyright
+- Teselas HOT servidas por OpenStreetMap France: https://www.openstreetmap.fr/ — atribución visible en el mapa. Solo peticiones interactivas; sin descarga masiva ni caché de teselas.
+- Ruta vial OSRM basada en OSM: https://project-osrm.org/ y https://router.project-osrm.org/route/v1/driving/-79.0059,-2.9001;-79.8869,-2.1427?overview=full&geometries=geojson&steps=true — geometría versionada en `shared/route.json`. La ruta no garantiza estado actual de vías ni constituye navegación operativa.

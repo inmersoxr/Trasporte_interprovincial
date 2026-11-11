@@ -1,0 +1,23 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import worker from '../worker.mjs';import route from '../../shared/route.json' with {type:'json'};import {prepareRoad,roadPosition,tripSnapshot} from '../../shared/trip-core.mjs';
+class Bucket{store=new Map();revision=0;async put(key,value,options={}){const old=this.store.get(key);if(options.onlyIf?.etagMatches&&old?.etag!==options.onlyIf.etagMatches)return null;if(options.onlyIf instanceof Headers&&options.onlyIf.get('If-None-Match')==='*'&&old)return null;const object={value,etag:String(++this.revision)};this.store.set(key,object);return object;}async get(key){const item=this.store.get(key);return item?{etag:item.etag,json:async()=>JSON.parse(item.value)}:null;}}
+const road=prepareRoad(route);
+test('Road geometry follows OSM road nodes and covers Cuenca–Guayaquil',()=>{assert.ok(route.coordinates.length>3000);assert.ok(road.totalMeters>180000&&road.totalMeters<210000);assert.ok(road.totalMeters>1.25*Math.hypot(0.88*111000,0.76*111000));assert.equal(roadPosition(road,0).lat,route.coordinates[0][1]);assert.equal(roadPosition(road,road.totalMeters).lng,route.coordinates.at(-1)[0]);for(let i=1;i<100;i++){const p=roadPosition(road,road.totalMeters*i/100);assert.ok(p.heading>=0&&p.heading<360);assert.ok(p.index>0);}});
+test('Shared API permissions, pause/resume/speed, persistent SOS and completion with sender absent',async()=>{
+ const env={BUCKET:new Bucket()};let now=1800000000000;const clock=Date.now;Date.now=()=>now;
+ try{
+ const call=async(path,method='GET',body,key)=>{const headers={'Origin':'https://inmersoxr.github.io'};if(body)headers['Content-Type']='application/json';if(key)headers.Authorization='Bearer '+key;const result=await worker.fetch(new Request('https://sync.test'+path,{method,headers,body:body?JSON.stringify(body):undefined}),env);return {status:result.status,data:await result.json()};};
+ let c=await call('/api/trips','POST',{routeId:route.id});assert.equal(c.status,201);const id=c.data.trip.id,owner=c.data.controllerToken,ops=c.data.operationsToken;let revision=1;assert.equal(c.data.trip.controlHash,undefined);assert.equal(c.data.trip.opsHash,undefined);
+ const command=async(action,extra={},key=owner)=>{const r=await call('/api/trips/'+id+'/commands','POST',{action,requestId:crypto.randomUUID(),expectedRevision:revision,...extra},key);if(r.data.trip)revision=r.data.trip.revision;return r;};
+ assert.equal((await command('start',{},null)).status,403);assert.equal((await command('start',{},ops)).status,403);
+ c=await command('start');assert.equal(c.status,200);now+=45000;let viewer=await call('/api/trips/'+id);assert.ok(Math.abs(viewer.data.snapshot.progress-.25)<.00001);assert.equal(viewer.data.permissions.control,false);
+ c=await command('pause');const paused=c.data.snapshot.distanceMeters;now+=45000;viewer=await call('/api/trips/'+id);assert.equal(viewer.data.snapshot.distanceMeters,paused);
+ await command('start');await command('speed',{multiplier:2});now+=10000;c=await command('sos');assert.equal(c.status,200);const alert=c.data.trip.alerts[0];assert.equal(alert.simulated,true);assert.equal(alert.position.lat,c.data.snapshot.position.lat);
+ viewer=await call('/api/trips/'+id);assert.equal(viewer.data.trip.alerts[0].id,alert.id);c=await command('attend',{alertId:alert.id},ops);assert.equal(c.data.trip.alerts[0].status,'attended');await command('close-sos',{alertId:alert.id});assert.equal((await call('/api/trips/'+id)).data.trip.alerts[0].status,'closed');
+ now+=180000;viewer=await call('/api/trips/'+id);assert.equal(viewer.data.snapshot.status,'arrived');assert.equal(viewer.data.snapshot.progress,1);assert.equal(viewer.data.snapshot.remainingMeters,0);
+ c=await command('reset');assert.equal(c.data.snapshot.progress,0);assert.equal(c.data.snapshot.status,'ready');
+ const stale=await call('/api/trips/'+id+'/commands','POST',{action:'start',requestId:crypto.randomUUID(),expectedRevision:1},owner);assert.equal(stale.status,409);
+ const cors=await worker.fetch(new Request('https://sync.test/api/trips/'+id,{headers:{Origin:'https://unrelated.test'}}),env);assert.equal(cors.status,403);
+ now+=86400001;assert.equal((await call('/api/trips/'+id)).status,410);
+ }finally{Date.now=clock;}
+});

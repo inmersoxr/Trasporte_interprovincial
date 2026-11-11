@@ -6,7 +6,7 @@ Aplicación web móvil y PWA de transporte interprovincial. Continúa la impleme
 
 GitHub Pages: https://inmersoxr.github.io/Trasporte_interprovincial/
 
-El sitio estático se publica desde la raíz de `main`. No necesita compilación ni dependencias externas. Todas las imágenes, iconos, estilos y scripts se sirven desde el repositorio. La PWA incluye iconos PNG 192/512, manifest y service worker con actualización de caché.
+El sitio estático se publica desde la raíz de `main`. El frontend no necesita compilación. El módulo de seguimiento requiere conexión al servicio de sincronización y al proveedor de teselas. Todas las imágenes, iconos, estilos y scripts se sirven desde el repositorio. La PWA incluye iconos PNG 192/512, manifest y service worker con actualización de caché.
 
 ## Flujos
 
@@ -35,3 +35,7 @@ Comprobación de sintaxis: `node --check app.js` y `node --check sw.js`.
 ## Carrusel turístico de inicio
 
 Guayaquil (Rotonda aprobada), Cuenca (Catedral Nueva), Manta (Playa El Murciélago), Babahoyo (Malecón 9 de Octubre) y Quito (San Francisco, centro histórico). Cambia cada seis segundos con fundido de 1,1 segundos. Incluye indicadores, selección manual, deslizamiento y pausa. Respeta movimiento reducido; suspende la rotación cuando la pestaña está oculta o se sale del inicio. Espera a que la siguiente imagen esté decodificada antes de mostrarla. Los campos del buscador conservan sus valores durante el cambio.
+
+## Viaje compartido y SOS
+
+Implementado un viaje Cuenca–Guayaquil con mapa OSM/Leaflet, ruta vial real, vehículo orientado, simulación de 3 minutos acelerable, seguimiento público entre dispositivos, SOS y centro de operaciones sincronizados. Se accede desde el menú o Tus viajes, sin reservas ni pagos. La arquitectura, API, instrucciones para dos teléfonos y pruebas están en [LIVE-DEMO.md](LIVE-DEMO.md). El servicio ligero desplegado usa Worker + R2; su fuente y pruebas se incluyen en `sync-service/`, separadas de las reservas locales.
