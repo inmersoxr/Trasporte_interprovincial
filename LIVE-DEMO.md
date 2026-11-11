@@ -47,3 +47,9 @@ node --check sw.js
 El bundle Worker resultante se despliega con un bucket R2 vinculado como `BUCKET`. No hay dependencias de compilación. Ajustar el origen permitido del frontend en worker.mjs y la URL de API en shared/live-config.mjs si se migra el despliegue. No guardar capacidades de viajes ni credenciales de infraestructura en Git.
 
 Las pruebas verifican carretera y orientación, permisos, revisión obsoleta, pausa/reanudación/velocidad, SOS/atención/cierre compartido, caducidad y llegada con emisor ausente. La verificación en navegador cubre sesiones separadas y tamaño móvil. Un navegador de escritorio no certifica el envío desde WhatsApp instalado ni sustituye probar dos teléfonos físicos.
+
+## Comprobación de la publicación · 2026-11-11 UTC
+
+En GitHub Pages se crearon sesiones independientes de pasajero, destinatario y operaciones. En pausa coincidieron exactamente distancia (1,3 km), progreso (0,7 %), coordenadas y orientación. Se activó SOS con un número ficticio y sin enviar mensajes: el seguimiento recibió la misma alerta; otra sesión de operaciones la marcó atendida y el pasajero la cerró. Se comprobó el enlace de WhatsApp preparado con número, viaje, enlace y ubicación simulada.
+
+Se reanudó a 4× y se cerró la pestaña del pasajero: el destinatario siguió avanzando y llegó a Guayaquil con 100 %, 186,1 km recorridos y 0 km restantes. Se verificaron mapa, controles y SOS a 390 × 844 sobre la publicación real. No se realizó envío de WhatsApp ni prueba con dos teléfonos físicos.

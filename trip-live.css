@@ -7,3 +7,6 @@
 .rutas-map-tiles{filter:invert(.90) hue-rotate(175deg) saturate(.5) brightness(.90)}
 
 .live-round svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+/* Keep map tools reachable when a synchronized SOS banner is open. */
+.live-map-tools{top:auto;bottom:calc(var(--live-panel) + 20px)}
+#live-trip:has(.live-alert:not([hidden])) .leaflet-top{top:270px}
