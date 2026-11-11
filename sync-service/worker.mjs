@@ -1,3 +1,4 @@
+import {handleInstitution} from './institution.mjs';
 import {handleBookings,handleLinkedTrip} from './bookings.mjs';
 import {prepareRoad, tripSnapshot, applyTripCommand, ROUTE_ID} from '../shared/trip-core.mjs';
 import route from '../shared/route.json' with {type:'json'};
@@ -18,6 +19,7 @@ export default {async fetch(request,env){
   if(!env.BUCKET)return response(request,{error:'El almacenamiento compartido no está disponible.'},503);
   try {
     const ctx={digest,snapshot:trip=>tripSnapshot(trip,road,Date.now()),command:(trip,cmd,now)=>applyTripCommand(trip,cmd,road,now),totalMeters:road.totalMeters,publicView};
+    const institution=await handleInstitution(request,env,ctx);if(institution)return response(request,institution.data,institution.status||200);
     const market=await handleBookings(request,env,ctx);if(market)return response(request,market.data,market.status||200);
     if(path==='/api/trips'&&request.method==='POST'){
       const body=await request.json();if(body.routeId!==ROUTE_ID)return response(request,{error:'Ruta no admitida.'},400);
