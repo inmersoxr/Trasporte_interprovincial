@@ -80,3 +80,9 @@
 .demo-seat-assignment{padding:12px 0;font-size:15px;color:#d2b16b}
 #demoPaymentDetailsStep[hidden],#demoPaymentMethodStep[hidden]{display:none!important}
 @media(max-width:370px){.sprinter-van{width:290px}.sprinter-van .demo-seat{width:40px;height:36px}}
+
+/* Custom private transport is a separate homepage action, not a published route */
+.home-private-cta{margin:18px 0 24px;padding:20px 18px;border:1px solid #d2b16b77;border-radius:12px;background:#d2b16b0d;display:flex;flex-direction:column;gap:9px}
+.home-private-cta p{margin:0;font-size:15px;line-height:1.5}
+.home-private-cta .security-outline{align-self:flex-start;max-width:100%;white-space:normal;text-align:left}
+.home-private-cta small{font-size:11px;opacity:.72;line-height:1.5}
