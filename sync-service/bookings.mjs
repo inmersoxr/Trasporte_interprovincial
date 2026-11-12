@@ -19,7 +19,7 @@ function bRideFields(body){const origin=bText(body.origin,2,60),destination=bTex
 function bOwn(actor,ride){bAssert(actor.operator&&ride.operatorId===actor.operator.id,'Solo la operadora de esta salida puede gestionarla.',403);}
 function bNewLive(ride,operator,ctx){const now=Date.now();return {id:crypto.randomUUID(),routeId:'cuenca-guayaquil-v1',simulated:true,source:'simulator',status:'ready',anchorMeters:0,anchorAt:now,multiplier:1,revision:1,createdAt:now,updatedAt:now,expiresAt:now+7*86400000,alerts:[],events:[],driver:{name:'Conductor · Demo',operator:operator.name+' · Demo',vehicle:ride.vehicle,plate:'DEMO-001'}};}
 export async function handleBookings(request,env,ctx){const path=new URL(request.url).pathname,method=request.method;
- if(!/^\/api\/(catalog|operators|operator|rides|bookings|private-requests)(?:\/|$)/.test(path))return null;
+ if(!/^\/api\/(catalog|operators|operator|rides|bookings|private-requests|private-route-bookings)(?:\/|$)/.test(path))return null;
  if(method==='GET'){
   const {ledger}=await bLoad(env),actor=await bActor(request,ledger,ctx);
   if(path==='/api/private-requests'){const key=bBearer(request);bAssert(B_TOKEN.test(key),'Enlace de solicitud no válido.',403);const hash=await ctx.digest(key);const requests=(ledger.privateRequests||[]).filter(p=>p.tokenHash===hash).map(({tokenHash,...p})=>p);return {data:{requests}};}
