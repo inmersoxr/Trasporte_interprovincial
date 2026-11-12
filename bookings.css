@@ -89,3 +89,7 @@
 
 /* Tier visibility must win over the navigation grid display rule. */
 #operatorSubnav[hidden],#operatorDashboard[hidden],.operator-section[hidden]{display:none!important}
+
+/* The private-service action follows the fixed-height hero in normal flow. */
+#home{padding-bottom:calc(var(--app-nav-height) + 24px)}
+#home>.home-private-cta{margin:18px 24px 24px}
