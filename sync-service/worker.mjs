@@ -4,7 +4,7 @@ import {prepareRoad, tripSnapshot, applyTripCommand, ROUTE_ID} from '../shared/t
 import route from '../shared/route.json' with {type:'json'};
 const road=prepareRoad(route);
 const FRONTEND='https://inmersoxr.github.io';
-const TTL=24*60*60*1000;
+// Demo trips do not expire; the stored state remains available across sessions.
 const token=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
 const digest=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
 function originAllowed(origin,url){return !origin||origin===FRONTEND||origin===new URL(url).origin||/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin);}
@@ -15,7 +15,7 @@ export default {async fetch(request,env){
   const url=new URL(request.url),path=url.pathname;
   if(!originAllowed(request.headers.get('Origin'),request.url))return response(request,{error:'Origen no permitido.'},403);
   if(request.method==='OPTIONS')return response(request,{ok:true});
-  if(path==='/health'||path==='/')return response(request,{service:'RutasEC Demo Sync',ok:!!env.BUCKET,source:'simulated',route:ROUTE_ID,pollIntervalMs:1800,expiresAfterHours:24});
+  if(path==='/health'||path==='/')return response(request,{service:'RutasEC Demo Sync',ok:!!env.BUCKET,source:'simulated',route:ROUTE_ID,pollIntervalMs:1800,expiresAfterHours:null});
   if(!env.BUCKET)return response(request,{error:'El almacenamiento compartido no está disponible.'},503);
   try {
     const ctx={digest,snapshot:trip=>tripSnapshot(trip,road,Date.now()),command:(trip,cmd,now)=>applyTripCommand(trip,cmd,road,now),totalMeters:road.totalMeters,publicView};
@@ -24,7 +24,7 @@ export default {async fetch(request,env){
     if(path==='/api/trips'&&request.method==='POST'){
       const body=await request.json();if(body.routeId!==ROUTE_ID)return response(request,{error:'Ruta no admitida.'},400);
       const id=crypto.randomUUID(),controllerToken=token(),operationsToken=token(),now=Date.now();
-      const trip={id,routeId:ROUTE_ID,simulated:true,source:'simulator',status:'ready',anchorMeters:0,anchorAt:now,multiplier:1,revision:1,createdAt:now,updatedAt:now,expiresAt:now+TTL,controlHash:await digest(controllerToken),opsHash:await digest(operationsToken),alerts:[],events:[],driver:{name:'Daniel Andrade · Demo',operator:'Transporte Andecar · Demo',vehicle:'Mercedes Sprinter · 12 plazas',plate:'DEMO-001'}};
+      const trip={id,routeId:ROUTE_ID,simulated:true,source:'simulator',status:'ready',anchorMeters:0,anchorAt:now,multiplier:1,revision:1,createdAt:now,updatedAt:now,expiresAt:null,controlHash:await digest(controllerToken),opsHash:await digest(operationsToken),alerts:[],events:[],driver:{name:'Daniel Andrade · Demo',operator:'Transporte Andecar · Demo',vehicle:'Mercedes Sprinter · 12 plazas',plate:'DEMO-001'}};
       await env.BUCKET.put('trips/'+id+'.json',JSON.stringify(trip),{onlyIf:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:'application/json'}});
       return response(request,{...publicView(trip,{control:true,operations:true}),controllerToken,operationsToken},201);
     }
@@ -32,7 +32,7 @@ export default {async fetch(request,env){
     if(!match)return response(request,{error:'Recurso no encontrado.'},404);
     const key='trips/'+match[1]+'.json',object=await env.BUCKET.get(key);
     if(!object){const linked=await handleLinkedTrip(request,env,match[1],ctx);if(linked)return response(request,linked.data,linked.status||200);return response(request,{error:'Viaje no encontrado. Revisa el enlace.'},404);}
-    const trip=await object.json();if(Date.now()>trip.expiresAt)return response(request,{error:'El enlace de demostración ha caducado (24 horas).'},410);
+    const trip=await object.json();// Persistent mockup: historical demo trips remain accessible; no 24-hour expiration.
     const access=await permissions(request,trip);
     if(request.method==='GET'&&!match[2])return response(request,publicView(trip,access));
     if(request.method!=='POST'||!match[2])return response(request,{error:'Método no permitido.'},405);
