@@ -1,0 +1,33 @@
+name: Verify RutasEC marketplace
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bookings.mjs'
+      - 'app.js'
+      - 'sync-service/**'
+      - 'shared/**'
+      - '.github/workflows/verify-marketplace.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: |
+          node --check bookings.mjs
+          node --check app.js
+          node --check sync-service/bookings.mjs
+          node --check sync-service/worker.mjs
+      - name: Marketplace and trip tests
+        run: node --test sync-service/tests/*.test.mjs
+      - name: Worker build
+        run: |
+          node sync-service/build.mjs
+          node --check sync-service/out/worker.mjs
