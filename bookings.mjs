@@ -77,12 +77,17 @@ function renderDetail(){const r=getRide();if(!r){$b('carTitle').textContent='Sal
 
 let demoSelectedSeats=[],demoPaymentStage='method';
 function demoSeatLayout(capacity){
- const n=Math.max(1,Math.min(30,capacity)),ride=getRide(),taken=new Set(ride?.reservedSeatNumbers||[]),legacy=ride?.unassignedOccupied||0;
- const selected=new Set(demoSelectedSeats);
- const seat=(number,x,y)=>{const unavailable=taken.has(number)||number<=legacy;return '<button type="button" class="demo-seat '+(unavailable?'is-occupied':selected.has(number)?'is-selected':'')+'" style="left:'+x+'%;top:'+y+'%" onclick="BookingApp.demoSeat('+number+')" aria-pressed="'+selected.has(number)+'" '+(unavailable?'disabled':'')+' aria-label="Asiento '+number+(unavailable?' ocupado':'')+'">'+number+'</button>';};
- let html='<div class="demo-van" role="group" aria-label="Plano de asientos del vehículo"><div class="demo-van-windshield">PARABRISAS</div><div class="demo-driver">CONDUCTOR</div><div class="demo-door">PUERTA LATERAL</div><div class="demo-aisle">PASILLO</div>';
- for(let i=1;i<=n;i++){const row=Math.floor((i-1)/3),col=(i-1)%3;const x=[13,43,73][col],y=20+row*(65/Math.max(4,Math.ceil(n/3)));html+=seat(i,x,y);}
- return html+'</div><p class="market-note">Asientos ocupados no disponibles. El plano debe configurarse según la distribución real de la unidad.</p><p class="demo-seat-assignment"><strong>'+demoSelectedSeats.length+'</strong> asiento(s) seleccionado(s): '+(demoSelectedSeats.join(', ')||'ninguno')+'</p>';
+ const n=Math.max(1,Math.min(30,capacity)),ride=getRide(),taken=new Set(ride?.reservedSeatNumbers||[]),legacy=ride?.unassignedOccupied||0,selected=new Set(demoSelectedSeats);
+ // Mercedes-Benz Sprinter passenger layout: front driver + front passenger, rear benches 3+3+4 (12 seats total), or 3+3+3+4 (15 total).
+ // The operator's published capacity is the number of SALEABLE seats, excluding the driver.
+ const rowGroups=n<=11?[3,3,4]:n<=14?[3,3,3,4]:null;
+ const rows=[];let remaining=n-1,next=2;
+ if(rowGroups){for(const size of rowGroups){const seats=Math.min(size,remaining);if(seats>0){rows.push(Array.from({length:seats},()=>next++));remaining-=seats;}}}
+ else{while(remaining>0){const size=Math.min(remaining,rows.length%4===3?4:3);rows.push(Array.from({length:size},()=>next++));remaining-=size;}}
+ const layout=rows.map((row,i)=>{const full=row.length===4;const left=full?[10,33,57,80]:[11,37,72];return row.map((number,j)=>({number,x:left[j],y:25+(i*65/Math.max(3,rows.length))}));}).flat();
+ const all=[{number:1,x:71,y:14},...layout];
+ const seat=({number,x,y})=>{const unavailable=taken.has(number)||number<=legacy,active=selected.has(number);return '<button type="button" class="demo-seat '+(unavailable?'is-occupied':active?'is-selected':'')+'" style="left:'+x+'%;top:'+y+'%" onclick="BookingApp.demoSeat('+number+')" aria-pressed="'+active+'" '+(unavailable?'disabled':'')+' aria-label="Asiento '+number+(unavailable?' ocupado':'')+'">'+number+'</button>';};
+ return '<div class="sprinter-layout"><div class="sprinter-layout-heading"><strong>MERCEDES-BENZ SPRINTER</strong><span>'+(n<=11?'Configuración 12 ocupantes (11+1)':n<=14?'Configuración 15 ocupantes (14+1)':'Distribución ampliada')+'</span></div><div class="sprinter-van"><div class="sprinter-glass"></div><div class="sprinter-dash"></div><div class="sprinter-wheel">◯</div><div class="sprinter-driver">CONDUCTOR</div><div class="sprinter-aisle"></div><div class="sprinter-door">PUERTA</div>'+all.map(seat).join('')+'</div><div class="sprinter-legend"><span><i class="sprinter-dot available"></i> Disponible</span><span><i class="sprinter-dot selected"></i> Seleccionado</span><span><i class="sprinter-dot occupied"></i> Ocupado</span></div><p class="market-note">Distribución basada en las configuraciones de pasajeros Sprinter 12 (11+1) y 15 (14+1). La operadora debe confirmar el plano de cada unidad.</p><p class="demo-seat-assignment"><strong>'+demoSelectedSeats.length+'</strong> asiento(s): '+(demoSelectedSeats.join(', ')||'selecciona una plaza')+'</p></div>';
 }
 function demoSeat(number){
  const r=getRide(),count=Number($b('people').value)||1,taken=new Set(r?.reservedSeatNumbers||[]);
