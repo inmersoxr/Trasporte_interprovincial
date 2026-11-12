@@ -18,6 +18,6 @@ test('Shared API permissions, pause/resume/speed, persistent SOS and completion 
  c=await command('reset');assert.equal(c.data.snapshot.progress,0);assert.equal(c.data.snapshot.status,'ready');
  const stale=await call('/api/trips/'+id+'/commands','POST',{action:'start',requestId:crypto.randomUUID(),expectedRevision:1},owner);assert.equal(stale.status,409);
  const cors=await worker.fetch(new Request('https://sync.test/api/trips/'+id,{headers:{Origin:'https://unrelated.test'}}),env);assert.equal(cors.status,403);
- now+=86400001;assert.equal((await call('/api/trips/'+id)).status,410);
+ const legacyKey='trips/'+id+'.json',legacy=JSON.parse(env.BUCKET.store.get(legacyKey).value);legacy.expiresAt=now-1;await env.BUCKET.put(legacyKey,JSON.stringify(legacy));now+=400*86400000;const persistent=await call('/api/trips/'+id);assert.equal(persistent.status,200);assert.equal(persistent.data.trip.expiresAt,null);assert.equal((await call('/health')).data.expiresAfterHours,null);c=await command('sos');assert.equal(c.status,200);assert.equal(c.data.trip.alerts.at(-1).status,'open');
  }finally{Date.now=clock;}
 });

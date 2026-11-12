@@ -10,7 +10,7 @@ const digest=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('
 function originAllowed(origin,url){return !origin||origin===FRONTEND||origin===new URL(url).origin||/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin);}
 function response(request,data,status=200){const origin=request.headers.get('Origin');return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':origin||FRONTEND,'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type, Authorization','Access-Control-Max-Age':'600','Vary':'Origin','X-Content-Type-Options':'nosniff'}});}
 async function permissions(request,trip){const raw=request.headers.get('Authorization')?.replace(/^Bearer /,'')||'';if(!raw)return {control:false,operations:false};const hash=await digest(raw);return {control:hash===trip.controlHash,operations:hash===trip.opsHash||hash===trip.controlHash};}
-function publicView(trip,permissions){const {controlHash,opsHash,...visible}=trip;const now=Date.now();return {trip:visible,snapshot:tripSnapshot(trip,road,now),permissions,serverNow:now};}
+function publicView(trip,permissions){const {controlHash,opsHash,...visible}=trip;visible.expiresAt=null;const now=Date.now();return {trip:visible,snapshot:tripSnapshot(trip,road,now),permissions,serverNow:now};}
 export default {async fetch(request,env){
   const url=new URL(request.url),path=url.pathname;
   if(!originAllowed(request.headers.get('Origin'),request.url))return response(request,{error:'Origen no permitido.'},403);

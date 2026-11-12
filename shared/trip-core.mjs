@@ -11,7 +11,7 @@ export function applyTripCommand(trip,command,road,now=Date.now()){
  else if(action==='pause'){next.status=current.status==='arrived'?'arrived':current.status==='ready'?'ready':'paused';}
  else if(action==='speed'){if(![1,2,4,8,16,32].includes(command.multiplier))throw new Error('Velocidad no válida.');next.multiplier=command.multiplier;next.status=current.status;}
  else if(action==='reset'){next.anchorMeters=0;next.status='ready';for(const a of next.alerts)if(a.status!=='closed'){a.status='closed';a.closedAt=now;a.reason='simulation_reset';}}
- else if(action==='sos'){if(current.status==='ready'||current.status==='arrived')throw new Error('Inicia un viaje activo para probar SOS.');if(next.alerts.some(a=>a.status!=='closed'))return trip;next.status=current.status;next.alerts.push({id:command.alertId,at:now,position:current.position,status:'open',simulated:true,source:'simulator'});}
+ else if(action==='sos'){if(next.alerts.some(a=>a.status!=='closed'))return trip;next.status=current.status;next.alerts.push({id:command.alertId,at:now,position:current.position,status:'open',simulated:true,source:'simulator'});}
  else if(action==='attend'||action==='close-sos'){const a=next.alerts.find(a=>a.id===command.alertId);if(!a)throw new Error('Alerta no encontrada.');if(action==='attend'){if(a.status==='closed')throw new Error('La alerta está cerrada.');a.status='attended';a.attendedAt=now;}else {a.status='closed';a.closedAt=now;}next.status=current.status;}
  else throw new Error('Acción no válida.');
  next.updatedAt=now;next.revision++;next.events.push({id:command.requestId,type:action,at:now,simulated:true,alertId:command.alertId||null});next.events=next.events.slice(-50);next.alerts=next.alerts.slice(-20);return next;

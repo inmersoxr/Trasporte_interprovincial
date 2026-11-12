@@ -27,7 +27,7 @@ El servidor persiste ancla de distancia, fecha de referencia, velocidad, estado,
 - `POST /api/trips/:id/commands` recibe `{action, requestId, expectedRevision}` y los campos de la acción. Requiere `Authorization: Bearer <capacidad>`. Acciones: `start`, `pause`, `speed` (multiplier), `reset`, `sos`, `attend` y `close-sos` (alertId).
 - Solo el controlador modifica el viaje o cierra SOS. Operaciones solo puede `attend`. Los hashes de las capacidades no se publican; el teléfono guarda sus claves en localStorage. El número de emergencia permanece local y no se envía a la API. WhatsApp solo recibe el mensaje al abrir su enlace.
 - Escrituras condicionales R2 por ETag, revisiones y requestId evitan sobrescrituras y repeticiones inmediatas. Conserva los últimos 50 eventos y 20 alertas por viaje.
-- Los enlaces caducan a las 24 horas (HTTP 410). La caducidad limita lectura, no elimina automáticamente objetos del bucket. El servicio es una demostración, sin inventario, pagos, GPS operativo, despacho ni autenticación comercial. No usar datos sensibles reales en esta demo pública.
+- Los enlaces de simulación no caducan. Los registros nuevos usan expiresAt=null y los enlaces antiguos conservan acceso aunque contengan una fecha de caducidad histórica. El servicio es una demostración, sin inventario, pagos, GPS operativo, despacho ni autenticación comercial. No usar datos sensibles reales en esta demo pública.
 
 Los enlaces de controlador dependen de las claves locales: al borrar almacenamiento se pierde el control. El enlace público sigue siendo observación. La conectividad es necesaria para mapa, sincronización y WhatsApp; la PWA guarda la interfaz y geometría, no promete seguimiento sin conexión. El indicador informa pérdida de sincronización. Las teselas se solicitan directamente al proveedor y no se precargan ni se guardan masivamente.
 
@@ -46,7 +46,7 @@ node --check sw.js
 
 El bundle Worker resultante se despliega con un bucket R2 vinculado como `BUCKET`. No hay dependencias de compilación. Ajustar el origen permitido del frontend en worker.mjs y la URL de API en shared/live-config.mjs si se migra el despliegue. No guardar capacidades de viajes ni credenciales de infraestructura en Git.
 
-Las pruebas verifican carretera y orientación, permisos, revisión obsoleta, pausa/reanudación/velocidad, SOS/atención/cierre compartido, caducidad y llegada con emisor ausente. La verificación en navegador cubre sesiones separadas y tamaño móvil. Un navegador de escritorio no certifica el envío desde WhatsApp instalado ni sustituye probar dos teléfonos físicos.
+Las pruebas verifican carretera y orientación, permisos, revisión obsoleta, pausa/reanudación/velocidad, SOS/atención/cierre compartido, persistencia más allá de 400 días y llegada con emisor ausente. La verificación en navegador cubre sesiones separadas y tamaño móvil. Un navegador de escritorio no certifica el envío desde WhatsApp instalado ni sustituye probar dos teléfonos físicos.
 
 ## Comprobación de la publicación · 2026-11-11 UTC
 
@@ -58,8 +58,16 @@ Se reanudó a 4× y se cerró la pestaña del pasajero: el destinatario siguió 
 
 La barra inferior recupera Inicio, Explorar, Mis viajes y Operadores, e incorpora Seguridad. Todos son botones con destino real y estado activo accesible. La barra permanece en las pantallas principales; durante el seguimiento inmersivo se oculta para dejar espacio a Compartir y SOS. Volver desde el mapa abre Seguridad. La pantalla permite configurar el contacto antes de iniciar el viaje, pegar un enlace público o acceder a operaciones.
 
-Se eliminó el menú hamburguesa. El botón Instalar app permanece en las cabeceras. Un aviso superior ofrece instalación y puede cerrarse durante 24 horas. Si el navegador expone beforeinstallprompt se usa el diálogo nativo; en caso contrario se muestran instrucciones para Android, iOS o escritorio. El aviso se oculta en modo instalado y durante el viaje. No se simula una instalación del sistema operativo.
+El menú hamburguesa contiene las cinco secciones institucionales; la barra inferior conserva las funciones operativas. El botón Instalar app permanece en las cabeceras. Un aviso superior ofrece instalación y puede cerrarse durante 24 horas. Si el navegador expone beforeinstallprompt se usa el diálogo nativo; en caso contrario se muestran instrucciones para Android, iOS o escritorio. El aviso se oculta en modo instalado y durante el viaje. No se simula una instalación del sistema operativo.
 
 ## Reservas confirmadas
 
 El módulo también admite salidas y boletos compartidos. El operador inicia el recorrido desde su panel; el boleto habilita el acceso al mismo viaje. Un pasajero confirmado puede compartirlo y activar/cerrar SOS, mientras que los controles del movimiento permanecen en el operador. La arquitectura y prueba completa están en [BOOKINGS-DEMO.md](BOOKINGS-DEMO.md). Las capacidades y límites descritos antes para la demo independiente se mantienen para los enlaces antiguos.
+
+## Sincronización y modalidades actuales
+
+Los asientos compartidos solo se ocupan al confirmar el pago simulado. No existen bloqueos temporales ni reservas sin pagar. La selección visual es local; Cloudflare valida disponibilidad y números de asiento mediante escritura condicional de R2. Si no se envían números, los asigna automáticamente dentro de la misma transacción. Las compras privadas por ruta usan fecha/hora propias y no consumen plazas de salidas compartidas; las solicitudes personalizadas se guardan aparte para cotización.
+
+El aviso de reserva recibida se muestra en el panel de la operadora y en el boleto como entrega simulada dentro de RutasEC. El destinatario de WhatsApp es el previamente configurado por la operadora. El enlace wa.me prepara el mensaje para envío manual; no acredita entrega externa automática.
+
+SOS funciona también con una simulación lista o finalizada y conserva alertas compartidas. El contacto es opcional para registrar una alerta de demo; se requiere un teléfono válido solo al configurar un contacto o abrir WhatsApp. El destinatario del enlace público conserva permisos de solo lectura.
