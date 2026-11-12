@@ -6,7 +6,7 @@ const bError=(message,status=400)=>Object.assign(new Error(message),{status});
 const bAssert=(condition,message,status=400)=>{if(!condition)throw bError(message,status);};
 const bText=(value,min,max)=>{bAssert(typeof value==='string','Revisa los campos obligatorios.');const s=value.trim();bAssert(s.length>=min&&s.length<=max,'Texto incompleto o demasiado largo.');return s;};
 const bPhone=value=>{const p=String(value||'').replace(/[\s()+-]/g,'').replace(/^09(\d{8})$/,'5939$1');bAssert(/^\d{8,15}$/.test(p),'Configura un WhatsApp válido con código de país.');return p;};
-const bLoad=async env=>{const object=await env.BUCKET.get(B_KEY);return {object,ledger:object?await object.json():{revision:0,operators:[],rides:[],bookings:[]}};};
+const bLoad=async env=>{const object=await env.BUCKET.get(B_KEY);return {object,ledger:object?await object.json():{revision:0,operators:[],rides:[],bookings:[],privateRequests:[]}};};
 async function bWrite(env,fn){for(let attempt=0;attempt<8;attempt++){const {object,ledger}=await bLoad(env);const result=await fn(ledger);if(result.unchanged)return result.data;ledger.revision++;bAssert(ledger.bookings.length<2500,'La demo alcanzó su límite de registros.',503);const saved=await env.BUCKET.put(B_KEY,JSON.stringify(ledger),{onlyIf:object?{etagMatches:object.etag}:new Headers({'If-None-Match':'*'}),httpMetadata:{contentType:'application/json'}});if(saved)return result.data;}throw bError('Hay varias reservas simultáneas. Reintenta; no se ha cobrado nada.',409);}
 const bBearer=request=>request.headers.get('Authorization')?.replace(/^Bearer /,'')||'';
 async function bActor(request,ledger,ctx){const value=bBearer(request);if(!B_TOKEN.test(value))return {operator:null,booking:null};const hash=await ctx.digest(value);return {operator:ledger.operators.find(o=>o.tokenHash===hash)||null,booking:ledger.bookings.find(b=>b.tokenHash===hash)||null};}
@@ -19,15 +19,27 @@ function bRideFields(body){const origin=bText(body.origin,2,60),destination=bTex
 function bOwn(actor,ride){bAssert(actor.operator&&ride.operatorId===actor.operator.id,'Solo la operadora de esta salida puede gestionarla.',403);}
 function bNewLive(ride,operator,ctx){const now=Date.now();return {id:crypto.randomUUID(),routeId:'cuenca-guayaquil-v1',simulated:true,source:'simulator',status:'ready',anchorMeters:0,anchorAt:now,multiplier:1,revision:1,createdAt:now,updatedAt:now,expiresAt:now+7*86400000,alerts:[],events:[],driver:{name:'Conductor · Demo',operator:operator.name+' · Demo',vehicle:ride.vehicle,plate:'DEMO-001'}};}
 export async function handleBookings(request,env,ctx){const path=new URL(request.url).pathname,method=request.method;
- if(!/^\/api\/(catalog|operators|operator|rides|bookings)(?:\/|$)/.test(path))return null;
+ if(!/^\/api\/(catalog|operators|operator|rides|bookings|private-requests)(?:\/|$)/.test(path))return null;
  if(method==='GET'){
   const {ledger}=await bLoad(env),actor=await bActor(request,ledger,ctx);
+  if(path==='/api/private-requests'){const key=bBearer(request);bAssert(B_TOKEN.test(key),'Enlace de solicitud no válido.',403);const hash=await ctx.digest(key);const requests=(ledger.privateRequests||[]).filter(p=>p.tokenHash===hash).map(({tokenHash,...p})=>p);return {data:{requests}};}
   if(path==='/api/catalog')return {data:{revision:ledger.revision,operators:ledger.operators.map(o=>({id:o.id,name:o.name,brand:bPublicBrand(o)})),rides:ledger.rides.filter(r=>!['draft','cancelled'].includes(r.status)).map(r=>bRide(ledger,r,ctx)),serverNow:Date.now()}};
   if(path==='/api/operator'){bAssert(actor.operator,'Activa el panel de tu operadora en este teléfono.',403);const {tokenHash,...profile}=actor.operator;return {data:{revision:ledger.revision,profile,rides:ledger.rides.filter(r=>r.operatorId===profile.id).map(r=>bRide(ledger,r,ctx)),bookings:ledger.bookings.filter(b=>ledger.rides.find(r=>r.id===b.rideId)?.operatorId===profile.id).map(b=>bBooking(ledger,b,ctx)),serverNow:Date.now()}};}
   const match=path.match(/^\/api\/bookings\/([a-f0-9-]{36})$/);if(match){const b=ledger.bookings.find(b=>b.id===match[1]);bAssert(b,'Reserva no encontrada.',404);const r=ledger.rides.find(r=>r.id===b.rideId);bAssert(actor.booking?.id===b.id||actor.operator?.id===r.operatorId,'Este boleto requiere su enlace privado.',403);return {data:{booking:bBooking(ledger,b,ctx),serverNow:Date.now()}};}
   throw bError('Recurso no encontrado.',404);
  }
  bAssert(method==='POST','Método no permitido.',405);const raw=await request.text();bAssert(raw.length<=16000,'Solicitud demasiado grande.',413);const body=JSON.parse(raw);
+ if(path==='/api/private-requests'){
+  bAssert(B_UUID.test(body.requestId)&&B_TOKEN.test(bBearer(request)),'Solicitud privada no válida.',400);
+  const type=bText(body.vehicleType,3,12);bAssert(['auto','suv','van','minivan'].includes(type),'Tipo de vehículo no válido.');
+  const date=bText(body.date,10,10),endDate=bText(body.endDate,10,10),time=bText(body.time,5,5);
+  bAssert(/^\\d{4}-\\d{2}-\\d{2}$/.test(date)&&/^\\d{4}-\\d{2}-\\d{2}$/.test(endDate)&&/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time)&&endDate>=date,'Revisa las fechas y la hora.');
+  const departure=Date.parse(date+'T'+time+':00-05:00');bAssert(Number.isFinite(departure)&&departure>Date.now()-300000,'Elige una fecha futura.');
+  const people=Number(body.people);bAssert(Number.isInteger(people)&&people>=1&&people<=30,'Cantidad de pasajeros no válida.');
+  const tokenHash=await ctx.digest(bBearer(request));
+  return {status:201,data:await bWrite(env,ledger=>{ledger.privateRequests||=[];const previous=ledger.privateRequests.find(p=>p.requestId===body.requestId);if(previous){bAssert(previous.tokenHash===tokenHash,'Solicitud ya utilizada.',409);return {unchanged:true,data:{requestId:previous.id,status:previous.status}};}
+   const entry={id:crypto.randomUUID(),requestId:body.requestId,tokenHash,origin:bText(body.origin,2,100),destination:bText(body.destination,2,100),pickupAddress:bText(body.pickupAddress,2,160),date,endDate,time,people,vehicleType:type,serviceType:['oneway','roundtrip','tour','disposal'].includes(body.serviceType)?body.serviceType:'oneway',notes:bText(String(body.notes||''),0,500),passengerName:bText(body.passengerName,2,80),status:'requested',createdAt:Date.now(),simulated:true};bAssert(ledger.privateRequests.length<500,'Límite de solicitudes privadas alcanzado.',503);ledger.privateRequests.push(entry);return {data:{requestId:entry.id,status:entry.status}};})};
+ }
  if(path==='/api/operators'){
   bAssert(B_UUID.test(body.id)&&B_TOKEN.test(bBearer(request)),'Identidad de demostración no válida.');const tokenHash=await ctx.digest(bBearer(request)),name=bText(body.name,2,80),whatsapp=bPhone(body.whatsapp);
   return {data:await bWrite(env,ledger=>{const existing=ledger.operators.find(o=>o.id===body.id);if(existing){bAssert(existing.tokenHash===tokenHash,'Esta operadora pertenece a otro acceso.',403);existing.name=name;existing.whatsapp=whatsapp;existing.updatedAt=Date.now();}else{bAssert(ledger.operators.length<100,'Límite de operadoras de la demo.',503);ledger.operators.push({id:body.id,name,whatsapp,tokenHash,createdAt:Date.now(),updatedAt:Date.now()});}return {data:{ok:true,operatorId:body.id}};})};
