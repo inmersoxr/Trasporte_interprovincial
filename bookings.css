@@ -54,3 +54,8 @@
 .premium-ledger{display:grid;grid-template-columns:1fr auto;gap:14px 9px;padding:14px;background:#ffffff08;border-radius:9px;font-size:12px}.premium-ledger b{font-weight:500;color:#d2b16b}
 @media(max-width:490px){.operator-tier-options{grid-template-columns:1fr}.operator-tier-options button{min-height:125px}.premium-person-card{grid-template-columns:1fr}.premium-person-portrait img,.premium-profile-photo{width:92px;height:100px}.premium-summary-grid{grid-template-columns:1fr 1fr}.premium-ledger{grid-template-columns:1fr}}
 @media(min-width:740px){.premium-directory{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Premium card expansion: details appear immediately after the selected card. */
+.premium-directory>.premium-detail{grid-column:1/-1;margin:2px 0 12px;min-width:0}
+.premium-directory-item.selected,.premium-directory-item[aria-expanded="true"]{border-color:#d2b16b;background:#d2b16b18}
+@media(max-width:520px){.premium-directory{grid-template-columns:1fr!important}.premium-person-card{grid-template-columns:1fr!important}.premium-person-card dl{grid-template-columns:minmax(75px,1fr) minmax(100px,2fr)}}
