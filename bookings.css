@@ -86,3 +86,6 @@
 .home-private-cta p{margin:0;font-size:15px;line-height:1.5}
 .home-private-cta .security-outline{align-self:flex-start;max-width:100%;white-space:normal;text-align:left}
 .home-private-cta small{font-size:11px;opacity:.72;line-height:1.5}
+
+/* Tier visibility must win over the navigation grid display rule. */
+#operatorSubnav[hidden],#operatorDashboard[hidden],.operator-section[hidden]{display:none!important}
