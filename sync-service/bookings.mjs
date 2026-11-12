@@ -67,6 +67,18 @@ export async function handleBookings(request,env,ctx){const path=new URL(request
   else if(action==='cancel'){bAssert(!['finished','cancelled'].includes(ride.status),'La salida ya está cerrada.');ride.status='cancelled';if(ride.live){ride.live=ctx.command(ride.live,{action:'pause',requestId:crypto.randomUUID()},Date.now());for(const a of ride.live.alerts)a.status='closed';}for(const b of ledger.bookings.filter(b=>b.rideId===ride.id&&b.status==='confirmed')){b.status='cancelled';b.payment.status='simulated_refunded';b.cancelledAt=Date.now();}}
   else throw bError('Acción no válida.');ride.revision++;ride.updatedAt=Date.now();return {data:{ride:bRide(ledger,ride,ctx)}};
  })};
+ if(path==='/api/private-route-bookings'){
+  bAssert(B_UUID.test(body.requestId)&&B_TOKEN.test(body.bookingToken),'Solicitud de pago no válida.');const tokenHash=await ctx.digest(body.bookingToken);
+  return {status:201,data:await bWrite(env,ledger=>{const previous=ledger.bookings.find(b=>b.requestId===body.requestId);if(previous){bAssert(previous.tokenHash===tokenHash,'Solicitud ya utilizada.',409);return {unchanged:true,data:{booking:bBooking(ledger,previous,ctx)}};}
+   const ride=ledger.rides.find(r=>r.id===body.rideId);bAssert(ride&&ride.status==='published','Esta oferta privada no está disponible.',409);
+   bAssert(ride.priceCents===Number(body.quotedPriceCents),'El precio de la oferta cambió.',409);
+   const date=bText(body.date,10,10),time=bText(body.time,5,5);bAssert(/^\\d{4}-\\d{2}-\\d{2}$/.test(date)&&/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time),'Fecha u hora inválida.');
+   const departure=Date.parse(date+'T'+time+':00-05:00');bAssert(Number.isFinite(departure)&&departure>Date.now(),'Elige una fecha y hora futuras.',409);
+   const names=body.passengers;bAssert(Array.isArray(names)&&names.length>=1&&names.length<=ride.capacity,'Revisa la cantidad de pasajeros.');const passengers=names.map(name=>({name:bText(name,2,80),boardedAt:null,seatNumber:null}));
+   bAssert(['credit','debit','transfer'].includes(body.paymentMethod),'Selecciona un método de pago simulado.');
+   const now=Date.now(),amount=ride.privatePriceCents||ride.priceCents*ride.capacity;
+   const b={id:crypto.randomUUID(),rideId:ride.id,requestId:body.requestId,tokenHash,seats:0,seatNumbers:null,mode:'private-route',passengers,status:'confirmed',createdAt:now,updatedAt:now,simulated:true,payment:{status:'simulated_confirmed',method:body.paymentMethod,amountCents:amount,currency:'USD',confirmedAt:now,simulated:true},itinerary:{origin:ride.origin,destination:ride.destination,date,time,vehicle:ride.vehicle,operatorName:ledger.operators.find(o=>o.id===ride.operatorId).name,unitPriceCents:amount,pickupAddress:bText(String(body.pickupAddress||ride.origin),2,160),pickupInstructions:'Traslado privado: horario elegido por el pasajero.',pickupLat:null,pickupLng:null}};ledger.bookings.push(b);return {data:{booking:bBooking(ledger,b,ctx)}};})};
+ }
  if(path==='/api/bookings'){
   bAssert(B_UUID.test(body.requestId)&&B_TOKEN.test(body.bookingToken),'Solicitud de reserva no válida.');const tokenHash=await ctx.digest(body.bookingToken),id=crypto.randomUUID();
   return {status:201,data:await bWrite(env,ledger=>{const duplicate=ledger.bookings.find(b=>b.requestId===body.requestId);if(duplicate){bAssert(duplicate.tokenHash===tokenHash,'Solicitud de reserva ya utilizada.',409);return {unchanged:true,data:{booking:bBooking(ledger,duplicate,ctx)}};}
