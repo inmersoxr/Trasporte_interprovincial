@@ -60,13 +60,23 @@
 .premium-directory-item.selected,.premium-directory-item[aria-expanded="true"]{border-color:#d2b16b;background:#d2b16b18}
 @media(max-width:520px){.premium-directory{grid-template-columns:1fr!important}.premium-person-card{grid-template-columns:1fr!important}.premium-person-card dl{grid-template-columns:minmax(75px,1fr) minmax(100px,2fr)}}
 
-/* Passenger van demo seat selection */
-.demo-van{position:relative;margin:18px auto;width:min(100%,330px);height:540px;border:3px solid #8996a5;border-radius:100px 100px 35px 35px;background:linear-gradient(90deg,#28323d,#1b252f 50%,#28323d);box-shadow:inset 0 0 0 9px #ffffff09}
-.demo-van-windshield{position:absolute;top:8px;left:19%;width:62%;height:35px;border-radius:55% 55% 10px 10px;background:#8295a550;text-align:center;padding-top:9px;font-size:9px;letter-spacing:.15em}
-.demo-driver{position:absolute;top:54px;left:10%;width:31%;height:43px;border:1px solid #8393a0;border-radius:12px;display:grid;place-items:center;font-size:10px;color:#aebcc9}
-.demo-door{position:absolute;right:-4px;top:38%;writing-mode:vertical-rl;padding:14px 3px;border:2px solid #d2b16b;background:#1b252f;font-size:9px;color:#d2b16b}
-.demo-aisle{position:absolute;top:110px;bottom:28px;left:40%;width:20%;border-left:1px dashed #ffffff20;border-right:1px dashed #ffffff20;pointer-events:none}
-.demo-seat{position:absolute;transform:translate(-50%,-50%);width:48px;height:39px;border:2px solid #6f8293;border-radius:13px 13px 8px 8px;background:#384653;color:#e7edf2;font-weight:700;cursor:pointer;z-index:1}
-.demo-seat.is-selected{background:#d2b16b;color:#15202a;border-color:#fff1bc;box-shadow:0 0 0 3px #d2b16b44}
-.demo-seat-assignment{font-size:15px;padding:12px 0;color:#d2b16b}
+
+/* Mercedes-Benz Sprinter passenger seating: 11+1 and 14+1 layouts */
+.sprinter-layout{max-width:480px;margin:20px auto 28px}
+.sprinter-layout-heading{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:14px;letter-spacing:.07em}
+.sprinter-layout-heading strong{font-size:14px}.sprinter-layout-heading span{font-size:11px;opacity:.7}
+.sprinter-van{position:relative;margin:auto;width:min(100%,340px);height:565px;border:6px solid #667581;border-radius:98px 98px 35px 35px;background:linear-gradient(90deg,#24323d 0%,#1b2832 12%,#25333e 50%,#1b2832 88%,#24323d 100%);box-shadow:inset 0 0 0 6px #64758566,0 18px 34px #0005;overflow:visible}
+.sprinter-glass{position:absolute;left:8%;top:2%;width:84%;height:9%;border-radius:65% 65% 14% 14%;background:linear-gradient(135deg,#a9d2df91,#536c7e66);border:2px solid #c5dce444}
+.sprinter-dash{position:absolute;top:11%;left:9%;width:82%;height:2px;background:#86939b}
+.sprinter-wheel{position:absolute;top:12%;left:19%;font-size:28px;color:#a5b2bb;line-height:1}
+.sprinter-driver{position:absolute;top:18%;left:12%;font-size:9px;color:#a5b2bb;letter-spacing:.04em}
+.sprinter-aisle{position:absolute;top:26%;bottom:4%;left:49%;width:15%;border-left:1px dashed #a9c4d144;border-right:1px dashed #a9c4d144}
+.sprinter-door{position:absolute;right:-7px;top:37%;writing-mode:vertical-rl;padding:13px 3px;background:#25333e;border:2px solid #d2b16b;color:#d2b16b;font-size:10px}
+.sprinter-van .demo-seat{position:absolute;transform:translate(-50%,-50%);width:48px;height:39px;border:2px solid #8797a4;border-radius:12px 12px 6px 6px;background:linear-gradient(#5c6f7d,#3d4d5c);color:#fff;font-weight:750;cursor:pointer;z-index:2;box-shadow:0 4px 0 #1b252e}
+.sprinter-van .demo-seat.is-selected{background:#d2b16b;color:#14202a;border-color:#fff3c9;box-shadow:0 0 0 3px #d2b16b55}
+.sprinter-van .demo-seat.is-occupied{background:#39414a;color:#7d8b94;border-color:#4b5760;cursor:not-allowed;text-decoration:line-through}
+.sprinter-legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:11px;margin:16px 0}
+.sprinter-legend span{display:flex;align-items:center;gap:5px}.sprinter-dot{display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid #8797a4}.sprinter-dot.available{background:#5c6f7d}.sprinter-dot.selected{background:#d2b16b}.sprinter-dot.occupied{background:#39414a}
+.demo-seat-assignment{padding:12px 0;font-size:15px;color:#d2b16b}
 #demoPaymentDetailsStep[hidden],#demoPaymentMethodStep[hidden]{display:none!important}
+@media(max-width:370px){.sprinter-van{width:290px}.sprinter-van .demo-seat{width:40px;height:36px}}
