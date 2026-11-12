@@ -96,9 +96,27 @@ const rideButton=Array.from(dashboard.querySelectorAll('button')).find(b=>b.text
 const scannerButton=Array.from(dashboard.querySelectorAll('button')).find(b=>b.textContent.trim()==='Escanear boleto QR');if(scannerButton)panels.scanner.appendChild(scannerButton);
 const scannerNote=scannerButton?.nextElementSibling;if(scannerNote?.classList.contains('market-note'))panels.scanner.appendChild(scannerNote);
 const headings=Array.from(dashboard.children).filter(el=>el.classList.contains('market-h2'));headings.forEach(h=>{if(!h.closest('.operator-section'))h.remove()});
-renderPremiumPanels();const demoNote=document.createElement('p');demoNote.id='operatorDemoNotice';demoNote.className='market-note';demoNote.textContent='PREMIUM · DEMOSTRACIÓN INTERACTIVA. Datos ficticios; no requiere registrar una operadora.';root.insertBefore(demoNote,nav);selectOperatorSection(operatorSection);updateOperatorTier();
+renderPremiumPanels();const demoNote=document.createElement('p');demoNote.id='operatorDemoNotice';demoNote.className='market-note';demoNote.textContent='PREMIUM · DEMOSTRACIÓN INTERACTIVA. Datos ficticios; no requiere registrar una operadora.';root.insertBefore(demoNote,nav);
+ // Event delegation avoids reliance on inline handlers and survives navigation rebuilds.
+ nav.addEventListener('click',event=>{const button=event.target.closest('button[data-section]');if(button&&nav.contains(button)){event.preventDefault();selectOperatorSection(button.dataset.section);}});
+ nav.querySelectorAll('button[data-section]').forEach(button=>button.removeAttribute('onclick'));
+ selectOperatorSection(operatorSection);updateOperatorTier();
 }
-function selectOperatorSection(section){if(!operatorTier)return;const premiumOnly=['livefleet','resources','staff','finance','company','brand'];if(operatorTier==='standard'&&premiumOnly.includes(section))section='overview';operatorSection=section;const nav=$b('operatorSubnav');if(!nav)return;nav.querySelectorAll('button').forEach(b=>{const active=b.dataset.section===section;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});$b('operatorDashboard').querySelectorAll('.operator-section').forEach(p=>p.hidden=p.dataset.section!==section);if(section==='scanner')ensureBoardingScanner();if(section==='livefleet')renderFleetDemo();if(section==='brand')renderBrandEditor();}
+function selectOperatorSection(section){
+ const dashboard=$b('operatorDashboard'),nav=$b('operatorSubnav');
+ if(!dashboard||!nav)return;
+ const premiumOnly=['livefleet','resources','staff','finance','company','brand'];
+ if(operatorTier==='standard'&&premiumOnly.includes(section))section='overview';
+ if(!dashboard.querySelector('.operator-section[data-section="'+section+'"]'))return;
+ operatorSection=section;
+ dashboard.hidden=false;dashboard.style.removeProperty('display');
+ nav.hidden=false;nav.style.removeProperty('display');
+ nav.querySelectorAll('button[data-section]').forEach(b=>{const active=b.dataset.section===section;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});
+ dashboard.querySelectorAll('.operator-section').forEach(p=>{const active=p.dataset.section===section;p.hidden=!active;p.style.setProperty('display',active?'block':'none','important');});
+ if(section==='scanner')ensureBoardingScanner();
+ if(section==='livefleet')renderFleetDemo();
+ if(section==='brand')renderBrandEditor();
+}
 function chooseOperatorTier(tier){if(!['standard','premium'].includes(tier))return;operatorTier=tier;operatorSection=tier==='premium'?'livefleet':(!operatorAuth?'profile':'overview');updateOperatorTier();selectOperatorSection(operatorSection);}
 function updateOperatorTier(){const chooser=$b('operatorTierChooser'),nav=$b('operatorSubnav'),dashboard=$b('operatorDashboard');if(!chooser||!nav||!dashboard)return;chooser.hidden=!!operatorTier;nav.hidden=!operatorTier;dashboard.hidden=!operatorTier;nav.querySelectorAll('button').forEach(b=>b.hidden=operatorTier==='standard'&&['livefleet','resources','staff','finance','company','brand'].includes(b.dataset.section));let back=$b('operatorTierBack');if(!back){back=document.createElement('button');back.id='operatorTierBack';back.type='button';back.className='operator-tier-back';back.textContent='← Cambiar entre Standard y Premium';back.onclick=()=>{operatorTier=null;updateOperatorTier();};chooser.parentElement.insertBefore(back,chooser);}back.hidden=!operatorTier;const form=$b('marketProfileForm');if(form&&!operatorAuth)form.hidden=operatorTier!=='standard';const notice=$b('operatorDemoNotice');if(notice)notice.hidden=operatorTier!=='premium';}
 
