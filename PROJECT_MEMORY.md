@@ -1,0 +1,49 @@
+# RutasEC — Memoria persistente del repositorio
+Actualizado: 2026-11-13. Fuente de verdad documental para agentes y desarrolladores. Leer antes de modificar código. Snapshot inicial: `docs/snapshots/2026-11-13-project-baseline.md`.
+
+## Identidad y estado
+RutasEC / Conecta Ecuador: plataforma web/PWA de transporte interciudad e interprovincial en Ecuador, marketplace de pasajeros, operadoras y conductores. Proyecto aprobado para iniciar transición de demostración a producto comercial el 2026-11-13. NO confundir aprobación del proyecto con despliegue comercial, certificación de pagos ni validación de backend productivo.
+
+Repositorio: https://github.com/inmersoxr/Trasporte_interprovincial (nombre exacto, incluida ortografía).
+Frontend: https://inmersoxr.github.io/Trasporte_interprovincial/
+API demo: https://rutasec-viajes-sync.cebx3001.chatgpt.site
+Rama principal: main. GitHub Pages publica sitio estático. Worker Cloudflare y R2 requieren despliegue independiente; commit en GitHub NO equivale a backend desplegado.
+
+## Producto y tres modalidades — decisiones
+1. **Compartido por salida publicada**: operadora publica origen, destino, fecha/hora, vehículo, precio por asiento y capacidad; pasajero busca, elige asiento numerado, paga y recibe boleto QR. En la DEMO no hay reservas pendientes: asiento ocupado solo tras pago simulado confirmado. En PRODUCCIÓN, definir retención técnica breve y transaccional durante procesamiento para impedir cobro de último asiento a dos compradores; retención no equivale a venta. Garantizar idempotencia y unicidad por salida/asiento.
+2. **Privado en ruta publicada con tarifa fija**: desde resultados pestañas Compartido / Privado; elegir vehículo completo (auto, SUV, van), fecha y hora propias, sin depender de hora de una salida compartida; precio publicado, NO cotización, NO ocupa asientos compartidos. Endpoint demo `POST /api/private-route-bookings`. Revisar diseño de catálogo independiente de salidas fechadas antes de producción.
+3. **Servicio privado personalizado**: CTA independiente en inicio, rutas especiales, turismo, varias paradas/días, vehículo a disposición; formulario de SOLICITUD DE COTIZACIÓN, no cobro inmediato. Pantalla `private-request`. No confundir con modalidad 2.
+
+## Experiencia / módulos
+Web móvil primero, PWA instalable; buscador por ciudades, fecha, personas; filtros auto/van/SUV; perfiles de operadoras, panel operador, flota, reservas, ventas, abordajes, boletos QR, WhatsApp preparado, seguridad/SOS, centro de operaciones y seguimiento de viaje compartible. Diferenciación Standard/Premium: perfiles básicos frente a perfiles enriquecidos, fotografías, valoraciones, comentarios y capacidades de reputación/comunidad. Verificar alcance realmente implementado antes de asumir funcionalidades terminadas. No destruir UI aprobada ni funcionalidades existentes durante migración.
+Seguimiento demo Cuenca–Guayaquil con Leaflet/OSM, geometría versionada, simulador de reloj servidor, polling ~1,8s y render local. Enlaces de seguimiento SIN CADUCIDAD 24h, incluidos registros históricos. Distintos permisos para controlador, observador y operaciones; SOS es simulado, no contacto real con emergencias. En producción sustituir simulador por proveedor GPS autorizado, con permisos, seguridad y optimización de tráfico. Evitar polling excesivo.
+
+## Arquitectura actual verificada en código/documentación
+Frontend sin build: `index.html`, `app.js`, `bookings.mjs`, `bookings.css`, `institution.mjs`, `trip-live.mjs`, `sw.js`, `assets/`. Versionar caché PWA al cambiar assets.
+Backend demo: `sync-service/worker.mjs` + `sync-service/bookings.mjs` + `sync-service/institution.mjs`, bundler `sync-service/build.mjs` produce `sync-service/out/worker.mjs`; R2 binding `BUCKET`. Núcleo compartido `shared/trip-core.mjs`, `shared/route.json`, `shared/live-config.mjs`. R2 almacena ledger de marketplace `marketplace/demo-v1.json` y viajes `trips/<id>.json`, escrituras condicionales e idempotencia demo. NO es base de datos comercial; ledger monolítico tiene límite de 2500 reservas y contención. No migrar producción sin modelo relacional.
+Consultar `README.md`, `LIVE-DEMO.md`, `BOOKINGS-DEMO.md` y tests existentes.
+
+## Arquitectura objetivo propuesta — NO desplegada ni decisión irreversible
+Mantener frontend/PWA, Cloudflare Workers como API, Cloudflare D1 (SQLite) como primera opción para datos relacionales, R2 para archivos, secretos en Cloudflare, autenticación y autorización por roles, registro/auditoría, backups, métricas, control de concurrencia e idempotencia. Evaluar límites reales antes de escalar. No introducir Kubernetes, VPS, microservicios o Supabase sin motivo económico/técnico. Diseñar migración gradual sin perder registros ni URLs. Separar entorno demo y producción, secretos, usuarios y pagos. Seguridad, protección de datos y obligaciones comerciales/transportistas de Ecuador pendientes de validación.
+Entidades candidatas: users, operators, drivers, vehicles, route_offers, departures, seats, bookings, booking_seats, payments, payment_events, refunds, settlements, payouts, private_requests, reviews, audit_events, tracking_sessions. Modelo final pendiente.
+
+## Pagos — decisiones y hallazgos a 2026-11-13
+**PRIORIDAD ABSOLUTA: minimizar costo TOTAL** (porcentaje + cargo fijo + IVA + inscripción + mensualidad/mínimos + retiro/dispersión + contracargos + operación), manteniendo seguridad y confiabilidad. Split payment es DESEABLE pero NO requisito: RutasEC puede recaudar y liquidar manual o periódicamente a operadoras si el contrato del proveedor y obligaciones regulatorias lo permiten. No sesgar selección por split. Comparar tarjetas crédito/débito por separado y boletos de USD 10, 15, 20, 30; investigar fuentes oficiales y terceros y solicitar ofertas contractuales; NO tratar cifras históricas o de comparadores como tarifas vigentes.
+
+**Kushki**: candidato para tarjetas, eventualmente transferencias; tarifa referencial externa 2,95% + USD 0,25 por operación, NO confirmada contractualmente. Condiciones generales contemplan mínimos mensuales negociables; se encontraron referencias históricas de USD 250 y condiciones generales con USD 1000; NO afirmar que se aplican a RutasEC. Afiliación y mínimos requieren propuesta escrita. No obligar a usar Kushki para transferencias.
+**Datafast Dataweb**: cobro web sin datáfono; distinto de Datalink. Referencias externas históricas para Dataweb: USD 80 configuración, USD 12/mes, USD 0,20/operación más comisión del banco adquirente. Referencias históricas de comisiones: débito 2%, crédito 4,02%; NO garantizadas para 2026. Datalink también publica cargos pero NO mezclar productos. Comprobar costos actuales Dataweb/adquirente. Los USD 0,20 afectan boletos pequeños.
+**Nuvei/Paymentez**: referencia externa 2,9% + USD 0,30; **PlacetoPay**: referencia externa 2,49% + USD 0,40; no son ofertas verificadas. **PayPhone**: referencia pública 5% + IVA sobre comisión; percibido caro; no priorizar salvo mejora comercial.
+**Deuna**: opción DIRECTA para cobros de transferencias/billetera, separada de pasarela de tarjetas; referencia comercial 2% (verificar condiciones). Enlace de cobro abre Deuna en el mismo teléfono, sin escanear QR; QR interoperable con algunas apps de otros bancos/cooperativas NO implica enlace universal entre bancos. API/webhooks y elegibilidad comercial deben confirmarse en contrato/documentación de integración. No forzar QR en mismo dispositivo; ofrecer enlace/deep link cuando sea compatible, y alternativas de transferencia bancaria. Pago manual a cuenta bancaria también posible, pero comprobante no prueba abono: confirmación bancaria antes de emitir boleto. Enlace de pago puede expirar sin que expire boleto/seguimiento.
+No se ha contratado proveedor ni activado cobro real. Diseñar interfaz de proveedores de pago desacoplada y ledger de conciliación; webhooks verificados, no confiar en frontend para confirmar.
+
+## Migración — orden de trabajo
+1. Auditoría código/repositorio, rutas, endpoints, frontend y Worker realmente desplegado; pruebas y fallos existentes. Distinguir implementación GitHub de despliegue Cloudflare.
+2. Congelar snapshot de referencia y contratos funcionales; preservar demo y datos R2.
+3. Diseñar D1, migración idempotente de ledger R2, roles/autenticación, inventario transaccional, separación de ofertas privadas vs salidas compartidas.
+4. Integrar proveedor de tarjetas y Deuna/transferencias según costos comerciales confirmados; sandbox primero, conciliación y liquidaciones.
+5. Integrar operaciones reales, GPS, notificaciones, reputación, Standard/Premium y controles de privacidad.
+6. Pruebas automatizadas, concurrencia entre dispositivos, carga, seguridad, backups, rollback y piloto progresivo.
+No afirmar completado lo que no se ha verificado. Cambios de backend requieren despliegue Cloudflare explícito. Nunca usar pagos reales o datos personales reales en demo pública.
+
+## Reglas para agentes / persistencia
+Antes de trabajar leer este archivo y snapshot más reciente en `docs/snapshots/`; consultar archivos fuente y tests, no confiar solo en narrativa. Registrar decisiones nuevas y evidencias, sin inventar estados. Cada hito crear snapshot fechado con commit base, estado verificado/no verificado, cambios, riesgos, decisiones y siguiente paso. No sobrescribir snapshots históricos. Actualizar esta memoria si cambia arquitectura/negocio; no incluir credenciales, tokens ni datos personales. Preservar decisiones de producto y evitar regresiones. 
