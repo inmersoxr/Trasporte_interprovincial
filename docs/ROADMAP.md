@@ -3,7 +3,7 @@ Fecha: 2026-11-14
 Estado: plan de trabajo; NO constituye verificación de fases completadas.
 
 ## Principios
-Preservar UI aprobada y demo, tres modalidades diferenciadas, bajo costo total, despliegue progresivo, snapshots por hito. Consultar PROJECT_MEMORY.md y AGENTS.md. Cloudflare Workers + D1 + R2, GitHub Pages, sin cobros reales hasta autorización y pruebas.
+Preservar UI aprobada y demo, tres modalidades diferenciadas, bajo costo total, despliegue progresivo, snapshots por hito. Consultar PROJECT_MEMORY.md y AGENTS.md. Cloudflare Workers + D1 + R2; migración controlada del frontend a Cloudflare Workers Static Assets, conservando GitHub Pages como demo intacta; sin cobros reales hasta autorización y pruebas.
 
 ## Fases y criterios de aceptación
 
@@ -22,8 +22,8 @@ Definir contratos internos de pago, estados, ledger, conciliación y liquidació
 ### 5. Operaciones de transporte (5–8 días)
 Panel operadora, manifiesto de pasajeros, boleto QR verificable, abordaje, estados de viaje, cancelaciones, avisos, SOS real solo cuando exista integración adecuada; seguimiento GPS autorizado con consentimiento y retención definida. Mantener simulador y enlaces demo persistentes.
 
-### 6. Standard/Premium y reputación (4–7 días)
-Perfiles básicos gratuitos, perfiles enriquecidos, imágenes, comentarios, calificaciones vinculadas a viajes verificables, moderación y prevención de abuso; verificar y corregir controles que se desactivan solos y CTA privado que no responde.
+### 6. Standard y reputación (4–7 días orientativos)
+Perfiles básicos de operadoras, reputación y calificaciones vinculadas a viajes verificables, moderación y prevención de abuso; verificar CTA privado y controles de Standard. NO desarrollar Premium en esta fase: su demo se conserva íntegro y el SaaS Premium se planificará por separado una vez completado Standard.
 
 ### 7. Piloto funcional sin pasarela (2–4 semanas orientativas)
 Onboarding de pocas operadoras, rutas reales, reservas y boletos de prueba, seguimiento, operaciones, soporte, requisitos legales y protección de datos. Pagos estrictamente simulados; no cobrar dinero real ni presentar la prueba como venta comercial.
@@ -32,7 +32,7 @@ Onboarding de pocas operadoras, rutas reales, reservas y boletos de prueba, segu
 Solo cuando el resto de la plataforma esté probado: cotizar y elegir proveedores por costo total; integrar Deuna y/o tarjetas/transferencias según contratos; webhooks seguros, idempotencia, conciliación, reembolsos y liquidaciones. Probar en sandbox y realizar piloto de cobros autorizado antes de habilitar producción comercial. Separar producción, staging y demo; monitoreo, backups, alertas y presupuesto. Workers Paid solo si lo exige la operación.
 
 ## Dependencias
-Fase 1 precede a identidad/reservas; la pasarela de pagos se implementa únicamente al final, tras completar backend, identidades, reservas, operaciones, Premium y piloto funcional sin cobros. Ninguna fase anterior debe activar pagos reales.
+Fase 1 precede a identidad/reservas; la pasarela de pagos se implementa únicamente al final, tras completar backend, identidades, reservas, operaciones Standard y piloto funcional sin cobros; Premium SaaS es etapa posterior independiente. Ninguna fase anterior debe activar pagos reales.
 
 ## Entregables por fase
 Código y tests, evidencia de ejecución, URL de entorno, estado de despliegue, costo estimado/real, riesgos, plan de rollback, snapshot fechado en docs/snapshots y actualización de PROJECT_MEMORY.md.
@@ -58,3 +58,18 @@ Premium se construirá posteriormente como producto SaaS empresarial modular SEP
 
 ## Regla innegociable 2026-11-14 — preservar demo funcional
 NO cambiar, retirar, desactivar, romper ni reemplazar el demo público actual al desarrollar Standard ni al posponer Premium. Mantener operativos todos los flujos existentes, incluyendo simulaciones, mapas, paneles Premium demostrativos, navegación, selección de planes, datos ficticios, reservas y seguimiento de prueba. Desarrollar Standard real de forma compatible/aislada, con feature flags o rutas separadas cuando corresponda, sin sustituir demo por implementaciones incompletas. Antes de desplegar verificar regresión de todos los flujos demo y contar con rollback. Premium se desarrolla posteriormente como SaaS separado; su demo actual permanece disponible y funcional durante todas las fases. Esta regla prevalece sobre cualquier indicación previa que pudiera implicar retirar o alterar el demo.
+
+## Fase transversal de infraestructura — frontend en Cloudflare (decisión 2026-11-14)
+**Objetivo:** publicar una versión independiente del frontend/PWA de RutasEC en **Cloudflare Workers Static Assets** y conectar progresivamente sus APIs Workers/D1/R2, manteniendo **GitHub como fuente de código** y el **GitHub Pages actual como demo público funcional, sin cambios**. No confundir preparar o registrar esta tarea con desplegarla.
+
+**Momento:** ejecutar tras verificar el backend de desarrollo de Fase 1, antes de considerar completado el piloto Standard. Puede realizarse en paralelo con el desarrollo Standard, pero nunca desplazar las prioridades ni tocar el demo.
+
+**Implementación planificada:**
+1. Auditar rutas absolutas/relativas, PWA/service worker, manifest, enlaces de seguimiento, endpoints, CORS, assets y configuración de caché de la versión actual; levantar línea base y pruebas de regresión.
+2. Preparar configuración Wrangler y directorio de publicación para Workers Static Assets, sin modificar ni reemplazar la configuración GitHub Pages; elegir nombre Worker/URL de staging independientes.
+3. Conectar el repositorio GitHub al build de Cloudflare o CI equivalente, con despliegues versionados, entorno staging y rollback. Evitar despliegue automático sobre el demo.
+4. Mantener backend demo y backend D1 de desarrollo separados; enrutar frontend Cloudflare a APIs correctas mediante configuración por entorno/feature flags. No mezclar datos reales y ficticios, ni activar pagos reales.
+5. Validar equivalencia funcional del demo en el nuevo dominio: Standard, Premium interactivo, mapas, simulador, reservas, selección de asientos, QR, enlaces persistentes de seguimiento, navegación móvil y PWA. Verificar persistencia, permisos y concurrencia de Standard según su fase.
+6. Solo tras pruebas satisfactorias, adoptar la URL Cloudflare como entorno principal de desarrollo/piloto Standard. Conservar la URL GitHub Pages operativa como demo público y fallback; no redirigir ni apagarla. Registrar URLs, resultados de pruebas, consumo/costos y procedimiento de rollback en snapshot.
+
+**Criterios de aceptación:** URL Cloudflare accesible y verificable, build reproducible desde GitHub, paridad funcional demo confirmada, frontend Standard conectado al backend de su entorno, GitHub Pages intacto, rollback probado y costos dentro de cuota objetivo. No afirmar despliegue realizado hasta comprobarlo. Documentación oficial: https://developers.cloudflare.com/workers/static-assets/ y https://developers.cloudflare.com/workers/ci-cd/builds/.
