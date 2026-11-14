@@ -1,0 +1,20 @@
+{
+  "name": "rutasec-api-dev",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "rutasec-dev",
+      "database_id": "40c86354-202d-4b69-b7f1-9cb604932a79",
+      "migrations_dir": "../sync-service/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "rutasec-dev-files"
+    }
+  ]
+}
