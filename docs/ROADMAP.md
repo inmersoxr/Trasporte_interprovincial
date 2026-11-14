@@ -14,7 +14,7 @@ Worker separado, D1 dev con migraciones, R2 preservado, API operadoras/vehículo
 Registro/inicio sesión seguro, recuperación, roles pasajero/operadora/administrador/conductor, aislamiento por operadora, sesiones y auditoría. Pruebas de autorización negativas.
 
 ### 3. Motor de reservas (4–7 días)
-Compartido: inventario y bloqueo temporal atómico, sin doble venta, expiración de holds; privado tarifa fija: vehículo completo, fecha/hora propia, sin usar asientos compartidos; personalizado: solicitud de cotización, respuesta y aceptación. Pruebas de concurrencia, cancelación y reintentos.
+Compartido: inventario y bloqueo temporal atómico, sin doble venta, expiración de holds; privado tarifa fija: vehículo completo, fecha/hora propia, sin usar asientos compartidos; personalizado: solicitud inmediata o programada; alertas a operadores elegibles disponibles; múltiples propuestas de precio y vehículo; comparación por perfil, reputación y precio; elección libre del pasajero (NO adjudicar al primero); confirmación de disponibilidad y reserva. Pruebas de concurrencia, cancelación y reintentos.
 
 ### 4. Preparación de pagos (sin pasarela ni cobros reales)
 Definir contratos internos de pago, estados, ledger, conciliación y liquidación simulada. No integrar, contratar ni activar pasarelas de pago. La integración de Deuna, tarjetas y transferencias queda expresamente para la ÚLTIMA fase, después del piloto funcional sin cobros reales.
@@ -39,3 +39,6 @@ Código y tests, evidencia de ejecución, URL de entorno, estado de despliegue, 
 
 ## Próxima acción después de Work
 Leer el snapshot que Work deje; contrastar endpoint desplegado y D1 contra repo, ejecutar pruebas de aceptación de Fase 1, corregir fallos antes de iniciar Fase 2. La pasarela queda para la última fase.
+
+## Cambio de alcance 2026-11-14 — viajes personalizados
+La modalidad personalizada funciona como mercado competitivo bajo demanda, parecido a la solicitud de Uber pero sin asignación automática: alerta a operadores disponibles, ofertas simultáneas, precio propuesto por cada operador y selección explícita por el cliente según perfiles, valoraciones y vehículos. El primer oferente NO tiene prioridad automática. Backend requiere solicitudes, ofertas, elegibilidad/disponibilidad, notificaciones, aceptación atómica y estados; no requiere pasarela de pagos hasta fase final.
