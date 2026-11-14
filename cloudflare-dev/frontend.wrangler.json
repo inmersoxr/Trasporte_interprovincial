@@ -1,0 +1,16 @@
+{
+  "name": "rutasec-web-dev",
+  "main": "out/worker.mjs",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "out/public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/standard-api/*"],
+    "not_found_handling": "404-page"
+  },
+  "services": [{ "binding": "STANDARD_API", "service": "rutasec-api-dev" }],
+  "r2_buckets": [{ "binding": "PARITY_BUCKET", "bucket_name": "rutasec-parity-dev-files" }],
+  "build": { "command": "node build-frontend.mjs" },
+  "upload_source_maps": false
+}

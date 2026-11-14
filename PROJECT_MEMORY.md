@@ -1,4 +1,8 @@
 # RutasEC — Memoria persistente del repositorio
+Verificación 2026-11-14 en Codex Cloud: J1 de infraestructura verificada tras habilitar acceso y R2. Worker `https://rutasec-api-dev.drbrownlabs.workers.dev/health`, D1 `rutasec-dev`, bucket `rutasec-dev-files`; esquema 0001 aplicado, persistencia D1/R2 y rollback de fuente probados. Endpoint de salud únicamente: NO es todavía API funcional Standard ni cierre de toda la Fase 1 comercial; APIs por implementar en J3–J7. Demo intacto. Evidencia: `docs/snapshots/2026-11-14-j1-infrastructure-deployed.md`. El bloqueo de credenciales del snapshot anterior quedó resuelto. Sin secretos en repositorio.
+
+J2 en curso: frontend Static Assets desplegado en `https://rutasec-web-dev.drbrownlabs.workers.dev/`, con paridad demo en bucket exclusivo `rutasec-parity-dev-files`, conexión al health D1 por service binding `/standard-api/health`, PWA/API aisladas y rollback Static Assets observado. Regresión Chromium con dos sesiones aprobada; 19 pruebas locales aprobadas. Pendiente verificar despliegue desde GitHub Actions y sus secretos de entorno antes de cerrar J2 y avanzar a J3. Ver `docs/snapshots/2026-11-14-j2-static-assets-staging.md`. La raíz sigue siendo demostración R2, no reservas D1 Standard funcionales.
+
 Actualizado: 2026-11-13. Fuente de verdad documental para agentes y desarrolladores. Leer antes de modificar código. Snapshot inicial: `docs/snapshots/2026-11-13-project-baseline.md`.
 
 ## Identidad y estado
