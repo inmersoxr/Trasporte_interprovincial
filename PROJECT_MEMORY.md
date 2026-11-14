@@ -50,3 +50,6 @@ Antes de trabajar leer este archivo y snapshot más reciente en `docs/snapshots/
 
 ## Decisión 2026-11-14 — despacho competitivo de viajes personalizados
 No implementar adjudicación por orden de llegada ni aceptación automática. Estados sugeridos: requested → broadcasting → receiving_offers → selected → operator_confirmed → booked, con cancelación/expiración. Notificaciones a operadores elegibles y disponibles; precio y condiciones definidos por cada operador. Respuesta múltiple, elección por pasajero apoyada en perfil/reputación. Definir plazos, cobertura, reglas de edición/retiro y protección contra spam durante implementación. Mantener pagos simulados hasta fase final del roadmap.
+
+## Decisión 2026-11-14 — visualización de ofertas en tiempo real
+Las propuestas de operadores para viajes personalizados aparecen al pasajero **conforme llegan**, sin esperar ventana de cierre ni reunir un lote. Cada nueva oferta se incorpora inmediatamente a la lista y se puede comparar con las anteriores. El pasajero puede seleccionar cualquier oferta vigente; no existe prioridad automática para el primero. Actualizar mediante eventos en tiempo real o polling razonable con fallback, mostrando estados de conexión y disponibilidad. Revalidar oferta y disponibilidad al confirmar para evitar adjudicaciones duplicadas. Pagos continúan simulados hasta la última fase.
