@@ -3,6 +3,8 @@ Verificación 2026-11-14 en Codex Cloud: J1 de infraestructura verificada tras h
 
 J2 en curso: frontend Static Assets desplegado en `https://rutasec-web-dev.drbrownlabs.workers.dev/`, con paridad demo en bucket exclusivo `rutasec-parity-dev-files`, conexión al health D1 por service binding `/standard-api/health`, PWA/API aisladas y rollback Static Assets observado. Regresión Chromium con dos sesiones aprobada; 19 pruebas locales aprobadas. Pendiente verificar despliegue desde GitHub Actions y sus secretos de entorno antes de cerrar J2 y avanzar a J3. Ver `docs/snapshots/2026-11-14-j2-static-assets-staging.md`. La raíz sigue siendo demostración R2, no reservas D1 Standard funcionales.
 
+Bloqueo externo J2 confirmado en GitHub Actions run `43596575209`: job verify aprobado; deploy falló en Check required credentials con `Missing CLOUDFLARE_API_TOKEN secret`, ambas variables Cloudflare vacías. Publicado en rama `codex/cloudflare-standard-junior`, commit remoto `9f520dde453ba814b94bed619c7edf0ecee31be7`, PR borrador https://github.com/inmersoxr/Trasporte_interprovincial/pull/1. Falta administrador configurar secretos GitHub y reejecutar CI; herramientas actuales no administran Actions secrets. No avanzar J3–J8 hasta cierre J2. Evidencia y pasos exactos en `docs/snapshots/2026-11-14-j2-z-ci-credentials-blocked.md`.
+
 Actualizado: 2026-11-13. Fuente de verdad documental para agentes y desarrolladores. Leer antes de modificar código. Snapshot inicial: `docs/snapshots/2026-11-13-project-baseline.md`.
 
 ## Identidad y estado
