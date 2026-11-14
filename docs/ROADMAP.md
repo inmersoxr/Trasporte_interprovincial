@@ -73,3 +73,21 @@ NO cambiar, retirar, desactivar, romper ni reemplazar el demo público actual al
 6. Solo tras pruebas satisfactorias, adoptar la URL Cloudflare como entorno principal de desarrollo/piloto Standard. Conservar la URL GitHub Pages operativa como demo público y fallback; no redirigir ni apagarla. Registrar URLs, resultados de pruebas, consumo/costos y procedimiento de rollback en snapshot.
 
 **Criterios de aceptación:** URL Cloudflare accesible y verificable, build reproducible desde GitHub, paridad funcional demo confirmada, frontend Standard conectado al backend de su entorno, GitHub Pages intacto, rollback probado y costos dentro de cuota objetivo. No afirmar despliegue realizado hasta comprobarlo. Documentación oficial: https://developers.cloudflare.com/workers/static-assets/ y https://developers.cloudflare.com/workers/ci-cd/builds/.
+
+
+## Orden operativo vigente — Junior → revisión Senior (2026-11-14)
+Este orden prevalece sobre estimaciones de calendario y propuestas anteriores que mezclaban Standard/Premium o adelantaban pagos. No significa que las fases estén terminadas. Consultar protocolo obligatorio en `AGENTS.md`.
+
+**Bloque Junior (una fase a la vez):**
+- J1. Confirmar el estado actual del trabajo Cloudflare Work: D1 dev creada o no, migraciones ejecutadas o no, Worker desplegado o no, bindings, URL, commits, pruebas, bloqueo de autenticación y rollback. La última sesión recuperada terminó con acceso Cloudflare expirado y sin despliegue confirmado; verificar de nuevo. No duplicar trabajo paralelo.
+- J2. Publicar frontend de desarrollo en Cloudflare Workers Static Assets, independiente de GitHub Pages, con configuración API por entorno y paridad de demo verificada; mantener demo/R2 intactos. Si J1 no está verificada, no marcar J2 completada.
+- J3. Conectar Standard: operadoras, vehículos, rutas, salidas, catálogo, persistencia y controles funcionales.
+- J4. Reservas compartidas, asientos, boletos QR, cancelaciones y pagos exclusivamente simulados; verificar concurrencia e idempotencia.
+- J5. Privados fijos con fecha/hora elegidas y disponibilidad exclusiva de vehículo, sin ocupar asientos compartidos.
+- J6. Privados personalizados: varias ofertas simultáneas visibles conforme llegan, comparación y elección libre, revalidación al aceptar, sin prioridad al primero.
+- J7. Operaciones básicas: manifiestos, abordaje, estados, seguimiento, historial, alertas/notificaciones simuladas identificadas como tales.
+- J8. Pruebas de extremo a extremo, dos sesiones, dispositivos móviles, persistencia, regresión Standard/Premium demo, documentación y handoff.
+
+**Bloque Senior (solo después de J8):** auditoría integral de arquitectura, seguridad, privacidad, calidad, rendimiento, deuda técnica y escalabilidad; revisión crítica de decisiones y refactorización justificada. Posteriormente planificar Premium empresarial por separado. Integración de pasarela y cobros reales únicamente en última fase autorizada y tras piloto, sin bloquear el Standard funcional.
+
+**Cierre obligatorio por fase:** pruebas ejecutadas y resultados, código/commit, URL real y entorno, limitaciones, rollback, snapshot, estado `pendiente / en curso / verificado`. Un commit no es un deploy; una pantalla no es un flujo funcional. Mantener controles mínimos de integridad, autorización y protección de datos durante Junior; posponer solo el endurecimiento avanzado, nunca fallos críticos.
