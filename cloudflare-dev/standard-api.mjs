@@ -60,7 +60,7 @@ export async function handleStandard(request, env) {
   if (path === '/api/catalog' && method === 'GET') {
     return { departures: (await rows(env.DB, catalogSQL, [new Date().toISOString()])).map(({reservedSeatsJson,...d})=>({...d,reservedSeats:JSON.parse(reservedSeatsJson||'[]')})),
       routeOffers: await rows(env.DB, `SELECT r.id,r.operator_id AS operatorId,r.origin,r.destination,r.service_type AS serviceType,
-       r.price_cents AS priceCents,o.display_name AS operatorName,v.id AS vehicleId,v.model AS vehicle,v.type AS vehicleType,v.capacity
+       r.price_cents AS priceCents,o.display_name AS operatorName,v.id AS vehicleId,v.model AS vehicle,v.type AS vehicleType,v.capacity,rv.duration_minutes AS durationMinutes
        FROM route_offers r JOIN operators o ON o.id=r.operator_id JOIN standard_route_vehicles rv ON rv.offer_id=r.id
        JOIN vehicles v ON v.id=rv.vehicle_id WHERE r.active=1 AND o.status='approved' AND v.status='active' LIMIT 200`),
       environment: 'development', payments: 'simulated' };
@@ -71,7 +71,7 @@ export async function handleStandard(request, env) {
       stmt(env.DB, 'INSERT INTO standard_sessions(token_hash,user_id) VALUES(?,?)', [await hash(token), id])]);
     return { token, userId: id, authentication: 'development-capability' };
   }
-  if(path.startsWith('/api/bookings'))return handleReservations(request,env,{identity,stmt,rows,failure,command,integer,text});
+  if(path.startsWith('/api/bookings')||path==='/api/private-route-bookings')return handleReservations(request,env,{identity,stmt,rows,failure,command,integer,text});
   if (!['/api/operator', '/api/operators', '/api/vehicles', '/api/route-offers', '/api/departures'].includes(path)) return null;
   const user = await identity(request, env.DB);
   if (path === '/api/operator' && method === 'GET') {
@@ -107,7 +107,7 @@ export async function handleStandard(request, env) {
       if (!vehicle) throw failure('Vehículo ajeno o no disponible', 403);
       saved = await command(env.DB, user, body, 'offer', [stmt(env.DB, 'INSERT INTO route_offers(id,operator_id,origin,destination,service_type,vehicle_type,price_cents) VALUES(?,?,?,?,?,?,?)',
         [id, body.operatorId, origin, destination, body.serviceType, vehicle.type, integer(body.priceCents, 1, 1000000, 'Precio en centavos')]),
-        stmt(env.DB, 'INSERT INTO standard_route_vehicles(offer_id,vehicle_id) VALUES(?,?)', [id, vehicle.id])], id);
+        stmt(env.DB, 'INSERT INTO standard_route_vehicles(offer_id,vehicle_id,duration_minutes) VALUES(?,?,?)', [id, vehicle.id,integer(body.durationMinutes??240,1,2880,'Duración')])], id);
     }
     if (path === '/api/departures') {
       const offer = await stmt(env.DB, `SELECT r.*,rv.vehicle_id FROM route_offers r JOIN standard_route_vehicles rv ON rv.offer_id=r.id

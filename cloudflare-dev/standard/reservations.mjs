@@ -1,13 +1,32 @@
 import {api,status} from './app.mjs';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let selected,requestId;
+let selected,requestId,fixedOffer,fixedRequestId;
 function enhance(data){
  for(const d of data.departures){
   const article=document.querySelector(`[data-departure="${d.id}"]`);if(!article||article.querySelector('button'))continue;
   const button=document.createElement('button');button.className='yellow';button.textContent=`Reservar · ${d.available} disponibles`;
   button.disabled=d.available<=0;button.onclick=()=>checkout(d);article.append(button);
  }
+ for(const r of data.routeOffers.filter(r=>r.serviceType==='private_fixed')){
+  const article=document.querySelector(`[data-private-route="${r.id}"]`);if(!article||article.querySelector('button'))continue;
+  const button=document.createElement('button');button.className='yellow';button.textContent='Reservar vehículo completo';
+  button.onclick=()=>{
+   if(!localStorage.getItem('rutasec-standard-session')){status('Crea un acceso de desarrollo para reservar');return;}
+   fixedOffer=r;fixedRequestId=crypto.randomUUID();$('privateError').textContent='';
+   $('privateSummary').textContent=`${r.origin} → ${r.destination} · $${(r.priceCents/100).toFixed(2)} por vehículo · ${r.durationMinutes} min · hasta ${r.capacity} pasajeros`;
+   $('privateReserveForm').querySelector('input[type="checkbox"]').checked=false;$('privateCheckout').showModal();
+  };article.append(button);
+ }
 }
+$('closePrivate').onclick=()=>$('privateCheckout').close();
+$('privateReserveForm').onsubmit=async e=>{
+ e.preventDefault();const form=e.target,button=form.querySelector('button');button.disabled=true;
+ try{
+  await api('/private-route-bookings',{offerId:fixedOffer.id,serviceAt:new Date(form.elements.serviceAt.value).toISOString(),
+   passengers:form.elements.passengers.value.split('\n').map(n=>n.trim()).filter(Boolean),quotedPriceCents:fixedOffer.priceCents,requestId:fixedRequestId});
+  $('privateCheckout').close();status('Privado confirmado en D1 · pago SIMULADO');await loadBookings();
+ }catch(error){$('privateError').textContent=error.message;}finally{button.disabled=false;}
+};
 function checkout(d){
  if(!localStorage.getItem('rutasec-standard-session')){status('Crea un acceso de desarrollo para reservar');return;}
  selected=d;requestId=crypto.randomUUID();$('checkoutSummary').textContent=`${d.origin} → ${d.destination} · $${(d.priceCents/100).toFixed(2)} por asiento`;

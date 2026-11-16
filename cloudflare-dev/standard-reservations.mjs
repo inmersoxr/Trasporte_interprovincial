@@ -1,7 +1,9 @@
+import {createPrivate} from './standard-private.mjs';
 export async function handleReservations(request, env, core) {
   const { identity, stmt, rows, failure, command, integer, text } = core;
   const user = await identity(request, env.DB), path = new URL(request.url).pathname;
-  const match = path.match(/^\/api\/bookings(?:\/([0-9a-f-]{36}))?$/i);
+  const fixed=path==='/api/private-route-bookings';
+  const match = fixed?[path,undefined]:path.match(/^\/api\/bookings(?:\/([0-9a-f-]{36}))?$/i);
   if (!match) throw failure('Recurso no encontrado', 404);
   const db = env.DB;
   async function view(id) {
@@ -15,7 +17,7 @@ export async function handleReservations(request, env, core) {
     return {...b,simulated:true,paymentLabel:b.paymentStatus==='refunded'?'Reembolso SIMULADO':'Pago SIMULADO confirmado',
       qrCodes:b.passengers.map(p=>`RUTASEC-STANDARD:${b.id}:${p.position}`)};
   }
-  if(request.method==='GET') {
+  if(request.method==='GET'&&!fixed) {
     if(match[1])return {booking:await view(match[1])};
     const ids=await rows(db,'SELECT id FROM bookings WHERE customer_id=? ORDER BY created_at DESC LIMIT 100',[user.id]);
     return {bookings:await Promise.all(ids.map(b=>view(b.id)))};
@@ -35,11 +37,13 @@ export async function handleReservations(request, env, core) {
       await db.batch([
         stmt(db,"UPDATE bookings SET status='cancelled' WHERE id=? AND status='confirmed'",[b.id]),
         stmt(db,"UPDATE seat_claims SET status='released' WHERE booking_id=? AND EXISTS(SELECT 1 FROM bookings WHERE id=? AND status='cancelled')",[b.id,b.id]),
+        stmt(db,"UPDATE standard_vehicle_slots SET active=0 WHERE booking_id=? AND EXISTS(SELECT 1 FROM bookings WHERE id=? AND status='cancelled')",[b.id,b.id]),
         stmt(db,"UPDATE payments SET status='refunded' WHERE booking_id=? AND status='paid' AND EXISTS(SELECT 1 FROM bookings WHERE id=? AND status='cancelled')",[b.id,b.id]),
         stmt(db,"INSERT OR IGNORE INTO payment_events(id,payment_id,provider_event_id,kind,payload_json) SELECT ?,id,?,'simulated_refund','{}' FROM payments WHERE booking_id=? AND status='refunded'",[crypto.randomUUID(),'cancel:'+b.id,b.id])]);
     }catch(error){if(String(error.message).includes('already_boarded'))throw failure('Pasajero ya embarcado',409);throw error;}
     return {booking:await view(b.id)};
   }
+  if(fixed)return {booking:await view(await createPrivate(db,user,body,core))};
   if(typeof body.departureId!=='string')throw failure('Salida requerida');
   const d=await stmt(db,`SELECT d.*,r.operator_id,r.price_cents,v.capacity FROM departures d JOIN route_offers r ON r.id=d.offer_id
     JOIN vehicles v ON v.id=d.vehicle_id WHERE d.id=? AND d.status='published' AND r.active=1 AND v.status='active'`,[body.departureId]).first();
