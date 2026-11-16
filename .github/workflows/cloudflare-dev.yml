@@ -95,9 +95,8 @@ jobs:
           WRANGLER_SEND_METRICS: 'false'
       - run: curl --fail --retry 3 https://rutasec-web-dev.drbrownlabs.workers.dev/standard-api/health
   restore-check:
-    # The push marker is a one-time trigger for the user's explicit authorization.
-    # Remove that trigger after recording the result; future checks are manual.
-    if: (github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-d1-restore-authorized]')) || (github.event_name == 'workflow_dispatch' && inputs.verify_restore)
+    # Explicit opt-in only; no automatic exports on branch/PR updates.
+    if: github.event_name == 'workflow_dispatch' && inputs.verify_restore
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 5
