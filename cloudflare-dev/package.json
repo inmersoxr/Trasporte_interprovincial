@@ -11,7 +11,8 @@
     "test:market": "node tests/market.e2e.mjs",
     "test:operations": "node tests/operations.e2e.mjs",
     "test:regression": "node tests/regression.e2e.mjs",
-    "deploy:frontend": "wrangler deploy --config frontend.wrangler.json"
+    "deploy:frontend": "wrangler deploy --config frontend.wrangler.json",
+    "test:premium": "node tests/premium.e2e.mjs"
   },
   "devDependencies": {
     "miniflare": "5.20261113.0-beta",

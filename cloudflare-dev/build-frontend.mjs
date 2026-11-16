@@ -16,6 +16,7 @@ for (const file of await readdir(root)) {
 for (const dir of ['assets', 'vendor', 'shared']) {
   await cp(new URL(dir, root), new URL('public/' + dir, output), { recursive: true });
 }
+await cp(new URL('premium/', import.meta.url), new URL('public/premium/', output), { recursive: true });
 await cp(new URL('standard/', import.meta.url), new URL('public/standard/', output), { recursive: true });
 await writeFile(new URL('public/bookings.mjs', output),
   patchBookings(await readFile(new URL('bookings.mjs', root), 'utf8')));

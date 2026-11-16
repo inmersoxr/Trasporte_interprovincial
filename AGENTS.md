@@ -1,4 +1,7 @@
 # Instrucciones persistentes — RutasEC
+## Orden vigente por instrucción expresa del usuario
+Tras J1–J8 funcionales, el usuario indicó «Salta esa parte y comienza con la parte premium»: posponer la revisión Senior y comenzar Premium empresarial por hitos verificables. Esta instrucción reemplaza únicamente el orden previo que exigía revisión Senior antes de Premium; no elimina controles mínimos de autorización, aislamiento, integridad, pruebas ni preservación de Standard/demo. Pagos reales siguen fuera de alcance. Consultar docs/PREMIUM_ROADMAP.md. No afirmar que la revisión Senior se realizó ni que el entorno es comercial.
+
 Antes de cualquier tarea leer `PROJECT_MEMORY.md` y el snapshot más reciente de `docs/snapshots/`. Consultar `README.md`, `LIVE-DEMO.md`, `BOOKINGS-DEMO.md` y código fuente relevante. Priorizar costo total, fiabilidad, no regresiones y migración gradual de demo a producción. No inventar pruebas ni despliegues. No asumir que GitHub actualiza Cloudflare. Mantener tres modalidades distintas (compartido por asiento; privado por ruta con precio fijo; privado personalizado por cotización). Split payment es opcional, no requisito. Tarifas de pasarelas son referenciales hasta cotización escrita. No exponer secretos ni datos personales. Documentar cada hito en snapshot fechado, preservar anteriores y actualizar `PROJECT_MEMORY.md` al tomar decisiones.
 
 

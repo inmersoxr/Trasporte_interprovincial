@@ -4,12 +4,12 @@ import { readFile } from 'node:fs/promises';
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 
 test('D1 Standard catalog: authorization, persistence, idempotency and vehicle scheduling', async () => {
-  const mf = new Miniflare(convertV4MiniflareOptions({ modules: ['worker.mjs','standard-api.mjs','standard-reservations.mjs','standard-private.mjs','standard-market.mjs','standard-operations.mjs','out/reference-route.mjs','../shared/trip-core.mjs'].map(file => ({
+  const mf = new Miniflare(convertV4MiniflareOptions({ modules: ['worker.mjs','premium-api.mjs','standard-api.mjs','standard-reservations.mjs','standard-private.mjs','standard-market.mjs','standard-operations.mjs','out/reference-route.mjs','../shared/trip-core.mjs'].map(file => ({
     type: 'ESModule', path: new URL('../' + file, import.meta.url).pathname })),modulesRoot:new URL('../../',import.meta.url).pathname,
     d1Databases: ['DB'], r2Buckets: ['BUCKET'], compatibilityDate: '2026-11-01' }));
   try {
     const db = await mf.getD1Database('DB');
-    for (const file of ['0001_initial.sql','0002_standard.sql','0003_shared_bookings.sql','0004_private_fixed.sql','0005_competitive_private.sql','0006_operations.sql']) {
+    for (const file of ['0001_initial.sql','0002_standard.sql','0003_shared_bookings.sql','0004_private_fixed.sql','0005_competitive_private.sql','0006_operations.sql','0007_premium_fleet.sql']) {
       const sql = (await readFile(new URL('../../sync-service/migrations/' + file, import.meta.url), 'utf8')).replace(/^--.*$/gm, '');
       const statements = sql.match(/CREATE TRIGGER[\s\S]*?END;|(?:PRAGMA|CREATE TABLE|CREATE INDEX|CREATE UNIQUE INDEX|ALTER TABLE|INSERT)[\s\S]*?;/gi);
       for (const statement of statements) await db.prepare(statement).run();
