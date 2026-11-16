@@ -21,4 +21,6 @@ No se registraron SQL, filas, nombres, hashes de sesión ni enlaces firmados en 
 ## Cierre y límites
 Prueba de export/restauración actual: VERIFICADA. Este hito no crea almacenamiento duradero ni certifica recuperación remota de producción. Tras registrar evidencia se retira trigger por push; futuras ejecuciones solo manual verify_restore opt-in. No hay cron/automatización de exportaciones ni publicación de artefactos. Consumo de lecturas/CI no medido, sin upgrade de plan ni pagos reales.
 
+Comprobación posterior del retiro: Actions43911773082 SUCCESS; verify SUCCESS, restore-check SKIPPED y deploy SKIPPED. Consulta de artefactos del run de respaldo43911145328: total_count=0. Health de aplicación permanece j7-operations-v1/schema0006, sin redespliegue. main sigue fa2c7df.
+
 Código de aplicación y demo intactos; ninguna regresión de UI por este cambio de verificación. Rollback: deshabilitar job/script, sin rollback de datos porque no se modificó la fuente. Siguiente revisión Senior/piloto: política de respaldo duradero autorizada, retención/cifrado, recuperación remota y controles comerciales.
