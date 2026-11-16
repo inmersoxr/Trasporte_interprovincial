@@ -88,9 +88,10 @@ export async function handleMarket(request,env,core){
     stmt(db,"UPDATE standard_vehicle_slots SET active=0 WHERE custom_booking_id IN(SELECT id FROM standard_custom_bookings WHERE request_id=? AND status='cancelled')",[req.id]),
     stmt(db,"INSERT OR IGNORE INTO standard_custom_events(id,booking_id,kind) SELECT ?,id,'simulated_refund' FROM standard_custom_bookings WHERE request_id=? AND status='cancelled'",[crypto.randomUUID(),req.id]),
     stmt(db,"INSERT OR IGNORE INTO standard_operational_events(id,operator_id,entity_kind,entity_id,event) SELECT id||':cancel',operator_id,'custom',id,'cancelled_simulated_refund' FROM standard_custom_bookings WHERE request_id=? AND status='cancelled'",[req.id]),
-    stmt(db,"UPDATE private_requests SET status='cancelled' WHERE id=?",[req.id]),
-    stmt(db,"UPDATE standard_private_offers SET status='expired' WHERE request_id=? AND status='available'",[req.id])]);}
+    stmt(db,"UPDATE private_requests SET status='cancelled' WHERE id=? AND (NOT EXISTS(SELECT 1 FROM standard_custom_bookings WHERE request_id=?) OR EXISTS(SELECT 1 FROM standard_custom_bookings WHERE request_id=? AND status='cancelled'))",[req.id,req.id,req.id]),
+    stmt(db,"UPDATE standard_private_offers SET status='expired' WHERE request_id=? AND status='available' AND EXISTS(SELECT 1 FROM private_requests WHERE id=? AND status='cancelled')",[req.id,req.id])]);}
    catch(error){if(String(error.message).includes('already_boarded'))throw failure('Servicio ya abordado',409);throw error;}
+   if((await stmt(db,'SELECT status FROM private_requests WHERE id=?',[req.id]).first()).status!=='cancelled')throw failure('El servicio cambió en otra sesión; actualiza',409);
    return {status:'cancelled',refund:'simulated'};
   }
   const offer=await stmt(db,'SELECT * FROM standard_private_offers WHERE id=? AND request_id=?',[b.offerId,req.id]).first();
