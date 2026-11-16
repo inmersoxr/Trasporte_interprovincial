@@ -16,7 +16,7 @@ async function refresh(){
   $('trackingConnection').textContent='Conectado · posición SIMULADA · enlace persistente';
   $('trackingControls').replaceChildren();
   const add=(label,action,extra)=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>command(action,extra);$('trackingControls').append(b);};
-  if(data.permissions.control){add('Iniciar/reanudar DEMO','start');add('Pausar DEMO','pause');add('Acelerar 8× DEMO','speed',{multiplier:8});}
+  if(data.permissions.control&&data.snapshot.status!=='arrived'){add('Iniciar/reanudar DEMO','start');add('Pausar DEMO','pause');add('Acelerar 8× DEMO','speed',{multiplier:8});}
   if(data.permissions.control||data.permissions.passenger)add('SOS DEMO','sos');
   $('trackingAlerts').replaceChildren();
   for(const alert of state.alerts){const p=document.createElement('p');p.textContent='SOS DEMO · '+alert.status;$('trackingAlerts').append(p);

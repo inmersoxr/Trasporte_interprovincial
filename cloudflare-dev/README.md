@@ -1,37 +1,55 @@
-# Entorno Cloudflare independiente
+# RutasEC Standard en Cloudflare — desarrollo
 
-No modifica los archivos ni el workflow del demo GitHub Pages. No usar datos personales ni pagos reales.
+GitHub Pages y su API/ledger R2 originales permanecen intactos. No se fusionó la rama dev a main ni se modificó el workflow Pages.
 
-## Recursos
-- Frontend de paridad: https://rutasec-web-dev.drbrownlabs.workers.dev/
-- Salud D1 a través del frontend: https://rutasec-web-dev.drbrownlabs.workers.dev/standard-api/health
-- Worker D1: https://rutasec-api-dev.drbrownlabs.workers.dev/health
-- `DB`: D1 `rutasec-dev`; `BUCKET`: R2 `rutasec-dev-files`.
-- `PARITY_BUCKET`: R2 `rutasec-parity-dev-files`, exclusivo de simulaciones del frontend de paridad.
+## Entradas y aislamiento
+- **Standard D1:** https://rutasec-web-dev.drbrownlabs.workers.dev/standard/
+- **Copia de paridad del demo:** https://rutasec-web-dev.drbrownlabs.workers.dev/
+- **Salud API por service binding:** https://rutasec-web-dev.drbrownlabs.workers.dev/standard-api/health
+- Worker API rutasec-api-dev, D1 rutasec-dev (DB), R2 privado rutasec-dev-files (BUCKET).
+- La raíz usa /api/* y bundle demo en bucket exclusivo rutasec-parity-dev-files; Standard usa /standard-api/api/*, D1 y código standard-*.mjs. Nunca se usa el ledger demo original para pruebas.
 
-La raíz es COPIA DEMOSTRATIVA de la interfaz existente. `/api/*` usa el bundle demo en un bucket nuevo; no se conecta al ledger demo original. `/standard-api/*` usa service binding al Worker D1, que por ahora solo implementa `/health`. Reservas D1 Standard y demás APIs no están implementadas todavía (J3–J7). No confundir una reserva de paridad R2 con migración comercial terminada.
+J1–J7 verificados con snapshots por fase. J8 es regresión/handoff; consultar snapshot final para estado actual. La aplicación es de desarrollo: datos ficticios, pagos/avisos/SOS y seguimiento simulados, no un lanzamiento comercial.
+
+## Funciones y límites
+Operadoras, vehículos, rutas, salidas y catálogo D1 con autorización por membresía. Compartidos con asientos/transacciones; privados fijos con calendario exclusivo y tarifa por vehículo; personalizados con ofertas progresivas y elección libre revalidada atómicamente. Boletos/QR, cancelaciones/reembolsos simulados, manifiestos, abordaje manual por QR, estados e historial.
+
+Identidades por capacidades privadas dev (hash en servidor), sin passwords/email verificado ni recuperación comercial. La clave se guarda localmente y puede copiarse/restaurarse en otro navegador. No compartirla con observadores: enlaces públicos de seguimiento no la incluyen. Alta de operadora autoaprobada solo para pruebas; no acredita habilitación comercial. No se inventan valoraciones.
+
+Seguimiento con geometría de referencia Cuenca–Guayaquil, estado/reloj en D1 y render local; no GPS ni necesariamente ruta solicitada. Operador controla movimiento/atiende SOS, pasajero confirmado activa/cierra SOS DEMO, público observa. Enlaces históricos sin TTL. No se contacta emergencias ni se envía WhatsApp automáticamente.
 
 ## Reproducir
-Desde esta carpeta, con Node 24:
+Node24, versiones fijadas en package-lock.json:
 
 ```sh
+cd cloudflare-dev
 npm ci
 npm test
 npm run build
 ```
 
-El build copia solo assets públicos; nunca copia `.git`, credenciales, SQL ni código backend al directorio Static Assets. Reescribe únicamente la copia de `shared/live-config.mjs` y `sw.js`: APIs same-origin, caché con prefijo propio y exclusión de APIs para evitar guardar boletos privados o devolver HTML cuando falle la red. Manifest y enlaces son relativos al dominio nuevo.
+Tests integran Workerd/Miniflare+D1 con migraciones reales/concurrencia. Build publica solo assets permitidos, no toca fuentes Pages y genera geometría para API. SW de paridad/Standard usan scopes/cachés distintos, versión por contenido y excluyen APIs. No se promete reservar sin conexión.
 
-Para desplegar, proporcionar `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_API_TOKEN` mediante secretos del entorno y ejecutar `npm run deploy:frontend`. `python deploy.py` es exclusivamente el bootstrap J1 y se niega a sobrescribir un Worker existente. `python check-remote.py` verifica persistencia y redespliega temporalmente SOLO el Worker dev; revisar actividad paralela antes de ejecutarlo.
+Browser contra dev, con Chromium /usr/bin/chromium o CHROMIUM_PATH:
 
-Prueba de navegador: `npm run test:frontend` con Chromium instalado en `/usr/bin/chromium` o variable `CHROMIUM_PATH`. Respeta proxy HTTPS del entorno; requiere que Chromium confíe en su CA. No desactiva validación TLS. Crea registros ficticios en el bucket de paridad y cancela la salida en finally; los registros históricos quedan en ese bucket aislado. No envía WhatsApp.
+```sh
+npm run test:frontend
+npm run test:standard
+npm run test:market
+npm run test:operations
+npm run test:regression
+```
 
-## GitHub Actions y bloqueo pendiente
-`.github/workflows/cloudflare-dev.yml` verifica PRs, despliega únicamente desde la rama `codex/cloudflare-standard-junior` y permite despliegue manual en entorno GitHub `cloudflare-development`. No despliega automáticamente en main ni altera el workflow Pages.
+Respetan proxy/CA del entorno sin desactivar TLS. Crean datos ficticios solo en dev; cancelan/finalizan servicios y conservan historial. Cámara física, dos teléfonos físicos e instalación nativa quedan para piloto.
 
-Para activar ese despliegue, un administrador debe configurar en GitHub los secretos `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ACCOUNT_ID` (ID de cuenta `05c3eb3b0c05413d604a3f0fb6522940`) a nivel repositorio o entorno. Las herramientas conectadas permiten publicar código, pero no administrar esos secretos ni ejecutar workflow_dispatch; esa ejecución no se verificó desde este entorno. No se incluyen tokens en código, YAML, logs o commits. Mantener J2 en curso hasta validar ese camino desde GitHub.
+## Despliegue y secretos
+Workflow cloudflare-dev.yml verifica PRs y despliega rama codex/cloudflare-standard-junior al entorno GitHub cloudflare-development o por workflow_dispatch. No despliega main ni cambia Pages. Ambos secretos están verificados por ejecución real; no volver a solicitarlos sin fallo concreto: CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID.
 
-## Rollback probado
-Frontend: versión estable `34f4351c-240c-4952-9884-efab1d980ab5`. Se desplegó una revisión temporal con `environment.json` diferente y se restauró esa versión mediante API Workers Deployments, con verificación HTTP del marcador `j2-static-v1`. No elimina datos R2 ni D1. Worker D1: `check-remote.py` prueba restauración de fuente. Restauración de datos D1 remota y backup duradero siguen pendientes; export/restauración local de SQL sí se probaron.
+CI genera build, aplica migraciones D1 con tracking y despliega API antes de Static Assets; health exige schema0006. No guardar tokens en archivos/YAML ni registros en logs/artifacts. deploy.py es bootstrap J1 y rehúsa sobrescribir Worker existente; check-remote.py está retirado para impedir reemplazar la API de negocio por un probe.
 
-Workers Free sin upgrade de plan; R2 Standard con cuota gratuita y posibles excedentes. No hay presupuesto medido ni garantía de factura cero.
+## Rollback, respaldo y revisión posterior
+Rollback por versión/fuente Worker/Static Assets probado J1/J2, sin borrar registros ni migraciones destructivas. Volver a código previo no revierte datos; revisar compatibilidad.
+
+Se probó export/restore local del esquema inicial vacío en J1. **No se validó respaldo actualizado de datos de negocio ni almacenamiento duradero.** El paso adicional de exportar D1 al runner CI fue rechazado por revisión automática como egreso sensible no autorizado específicamente y eliminado antes de publicarse. No exportar mediante otra vía para sortear ese rechazo; un nuevo destino requiere autorización concreta.
+
+Revisión Senior posterior: autenticación/recuperación/revocación, onboarding real, abuso, privacidad/retención, respaldos autorizados, cargas/límites/costos y requisitos legales/GPS/notificaciones. Premium empresarial y pagos reales fuera de etapa. Sin upgrade de plan; consumo/factura no medidos ni garantía de costo cero.

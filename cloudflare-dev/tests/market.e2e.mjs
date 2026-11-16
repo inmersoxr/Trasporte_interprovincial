@@ -59,6 +59,8 @@ try{
  assert.deepEqual(selectedRace.map(r=>r.status).sort(),[200,409]);
  const winner=selectedRace[0].status===200?0:1;
  assert.equal((await call(customer,'/private-requests/'+raceReq.data.id+'/select',payloads[winner],key)).data.bookingId,selectedRace[winner].data.bookingId);
+ const winnerOp=winner===0?a:b,winnerContext=winner===0?op1:op2;
+ assert.equal((await call(winnerContext,'/operations',{operatorId:winnerOp.operator.id,kind:'custom',id:selectedRace[winner].data.bookingId,action:'cancel'},winnerOp.key)).status,200);
  await call(customer,'/private-requests/'+raceReq.data.id,{action:'cancel'},key);
  const staleAt=new Date(Date.now()+12*86400000).toISOString();
  const stale=await call(customer,'/private-requests',{origin:'Cuenca',destination:'Manta',serviceAt:staleAt,people:2,vehicleType:'van',durationMinutes:240,requestId:crypto.randomUUID()},key);

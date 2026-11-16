@@ -45,6 +45,10 @@ try{
  const arrived=await call(observer,'/trips/'+liveId);assert.equal(arrived.data.snapshot.status,'arrived');assert.equal(arrived.data.expiresAt,null);
  assert.equal((await call(passenger,'/bookings/'+ticket.id,{action:'cancel'},buyerKey)).status,409);
  await operator.locator('#operationsHistory').getByText(/simulation_completed/).waitFor();
+ const fixed=await create('/route-offers',{operatorId:op.id,vehicleId:vehicle.id,origin:'Cuenca',destination:'Guayaquil',serviceType:'private_fixed',priceCents:10000});
+ const privateTicket=(await create('/private-route-bookings',{offerId:fixed.id,serviceAt:new Date(Date.now()+4*86400000).toISOString(),passengers:['Privado ficticio J7'],quotedPriceCents:10000},buyerKey)).booking;
+ const [cancelled]=await Promise.all([operator.waitForResponse(r=>r.url().endsWith('/api/operations')&&r.request().method()==='POST'),operator.locator(`[data-manifest="${privateTicket.id}"] [data-action="cancel"]`).click()]);
+ assert.equal(cancelled.status(),200);assert.equal((await cancelled.json()).booking.status,'cancelled');
  assert.deepEqual(errors,[]);
  console.log('J7 real: manifest, QR boarding once, role isolation, shared map/SOS/attend/close, progress after controller closes, finish/history and persistent link: PASS');
 }finally{await browser.close();}
