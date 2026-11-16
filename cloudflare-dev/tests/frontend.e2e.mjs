@@ -20,6 +20,12 @@ for (const p of [page, second]) p.on('request', request => {
 const token = () => crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');
 const opKey = token(), operatorId = crypto.randomUUID();
 let ride;
+let releaseCatalog;
+const catalogGate = new Promise(resolve => { releaseCatalog = resolve; });
+await page.route('**/api/catalog', async route => {
+  await catalogGate;
+  await route.continue();
+});
 async function api(client, path, body, key = '') {
   const response = await client.fetch(base + path, {
     method: body ? 'POST' : 'GET', headers: key ? { Authorization: 'Bearer ' + key } : {},
@@ -31,6 +37,13 @@ try {
   assert.equal((await page.goto(base)).status(), 200);
   await page.waitForFunction(() => window.BookingApp && window.LiveTrip);
   await page.locator('#splash').waitFor({ state: 'hidden' });
+  // Deterministically reproduce navigation before the catalog response arrives.
+  await page.evaluate(() => show('results'));
+  await page.getByText('Conectando a las salidas publicadas…', { exact: true }).waitFor();
+  releaseCatalog();
+  await page.unroute('**/api/catalog');
+  await page.waitForFunction(() => fleet.every(vehicle => vehicle.ride));
+  console.log('Slow catalog navigation shows loading without JavaScript error: PASS');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   await second.goto(base);
   await second.waitForFunction(() => window.BookingApp);

@@ -1,6 +1,7 @@
 // Build a separate copy. Never rewrite any file served by GitHub Pages.
 import { readFile, writeFile, mkdir, readdir, cp, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
+import { patchBookings } from './frontend-patches.mjs';
 const root = new URL('../', import.meta.url);
 const output = new URL('./out/', import.meta.url);
 await rm(output, { recursive: true, force: true });
@@ -13,11 +14,13 @@ for (const file of await readdir(root)) {
 for (const dir of ['assets', 'vendor', 'shared']) {
   await cp(new URL(dir, root), new URL('public/' + dir, output), { recursive: true });
 }
+await writeFile(new URL('public/bookings.mjs', output),
+  patchBookings(await readFile(new URL('bookings.mjs', root), 'utf8')));
 await writeFile(new URL('public/shared/live-config.mjs', output),
   `export const SYNC_API=location.origin;\nexport const POLL_INTERVAL_MS=1800;\n`);
 // Same-origin API requests must never enter the offline cache or HTML fallback.
 let sw = await readFile(new URL('sw.js', root), 'utf8');
-sw = sw.replace("const CACHE = '", "const CACHE = 'rutasec-cloudflare-dev-");
+sw = sw.replace("const CACHE = '", "const CACHE = 'rutasec-cloudflare-dev-j2-loading-v2-");
 sw = sw.replace("self.addEventListener('fetch', event => {", `self.addEventListener('fetch', event => {
   if (/^\\/(api|standard-api)(?:\\/|$)/.test(new URL(event.request.url).pathname)) return;`);
 await writeFile(new URL('public/sw.js', output), sw);
