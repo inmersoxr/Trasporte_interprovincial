@@ -58,8 +58,23 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          test -n "$CLOUDFLARE_API_TOKEN" || { echo 'Missing CLOUDFLARE_API_TOKEN secret'; exit 1; }
-          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo 'Missing CLOUDFLARE_ACCOUNT_ID secret'; exit 1; }
+          credential_errors=0
+          if test -z "$CLOUDFLARE_API_TOKEN"; then
+            echo '::error::Missing CLOUDFLARE_API_TOKEN secret'
+            credential_errors=1
+          else
+            echo 'CLOUDFLARE_API_TOKEN available; authentication will be checked by Wrangler'
+          fi
+          if test -z "$CLOUDFLARE_ACCOUNT_ID"; then
+            echo '::error::Missing CLOUDFLARE_ACCOUNT_ID secret'
+            credential_errors=1
+          elif test "$CLOUDFLARE_ACCOUNT_ID" != '05c3eb3b0c05413d604a3f0fb6522940'; then
+            echo '::error::CLOUDFLARE_ACCOUNT_ID does not match the RutasEC development account'
+            credential_errors=1
+          else
+            echo 'CLOUDFLARE_ACCOUNT_ID matches RutasEC: OK'
+          fi
+          exit "$credential_errors"
       - run: npm run deploy:frontend
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
