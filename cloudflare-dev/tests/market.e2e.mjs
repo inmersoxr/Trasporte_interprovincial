@@ -46,7 +46,10 @@ try{
  const chosen=(await call(customer,'/private-requests',undefined,key)).data.requests.find(r=>r.id===req);
  assert.equal(chosen.booking.offer_id,second.id);assert.equal(chosen.booking.amount_cents,9000);
  assert.equal((await call(op1,'/private-requests/'+req+'/select',{offerId:first,quotedPriceCents:12000,requestId:crypto.randomUUID()},a.key)).status,403);
- assert.equal((await call(customer,'/private-requests/'+req,{action:'cancel'},key)).status,200);
+ assert.equal((await call(op2,'/operations',{operatorId:b.operator.id,action:'board',code:'RUTASEC-CUSTOM:'+booking+':0'},b.key)).status,200);
+ assert.equal((await call(op2,'/operations',{operatorId:b.operator.id,kind:'custom',id:booking,action:'start'},b.key)).status,200);
+ assert.equal((await call(op2,'/operations',{operatorId:b.operator.id,kind:'custom',id:booking,action:'finish'},b.key)).status,200);
+ assert.equal((await call(customer,'/private-requests/'+req,{action:'cancel'},key)).status,409);
  console.log('J6 UI: eligible in-app alert, first offer visible before second, explicit choice of later offer, persisted booking/reload and 403: PASS');
  const at=new Date(Date.now()+10*86400000).toISOString();
  const raceReq=await call(customer,'/private-requests',{origin:'Cuenca',destination:'Manta',serviceAt:at,people:2,vehicleType:'van',durationMinutes:240,requestId:crypto.randomUUID()},key);assert.equal(raceReq.status,200);

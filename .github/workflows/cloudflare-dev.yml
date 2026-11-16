@@ -77,6 +77,7 @@ jobs:
           exit "$credential_errors"
       - name: Apply development D1 migrations and deploy Standard API
         run: |
+          npm run build
           npx wrangler d1 migrations apply rutasec-dev --remote --config wrangler.json
           npx wrangler deploy --config wrangler.json
         env:

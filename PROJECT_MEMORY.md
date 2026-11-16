@@ -1,4 +1,6 @@
 # RutasEC — Memoria persistente del repositorio
+Estado vigente: J1–J6 verificadas en desarrollo. Mercado personalizado competitivo separado de privados fijos/compartidos. Remoto 49a73f8da268ed45f6255df224a39c5e41d51fe9, CI43901684034 SUCCESS, schema0005. Browser real con tres contextos y dos operadoras: ofertas conforme llegan, elección de la segunda, persistencia, carrera200/409 y revalidación de calendario: PASS. Alertas solo in-app DEMO, perfiles básicos sin valoraciones inventadas. J7 siguiente. Snapshot `2026-11-16-j6-verified.md`.
+
 Estado vigente: J1–J5 verificadas en desarrollo. J5 remoto be140f3936a4301690f1ad9fecb20cdee9f35e90, Actions 43899002313 SUCCESS, schema0004. Privado fijo por vehículo/horario propio, tarifa servidor, exclusión horaria y cancelación probados; no consume plazas compartidas. Duración publicada por operadora, no manipulable por pasajero. Próximo J6 competitivo. Snapshot `2026-11-16-j5-verified.md`.
 
 Estado vigente: J1–J4 verificadas en desarrollo. J4 remoto `81465be44615c079008f98dd00e5dd0a35dd793f`, CI `43897933219` SUCCESS; D1 schema0003, reserva compartida atómica/pago simulado, QR, cancelación e idempotencia probados en navegador y carrera real contra D1. J5 es siguiente. Snapshot `2026-11-16-j4-verified.md`. No hay cobros reales ni cuentas comerciales verificadas.

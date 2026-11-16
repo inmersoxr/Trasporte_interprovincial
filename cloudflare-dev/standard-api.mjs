@@ -2,6 +2,7 @@
 // They are not commercial registration, email recovery or verified operators.
 import { handleReservations } from './standard-reservations.mjs';
 import { handleMarket } from './standard-market.mjs';
+import { handleOperations } from './standard-operations.mjs';
 export const failure = (message, status = 400) => Object.assign(new Error(message), { status });
 export const hash = async value => Array.from(new Uint8Array(await crypto.subtle.digest(
   'SHA-256', new TextEncoder().encode(value))), b => b.toString(16).padStart(2, '0')).join('');
@@ -75,6 +76,9 @@ export async function handleStandard(request, env) {
   }
   if(path.startsWith('/api/bookings')||path==='/api/private-route-bookings')return handleReservations(request,env,{identity,stmt,rows,failure,command,integer,text});
   if(path.startsWith('/api/private-requests')||path.startsWith('/api/private-offers')||path==='/api/private-market')return handleMarket(request,env,{identity,stmt,rows,failure,owner,command,integer,text});
+  if(path==='/api/operations'||path.startsWith('/api/trips/'))return handleOperations(request,env,{identity,stmt,rows,owner,failure,integer,
+   cancelBooking:id=>handleReservations(new Request(new URL('/api/bookings/'+id,request.url),{method:'POST',headers:request.headers,body:JSON.stringify({action:'cancel'})}),env,{identity,stmt,rows,failure,command,integer,text}),
+   cancelCustom:id=>handleMarket(new Request(new URL('/api/private-requests/'+id,request.url),{method:'POST',headers:request.headers,body:JSON.stringify({action:'cancel'})}),env,{identity,stmt,rows,failure,owner,command,integer,text})});
   if (!['/api/operator', '/api/operators', '/api/vehicles', '/api/route-offers', '/api/departures'].includes(path)) return null;
   const user = await identity(request, env.DB);
   if (path === '/api/operator' && method === 'GET') {

@@ -12,7 +12,7 @@ export async function handleMarket(request,env,core){
     JOIN standard_private_specs s ON s.request_id=r.id WHERE r.customer_id=? ORDER BY r.created_at DESC LIMIT 20`,[user.id]);
    const offers=await rows(db,`SELECT f.*,o.display_name AS operatorName,v.model AS vehicle,v.capacity,v.type AS vehicleType FROM standard_private_offers f
     JOIN private_requests r ON r.id=f.request_id JOIN operators o ON o.id=f.operator_id JOIN vehicles v ON v.id=f.vehicle_id WHERE r.customer_id=? ORDER BY f.created_at,f.id`,[user.id]);
-   const bookings=await rows(db,'SELECT * FROM standard_custom_bookings WHERE customer_id=?',[user.id]);
+   const bookings=await rows(db,'SELECT c.*,t.id AS liveId FROM standard_custom_bookings c LEFT JOIN standard_tracking t ON t.custom_booking_id=c.id WHERE c.customer_id=?',[user.id]);
    return {requests:requests.map(r=>({...r,offers:offers.filter(o=>o.request_id===r.id),booking:bookings.find(b=>b.request_id===r.id)||null,
     expired:r.expires_at<=now,simulated:true})),notifications:'in-app demo',selection:'customer-choice'};
   }
@@ -74,7 +74,11 @@ export async function handleMarket(request,env,core){
  }
  if(select||cancel){
   const req=await stmt(db,`SELECT r.*,s.people,s.duration_minutes FROM private_requests r JOIN standard_private_specs s ON s.request_id=r.id WHERE r.id=?`,[(select||cancel)[1]]).first();
-  if(!req)throw failure('Solicitud no encontrada',404);if(req.customer_id!==user.id)throw failure('Solicitud privada',403);
+  if(!req)throw failure('Solicitud no encontrada',404);
+  if(req.customer_id!==user.id){
+   const selected=cancel?await stmt(db,'SELECT operator_id FROM standard_custom_bookings WHERE request_id=?',[req.id]).first():null;
+   if(!selected)throw failure('Solicitud privada',403);await owner(db,user.id,selected.operator_id);
+  }
   if(cancel){
    if(b.action!=='cancel')throw failure('Acción no válida');
    const booking=await stmt(db,'SELECT * FROM standard_custom_bookings WHERE request_id=?',[req.id]).first();
@@ -83,6 +87,7 @@ export async function handleMarket(request,env,core){
     stmt(db,"UPDATE standard_custom_bookings SET status='cancelled' WHERE request_id=? AND status='confirmed'",[req.id]),
     stmt(db,"UPDATE standard_vehicle_slots SET active=0 WHERE custom_booking_id IN(SELECT id FROM standard_custom_bookings WHERE request_id=? AND status='cancelled')",[req.id]),
     stmt(db,"INSERT OR IGNORE INTO standard_custom_events(id,booking_id,kind) SELECT ?,id,'simulated_refund' FROM standard_custom_bookings WHERE request_id=? AND status='cancelled'",[crypto.randomUUID(),req.id]),
+    stmt(db,"INSERT OR IGNORE INTO standard_operational_events(id,operator_id,entity_kind,entity_id,event) SELECT id||':cancel',operator_id,'custom',id,'cancelled_simulated_refund' FROM standard_custom_bookings WHERE request_id=? AND status='cancelled'",[req.id]),
     stmt(db,"UPDATE private_requests SET status='cancelled' WHERE id=?",[req.id]),
     stmt(db,"UPDATE standard_private_offers SET status='expired' WHERE request_id=? AND status='available'",[req.id])]);}
    catch(error){if(String(error.message).includes('already_boarded'))throw failure('Servicio ya abordado',409);throw error;}

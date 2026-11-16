@@ -4,12 +4,12 @@ import { readFile } from 'node:fs/promises';
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 
 test('D1 Standard catalog: authorization, persistence, idempotency and vehicle scheduling', async () => {
-  const mf = new Miniflare(convertV4MiniflareOptions({ modules: ['worker.mjs','standard-api.mjs','standard-reservations.mjs','standard-private.mjs','standard-market.mjs'].map(file => ({
-    type: 'ESModule', path: new URL('../' + file, import.meta.url).pathname })),
+  const mf = new Miniflare(convertV4MiniflareOptions({ modules: ['worker.mjs','standard-api.mjs','standard-reservations.mjs','standard-private.mjs','standard-market.mjs','standard-operations.mjs','out/reference-route.mjs','../shared/trip-core.mjs'].map(file => ({
+    type: 'ESModule', path: new URL('../' + file, import.meta.url).pathname })),modulesRoot:new URL('../../',import.meta.url).pathname,
     d1Databases: ['DB'], r2Buckets: ['BUCKET'], compatibilityDate: '2026-11-01' }));
   try {
     const db = await mf.getD1Database('DB');
-    for (const file of ['0001_initial.sql','0002_standard.sql','0003_shared_bookings.sql','0004_private_fixed.sql','0005_competitive_private.sql']) {
+    for (const file of ['0001_initial.sql','0002_standard.sql','0003_shared_bookings.sql','0004_private_fixed.sql','0005_competitive_private.sql','0006_operations.sql']) {
       const sql = (await readFile(new URL('../../sync-service/migrations/' + file, import.meta.url), 'utf8')).replace(/^--.*$/gm, '');
       const statements = sql.match(/CREATE TRIGGER[\s\S]*?END;|(?:PRAGMA|CREATE TABLE|CREATE INDEX|CREATE UNIQUE INDEX|ALTER TABLE|INSERT)[\s\S]*?;/gi);
       for (const statement of statements) await db.prepare(statement).run();
@@ -114,5 +114,36 @@ test('D1 Standard catalog: authorization, persistence, idempotency and vehicle s
     const withdrawn=await create('/private-offers',{...proposal(op.data.id,vehicle.data.id,20000),privateRequestId:withdrawnReq.data.id});
     assert.equal((await call('/private-offers/'+withdrawn.data.id,{action:'withdraw'},a)).status,200);
     assert.equal((await call('/private-requests/'+withdrawnReq.data.id+'/select',{offerId:withdrawn.data.id,quotedPriceCents:20000,requestId:crypto.randomUUID()},b)).status,409);
+    const opPath='/operations?operatorId='+op.data.id;
+    assert.equal((await call(opPath,undefined,b)).status,403);
+    const boardedBooking=(await call('/bookings',reserve([2]),b)).data.booking;
+    const code=boardedBooking.qrCodes[0];
+    assert.equal((await call('/operations',{operatorId:op.data.id,action:'board',code},b)).status,403);
+    assert.equal((await call('/operations',{operatorId:op.data.id,action:'board',code},a)).status,200);
+    assert.equal((await call('/operations',{operatorId:op.data.id,action:'board',code},a)).status,409);
+    assert.equal((await call('/bookings/'+boardedBooking.id,{action:'cancel'},b)).status,409);
+    assert.equal((await call('/operations',{operatorId:op.data.id,kind:'departure',id:departure.data.id,action:'cancel'},a)).status,409);
+    assert.equal((await db.prepare('SELECT status FROM departures WHERE id=?').bind(departure.data.id).first()).status,'published');
+    const start=await call('/operations',{operatorId:op.data.id,kind:'departure',id:departure.data.id,action:'start'},a);assert.equal(start.status,200);
+    const liveId=start.data.liveId,tripPath='/trips/'+liveId;
+    const live=await call(tripPath,undefined,b);assert.equal(live.data.permissions.passenger,true);assert.equal(live.data.permissions.control,false);
+    const publicLive=await call(tripPath);assert.equal(publicLive.status,200);assert.equal(publicLive.data.expiresAt,null);
+    assert.equal(JSON.stringify(publicLive.data).includes('Pasajero ficticio'),false);
+    const cmd={action:'sos',requestId:crypto.randomUUID(),expectedRevision:live.data.trip.revision};
+    assert.equal((await call(tripPath+'/commands',{...cmd,action:'pause'},b)).status,403);
+    const sos=await call(tripPath+'/commands',cmd,b);assert.equal(sos.status,200);assert.equal(sos.data.trip.alerts[0].simulated,true);
+    const alert=sos.data.trip.alerts[0];
+    const attend=await call(tripPath+'/commands',{action:'attend',alertId:alert.id,requestId:crypto.randomUUID(),expectedRevision:sos.data.trip.revision},a);assert.equal(attend.status,200);
+    assert.equal((await call(tripPath+'/commands',{action:'close-sos',alertId:alert.id,requestId:crypto.randomUUID(),expectedRevision:attend.data.trip.revision},b)).status,200);
+    assert.equal((await call('/operations',{operatorId:op.data.id,kind:'departure',id:departure.data.id,action:'finish'},a)).status,200);
+    assert.equal((await call(tripPath)).data.snapshot.status,'arrived');
+    assert.ok((await call(opPath,undefined,a)).data.history.some(e=>e.event==='boarded'));
+    assert.equal((await call('/bookings',reserve([3]),b)).status,409);
+    const customBooking=await db.prepare('SELECT * FROM standard_custom_bookings WHERE request_id=?').bind(reqRace.data.id).first();
+    const customOp=customBooking.operator_id;
+    assert.equal((await call('/operations',{operatorId:customOp,action:'board',code:'RUTASEC-CUSTOM:'+customBooking.id+':0'},a)).status,200);
+    assert.equal((await call('/operations',{operatorId:customOp,kind:'custom',id:customBooking.id,action:'start'},a)).status,200);
+    assert.equal((await call('/operations',{operatorId:customOp,kind:'custom',id:customBooking.id,action:'finish'},a)).status,200);
+    assert.equal((await call('/private-requests/'+customBooking.request_id,{action:'cancel'},b)).status,409);
   } finally { await mf.dispose(); }
 });

@@ -16,6 +16,12 @@ export async function loadPrivate(){
    button.disabled=true;try{await api('/private-requests/'+button.dataset.request+'/select',{offerId:button.dataset.select,quotedPriceCents:Number(button.dataset.price),requestId:crypto.randomUUID()});status('Oferta elegida por ti; disponibilidad confirmada y pago SIMULADO');await loadPrivateAfter();}
    catch(e){status(e.message);button.disabled=false;}
   };
+  for(const r of requests)if(r.booking&&r.booking.status!=='cancelled'){
+   const target=document.querySelector(`[data-custom-booking="${r.booking.id}"]`),qr=document.createElement('div');qr.className='qr';target.append(qr);
+   new window.QRCode(qr,{text:'RUTASEC-CUSTOM:'+r.booking.id+':0',width:180,height:180});
+   if(r.booking.liveId){const link=document.createElement('a');link.href='#track/'+r.booking.liveId;link.textContent='Seguimiento DEMO del grupo';target.append(link);}
+   if(r.booking.boarded_at||r.booking.status!=='confirmed')document.querySelector(`[data-cancel-request="${r.id}"]`)?.remove();
+  }
   for(const button of document.querySelectorAll('[data-cancel-request]'))button.onclick=async()=>{
    button.disabled=true;try{await api('/private-requests/'+button.dataset.cancelRequest,{action:'cancel'});status('Solicitud cancelada; reembolso simulado si corresponde');await loadPrivateAfter();}catch(e){status(e.message);button.disabled=false;}
   };
@@ -59,7 +65,7 @@ $('privateRequestForm').onsubmit=async e=>{
  }catch(e){status(e.message);}finally{button.disabled=false;}
 };
 $('openPrivateMarket').onclick=()=>{
- for(const id of ['catalog','operator','myBookings'])$(id).hidden=true;$('privateRequests').hidden=false;loadPrivate();
+ for(const id of ['catalog','operator','myBookings','tracking'])$(id).hidden=true;$('privateRequests').hidden=false;loadPrivate();
 };
 $('openPrivateMarket').disabled=false;
 setInterval(()=>{if(!document.hidden){if(!$('privateRequests').hidden)loadPrivate();if(!$('operator').hidden)loadMarket();}},3000);

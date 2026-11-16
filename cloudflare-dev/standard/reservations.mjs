@@ -53,10 +53,15 @@ $('reserveForm').onsubmit=async e=>{
 export async function loadBookings(){
  try{
   const {bookings}=await api('/bookings');
-  for(const id of ['catalog','operator','privateRequests'])$(id).hidden=true;$('myBookings').hidden=false;
+  for(const id of ['catalog','operator','privateRequests','tracking'])$(id).hidden=true;$('myBookings').hidden=false;
   $('bookingList').innerHTML=bookings.map(b=>`<article data-booking="${b.id}"><strong>${esc(b.origin)} → ${esc(b.destination)}</strong><p>${esc(b.operatorName)} · ${esc(b.vehicle)}</p><p>${esc(b.service_at)} · ${esc(b.status)}</p><p>${esc(b.paymentLabel)} · $${(b.amount_cents/100).toFixed(2)}</p><ul>${b.passengers.map(p=>`<li>${esc(p.name)} · asiento ${p.seatNumber??'privado'}</li>`).join('')}</ul>${b.status==='confirmed'?b.qrCodes.map((qr,i)=>`<p>QR pasajero ${i+1}</p><div id="qr-${b.id}-${i}" class="qr"></div><p class="small">${esc(qr)}</p>`).join('')+`<button data-cancel="${b.id}">Cancelar y simular reembolso</button>`:''}</article>`).join('')||'<p>No hay boletos en este acceso.</p>';
   for(const b of bookings)if(b.status==='confirmed'){
    b.qrCodes.forEach((qr,i)=>new window.QRCode($(`qr-${b.id}-${i}`),{text:qr,width:180,height:180}));
+  }
+  for(const b of bookings){
+   const article=document.querySelector(`[data-booking="${b.id}"]`);
+   if(b.liveId){const a=document.createElement('a');a.href='#track/'+b.liveId;a.textContent='Abrir seguimiento DEMO';article.append(a);}
+   if(['running','completed'].includes(b.serviceStatus))article.querySelector('[data-cancel]')?.remove();
   }
   for(const button of document.querySelectorAll('[data-cancel]'))button.onclick=async()=>{
    button.disabled=true;try{await api('/bookings/'+button.dataset.cancel,{action:'cancel'});await loadBookings();status('Cancelación persistida; reembolso SIMULADO');}
