@@ -65,5 +65,6 @@ export async function loadBookings(){
  }catch(error){status(error.message);}
 }
 $('openBookings').onclick=loadBookings;$('refreshBookings').onclick=loadBookings;
+$('openBookings').disabled=false;
 document.addEventListener('standard:catalog',e=>enhance(e.detail));
 api('/catalog').then(enhance).catch(e=>status(e.message));

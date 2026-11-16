@@ -61,5 +61,6 @@ $('privateRequestForm').onsubmit=async e=>{
 $('openPrivateMarket').onclick=()=>{
  for(const id of ['catalog','operator','myBookings'])$(id).hidden=true;$('privateRequests').hidden=false;loadPrivate();
 };
+$('openPrivateMarket').disabled=false;
 setInterval(()=>{if(!document.hidden){if(!$('privateRequests').hidden)loadPrivate();if(!$('operator').hidden)loadMarket();}},3000);
 if(localStorage.getItem('rutasec-standard-session'))api('/operator').then(data=>{operatorVehicles=data.vehicles;updateVehicles();}).catch(e=>status(e.message));
