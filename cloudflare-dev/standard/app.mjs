@@ -1,6 +1,7 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let token = localStorage.getItem('rutasec-standard-session') || '', dashboard;
+let token = localStorage.getItem('rutasec-standard-session') || '', dashboard, refreshRevision = 0;
+for (const id of ['vehicleForm','offerForm','departureForm']) $(id).hidden = true;
 export async function api(path, body) {
   const response = await fetch('/standard-api/api' + path, { method: body ? 'POST' : 'GET',
     headers: { ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(body ? {'Content-Type':'application/json'} : {}) },
@@ -17,7 +18,9 @@ async function catalog() {
 }
 export async function refresh() {
   if (!token) return;
-  dashboard = await api('/operator'); const selected = $('operatorSelect').value;
+  const revision = ++refreshRevision, next = await api('/operator');
+  if (revision !== refreshRevision) return;
+  dashboard = next; const selected = $('operatorSelect').value;
   $('operatorSelect').innerHTML = options(dashboard.operators, o => o.display_name);
   if (dashboard.operators.some(o => o.id === selected)) $('operatorSelect').value = selected;
   const operatorId = $('operatorSelect').value;
@@ -48,7 +51,10 @@ for (const [id, path] of Object.entries(forms)) $(id).onsubmit = async event => 
   event.preventDefault(); const form = event.target, button = form.querySelector('button'); button.disabled = true;
   await guarded(async () => {
     const body = Object.fromEntries(new FormData(form)); body.requestId = form.dataset.requestId ||= crypto.randomUUID();
-    if (id !== 'operatorForm') body.operatorId = $('operatorSelect').value;
+    if (id !== 'operatorForm') {
+      body.operatorId = $('operatorSelect').value;
+      if (!body.operatorId) throw new Error('Selecciona una operadora antes de guardar');
+    }
     if (id === 'vehicleForm') body.capacity = Number(body.capacity);
     if (id === 'offerForm') { body.priceCents = Math.round(Number(body.price) * 100); delete body.price; }
     if (id === 'departureForm') { body.departAt = new Date(body.departAt).toISOString(); body.durationMinutes = Number(body.durationMinutes); }
