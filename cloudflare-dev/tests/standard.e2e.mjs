@@ -32,9 +32,23 @@ try{
  const forbidden=await passenger.request.post(base+'/standard-api/api/vehicles',{
   headers:{Authorization:'Bearer '+session.token},data:{operatorId:operator.id,requestId:crypto.randomUUID(),type:'van',model:'Ajeno',capacity:8}});
  assert.equal(forbidden.status(),403);
+ await other.locator('#createSession').click();
+ await other.getByText('Acceso privado de desarrollo creado',{exact:true}).waitFor();
+ await other.locator(`[data-departure="${departure.id}"] button`).click();
+ await other.locator('#seatGrid input[value="1"]').check();
+ await other.locator('#reserveForm input[required][type="checkbox"]').check();
+ const [paid]=await Promise.all([other.waitForResponse(r=>r.url().endsWith('/api/bookings')&&r.request().method()==='POST'),other.locator('#reserveForm button').first().click()]);
+ const ticket=(await paid.json()).booking;assert.equal(paid.status(),200);
+ await other.locator(`[data-booking="${ticket.id}"] .qr canvas`).first().waitFor({state:'attached'});
+ await other.reload();await other.locator('#openBookings').click();
+ await other.locator(`[data-booking="${ticket.id}"]`).waitFor();
+ await other.locator(`[data-cancel="${ticket.id}"]`).click();
+ await other.getByText('Cancelación persistida; reembolso SIMULADO',{exact:true}).waitFor();
+ const available=await (await passenger.request.get(base+'/standard-api/api/catalog')).json();
+ assert.equal(available.departures.find(d=>d.id===departure.id).available,8);
  await page.reload();await page.locator('[data-view="operator"]').click();
  await page.locator('#operatorSelect option[value="'+operator.id+'"]').waitFor({state:'attached'});
  assert.equal(await other.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  assert.deepEqual(errors,[]);
- console.log('J3 real D1: UI operator/vehicle/route/departure, second-session catalog/reload, restored access, 401/403 isolation: PASS');
+ console.log('J3/J4 real D1: tenant catalog, two sessions, seat booking/payment simulated, QR, reload, cancellation and 401/403: PASS');
 }finally{await browser.close();}

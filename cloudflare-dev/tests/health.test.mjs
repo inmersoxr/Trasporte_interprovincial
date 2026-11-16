@@ -5,7 +5,7 @@ import worker from '../worker.mjs';
 const request = (path = '/health', method = 'GET') =>
   new Request(`https://dev.example${path}`, { method });
 const env = {
-  DB: { prepare: () => ({ bind: () => ({ first: async () => ({ version: '0002_standard' }) }) }) },
+  DB: { prepare: () => ({ bind: () => ({ first: async () => ({ version: '0003_shared_bookings' }) }) }) },
   BUCKET: { list: async () => ({ objects: [] }) }
 };
 test('health verifies both bindings without cache', async () => {
@@ -23,8 +23,8 @@ test('missing bindings or schema fail closed without leaking internal error', as
     assert.equal((await response.json()).ok, false);
   }
 });
-test('no business or write API is exposed', async () => {
-  assert.equal((await worker.fetch(request('/api/bookings'), env)).status, 404);
+test('unknown routes and health writes are rejected', async () => {
+  assert.equal((await worker.fetch(request('/api/unknown'), env)).status, 404);
   const response = await worker.fetch(request('/health', 'POST'), env);
   assert.equal(response.status, 405);
   assert.equal(response.headers.get('Allow'), 'GET');

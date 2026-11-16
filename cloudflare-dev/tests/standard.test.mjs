@@ -4,12 +4,12 @@ import { readFile } from 'node:fs/promises';
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 
 test('D1 Standard catalog: authorization, persistence, idempotency and vehicle scheduling', async () => {
-  const mf = new Miniflare(convertV4MiniflareOptions({ modules: ['worker.mjs','standard-api.mjs'].map(file => ({
+  const mf = new Miniflare(convertV4MiniflareOptions({ modules: ['worker.mjs','standard-api.mjs','standard-reservations.mjs'].map(file => ({
     type: 'ESModule', path: new URL('../' + file, import.meta.url).pathname })),
     d1Databases: ['DB'], r2Buckets: ['BUCKET'], compatibilityDate: '2026-11-01' }));
   try {
     const db = await mf.getD1Database('DB');
-    for (const file of ['0001_initial.sql','0002_standard.sql']) {
+    for (const file of ['0001_initial.sql','0002_standard.sql','0003_shared_bookings.sql']) {
       const sql = (await readFile(new URL('../../sync-service/migrations/' + file, import.meta.url), 'utf8')).replace(/^--.*$/gm, '');
       const statements = sql.match(/CREATE TRIGGER[\s\S]*?END;|(?:PRAGMA|CREATE TABLE|CREATE INDEX|CREATE UNIQUE INDEX|INSERT)[\s\S]*?;/gi);
       for (const statement of statements) await db.prepare(statement).run();
@@ -44,5 +44,21 @@ test('D1 Standard catalog: authorization, persistence, idempotency and vehicle s
     assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM departures').first()).n,1);
     assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM audit_events').first()).n,4);
     assert.equal((await db.prepare('SELECT token_hash FROM standard_sessions LIMIT 1').first()).token_hash.includes(a),false);
+    const reserve=(seats)=>({departureId:departure.data.id,seatNumbers:seats,passengers:seats.map(n=>'Pasajero ficticio '+n),quotedPriceCents:1500,requestId:crypto.randomUUID()});
+    const first=reserve([1,2,3,4,5,6]),second=reserve([3,4,5,6,7,8]);
+    const race=await Promise.all([call('/bookings',first,a),call('/bookings',second,b)]);
+    assert.deepEqual(race.map(r=>r.status).sort(),[200,409]);
+    const index=race[0].status===200?0:1, winner=race[index].data.booking,winningKey=index===0?a:b,winningBody=index===0?first:second;
+    assert.equal((await call('/bookings',winningBody,winningKey)).data.booking.id,winner.id);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM bookings').first()).n,1);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM payments').first()).n,1);
+    assert.equal((await call('/catalog')).data.departures[0].available,2);
+    assert.equal((await call('/bookings/'+winner.id,undefined,index===0?b:a)).status,403);
+    assert.equal((await call('/bookings/'+winner.id,undefined,winningKey)).data.booking.simulated,true);
+    assert.equal((await call('/bookings/'+winner.id,{action:'cancel'},winningKey)).data.booking.status,'cancelled');
+    assert.equal((await call('/bookings/'+winner.id,{action:'cancel'},winningKey)).data.booking.status,'cancelled');
+    assert.equal((await call('/catalog')).data.departures[0].available,8);
+    assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM payment_events WHERE kind='simulated_refund'").first()).n,1);
+    assert.equal((await call('/bookings',reserve([1]),a)).status,200);
   } finally { await mf.dispose(); }
 });

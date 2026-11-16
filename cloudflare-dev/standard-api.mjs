@@ -1,5 +1,6 @@
 // Development identities use random bearer capabilities, stored hashed in D1.
 // They are not commercial registration, email recovery or verified operators.
+import { handleReservations } from './standard-reservations.mjs';
 export const failure = (message, status = 400) => Object.assign(new Error(message), { status });
 export const hash = async value => Array.from(new Uint8Array(await crypto.subtle.digest(
   'SHA-256', new TextEncoder().encode(value))), b => b.toString(16).padStart(2, '0')).join('');
@@ -47,7 +48,9 @@ export async function command(db, user, body, kind, operations, entityId) {
 }
 const catalogSQL = `SELECT d.id, d.depart_at AS departAt,d.status,r.id AS offerId,r.operator_id AS operatorId,
  r.origin,r.destination,r.price_cents AS priceCents,o.display_name AS operatorName,
- v.id AS vehicleId,v.type AS vehicleType,v.model AS vehicle,v.capacity
+ v.id AS vehicleId,v.type AS vehicleType,v.model AS vehicle,v.capacity,
+ v.capacity-(SELECT COUNT(*) FROM seat_claims sc WHERE sc.departure_id=d.id AND sc.status IN('held','confirmed')) AS available,
+ (SELECT json_group_array(seat_number) FROM seat_claims sc WHERE sc.departure_id=d.id AND sc.status IN('held','confirmed')) AS reservedSeatsJson
  FROM departures d JOIN route_offers r ON r.id=d.offer_id JOIN operators o ON o.id=r.operator_id
  JOIN vehicles v ON v.id=d.vehicle_id WHERE d.status='published' AND r.active=1
  AND o.status='approved' AND v.status='active' AND d.depart_at>? ORDER BY d.depart_at LIMIT 200`;
@@ -55,7 +58,7 @@ const catalogSQL = `SELECT d.id, d.depart_at AS departAt,d.status,r.id AS offerI
 export async function handleStandard(request, env) {
   const path = new URL(request.url).pathname, method = request.method;
   if (path === '/api/catalog' && method === 'GET') {
-    return { departures: await rows(env.DB, catalogSQL, [new Date().toISOString()]),
+    return { departures: (await rows(env.DB, catalogSQL, [new Date().toISOString()])).map(({reservedSeatsJson,...d})=>({...d,reservedSeats:JSON.parse(reservedSeatsJson||'[]')})),
       routeOffers: await rows(env.DB, `SELECT r.id,r.operator_id AS operatorId,r.origin,r.destination,r.service_type AS serviceType,
        r.price_cents AS priceCents,o.display_name AS operatorName,v.id AS vehicleId,v.model AS vehicle,v.type AS vehicleType,v.capacity
        FROM route_offers r JOIN operators o ON o.id=r.operator_id JOIN standard_route_vehicles rv ON rv.offer_id=r.id
@@ -68,6 +71,7 @@ export async function handleStandard(request, env) {
       stmt(env.DB, 'INSERT INTO standard_sessions(token_hash,user_id) VALUES(?,?)', [await hash(token), id])]);
     return { token, userId: id, authentication: 'development-capability' };
   }
+  if(path.startsWith('/api/bookings'))return handleReservations(request,env,{identity,stmt,rows,failure,command,integer,text});
   if (!['/api/operator', '/api/operators', '/api/vehicles', '/api/route-offers', '/api/departures'].includes(path)) return null;
   const user = await identity(request, env.DB);
   if (path === '/api/operator' && method === 'GET') {
