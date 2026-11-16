@@ -1,12 +1,17 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let token = localStorage.getItem('rutasec-standard-session') || '', dashboard, refreshRevision = 0;
+const copyAccess=document.createElement('button');copyAccess.id='copyStandardAccess';copyAccess.textContent='Copiar clave privada de mi acceso';copyAccess.hidden=!token;
+copyAccess.onclick=async()=>{try{await navigator.clipboard.writeText(token);status('Clave privada copiada; permite recuperar tu acceso en otro navegador. Consérvala privada.');}catch{status('No se pudo copiar; habilita permiso de portapapeles en este navegador');}};
+document.querySelector('header').append(copyAccess);
 for (const id of ['vehicleForm','offerForm','departureForm']) $(id).hidden = true;
 export async function api(path, body) {
+ try{
   const response = await fetch('/standard-api/api' + path, { method: body ? 'POST' : 'GET',
     headers: { ...(token ? { Authorization: 'Bearer ' + token } : {}), ...(body ? {'Content-Type':'application/json'} : {}) },
-    body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
+    body: body ? JSON.stringify(body) : undefined, cache: 'no-store',signal:AbortSignal.timeout(15000) });
   const data = await response.json(); if (!response.ok) throw new Error(data.error || 'No se pudo completar'); return data;
+ }catch(error){if(error.name==='TimeoutError')throw new Error('La conexión tardó demasiado. Actualiza el historial antes de reintentar.');if(error instanceof TypeError)throw new Error('Sin conexión con el servicio. Las reservas requieren conexión; revisa el historial al volver.');throw error;}
 }
 export function status(message) { $('status').textContent = message; }
 function options(items, label) { return items.map(item => `<option value="${esc(item.id)}">${esc(label(item))}</option>`).join(''); }
@@ -35,15 +40,16 @@ export async function refresh() {
 async function guarded(action) { try { await action(); } catch (e) { status(e.message); } }
 for (const button of document.querySelectorAll('[data-view]')) button.onclick = () => {
   for (const id of ['catalog','operator','myBookings','privateRequests','tracking']) $(id).hidden = id !== button.dataset.view;
+  if(location.hash.startsWith('#track/'))history.replaceState(null,'',location.pathname+location.search);
   guarded(button.dataset.view === 'operator' ? refresh : catalog);
 };
 $('createSession').onclick = () => guarded(async () => {
   const data = await api('/sessions', {}); token = data.token;
-  localStorage.setItem('rutasec-standard-session', token); $('access').hidden = true; status('Acceso privado de desarrollo creado'); await refresh();
+  localStorage.setItem('rutasec-standard-session', token); $('access').hidden = true;copyAccess.hidden=false; status('Acceso privado de desarrollo creado'); await refresh();
 });
 $('restoreSession').onsubmit = event => { event.preventDefault(); guarded(async () => {
   const next = event.target.elements.token.value.trim(), previous = token; token = next;
-  try { await refresh(); localStorage.setItem('rutasec-standard-session', token); $('access').hidden = true; status('Acceso recuperado'); }
+  try { await refresh(); localStorage.setItem('rutasec-standard-session', token); $('access').hidden = true;copyAccess.hidden=false; status('Acceso recuperado'); }
   catch(e) { token = previous; throw e; }
 }); };
 const forms = { operatorForm: '/operators', vehicleForm: '/vehicles', offerForm: '/route-offers', departureForm: '/departures' };
@@ -70,3 +76,8 @@ import('./reservations.mjs').catch(e => status(e.message));
 import('./market.mjs').catch(e => status(e.message));
 import('./operations.mjs').catch(e => status(e.message));
 import('./tracking.mjs').catch(e => status(e.message));
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>status('No se pudo habilitar el modo sin conexión'));
+let installPrompt;
+const install=document.createElement('button');install.id='installStandard';install.textContent='Instalar Standard de desarrollo';document.querySelector('header').append(install);
+window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;});
+install.onclick=async()=>{if(installPrompt){await installPrompt.prompt();installPrompt=null;}else status('Para instalar: menú del navegador → Instalar app o Añadir a inicio. En iPhone: Compartir → Añadir a inicio.');};

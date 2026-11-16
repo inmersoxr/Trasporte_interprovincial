@@ -2,6 +2,7 @@
 import { readFile, writeFile, mkdir, readdir, cp, rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { patchBookings } from './frontend-patches.mjs';
+import { createHash } from 'node:crypto';
 const root = new URL('../', import.meta.url);
 const output = new URL('./out/', import.meta.url);
 await rm(output, { recursive: true, force: true });
@@ -21,8 +22,16 @@ await writeFile(new URL('public/bookings.mjs', output),
 await writeFile(new URL('public/shared/live-config.mjs', output),
   `export const SYNC_API=location.origin;\nexport const POLL_INTERVAL_MS=1800;\n`);
 // Same-origin API requests must never enter the offline cache or HTML fallback.
+async function assetPaths(dir){const paths=[];for(const entry of (await readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name,'en'))){const path=new URL(entry.name+(entry.isDirectory()?'/':''),dir);if(entry.isDirectory())paths.push(...await assetPaths(path));else paths.push(path);}return paths;}
+const digest=createHash('sha256');
+digest.update(await readFile(new URL('build-frontend.mjs',import.meta.url)));
+for(const path of await assetPaths(new URL('public/',output))){digest.update(path.pathname.split('/out/public/')[1]);digest.update(await readFile(path));}
+const revision=digest.digest('hex').slice(0,16);
+const standardSW=await readFile(new URL('standard/sw.js',import.meta.url),'utf8');
+await writeFile(new URL('public/standard/sw.js',output),standardSW.replace('__BUILD_REVISION__',revision));
 let sw = await readFile(new URL('sw.js', root), 'utf8');
-sw = sw.replace("const CACHE = '", "const CACHE = 'rutasec-cloudflare-dev-j2-loading-v2-");
+sw = sw.replace("const CACHE = '", "const CACHE = 'rutasec-cloudflare-dev-"+revision+"-");
+sw = sw.replace("key.startsWith('rutasec-')", "key.startsWith('rutasec-cloudflare-dev-')");
 sw = sw.replace("self.addEventListener('fetch', event => {", `self.addEventListener('fetch', event => {
   if (/^\\/(api|standard-api)(?:\\/|$)/.test(new URL(event.request.url).pathname)) return;`);
 await writeFile(new URL('public/sw.js', output), sw);

@@ -10,6 +10,8 @@ import subprocess
 import time
 
 ROOT = Path(__file__).resolve().parent
+if 'standard-api.mjs' in (ROOT / 'worker.mjs').read_text():
+    raise SystemExit('Legacy J1 probe disabled for the active Standard API; use npm test and the Standard browser suites. Do not replace business code with a health probe.')
 m = runpy.run_path(str(ROOT / 'deploy.py'))
 config = json.loads((ROOT / 'wrangler.json').read_text())
 db = config['d1_databases'][0]['database_id']

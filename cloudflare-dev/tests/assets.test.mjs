@@ -5,7 +5,9 @@ import { readFileSync, existsSync } from 'node:fs';
 const root = new URL('../', import.meta.url);
 const sw = readFileSync(new URL('out/public/sw.js', root), 'utf8');
 const handlers = {};
-vm.runInNewContext(sw, { self: { addEventListener: (name, fn) => { handlers[name] = fn; } }, URL });
+const removed=[];
+vm.runInNewContext(sw, { self: { addEventListener: (name, fn) => { handlers[name] = fn; },clients:{claim:async()=>{}} },
+  caches:{keys:async()=>['rutasec-cloudflare-dev-old','rutasec-standard-dev-keep'],delete:async key=>removed.push(key)},URL });
 test('same-origin APIs bypass offline cache and HTML fallback', () => {
   for (const path of ['/api/catalog', '/standard-api/health']) {
     let intercepted = false;
@@ -13,6 +15,20 @@ test('same-origin APIs bypass offline cache and HTML fallback', () => {
       respondWith() { intercepted = true; } });
     assert.equal(intercepted, false);
   }
+});
+test('parity SW activation preserves the independent Standard PWA cache', async()=>{
+ let pending;handlers.activate({waitUntil(p){pending=p;}});await pending;
+ assert.deepEqual(removed,['rutasec-cloudflare-dev-old']);
+});
+test('Standard SW bypasses APIs and its precache includes real public files',()=>{
+ const source=readFileSync(new URL('out/public/standard/sw.js',root),'utf8'),events={};
+ vm.runInNewContext(source,{self:{addEventListener:(name,fn)=>events[name]=fn,location:{origin:'https://dev.example',href:'https://dev.example/standard/sw.js'}},URL});
+ for(const path of ['/standard-api/api/bookings','/api/catalog']){
+  let handled=false;events.fetch({request:{url:'https://dev.example'+path,method:'GET'},respondWith(){handled=true;}});assert.equal(handled,false);
+ }
+ const core=JSON.parse(source.match(/const CORE=(\[[^;]+\]);/)[1].replaceAll("'",'"'));
+ for(const path of core)assert.ok(existsSync(new URL('out/public/standard/'+path.split('?')[0],root)),path);
+ assert.ok(!source.includes('__BUILD_REVISION__'));
 });
 test('all service worker precache files exist; copied config cannot target original demo', () => {
   const core = JSON.parse(sw.match(/const CORE = (\[[^;]+\]);/)[1].replaceAll("'", '"'));

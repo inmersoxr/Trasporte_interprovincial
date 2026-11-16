@@ -28,7 +28,7 @@ async function refresh(){
  }catch(e){$('trackingConnection').textContent='Sin conexión · posición no actualizada';status(e.message);}finally{loading=false;}
 }
 async function open(){
- const match=location.hash.match(/^#track\/([0-9a-f-]{36})$/i);if(!match){id=null;return;}id=match[1];
+ const match=location.hash.match(/^#track\/([0-9a-f-]{36})$/i);if(!match){id=null;return;}id=match[1];state=null;
  for(const section of ['catalog','operator','myBookings','privateRequests'])$(section).hidden=true;$('tracking').hidden=false;
  try{
   if(!road){const response=await fetch('../shared/route.json');if(!response.ok)throw new Error('No se pudo cargar geometría');road=prepareRoad(await response.json());}
@@ -38,7 +38,7 @@ async function open(){
  }catch(e){status(e.message);}
 }
 setInterval(()=>{if(id&&!document.hidden&&!$('tracking').hidden)refresh();},3000);
-setInterval(()=>{if(state&&road&&id&&!$('tracking').hidden){const snapshot=tripSnapshot(state,road,Date.now()+clockOffset);marker?.setLatLng([snapshot.position.lat,snapshot.position.lng]);$('trackingProgress').textContent=`SIMULADO · ${(snapshot.progress*100).toFixed(1)}% · ${snapshot.status} · referencia Cuenca–Guayaquil`; }},150);
+setInterval(()=>{if(state&&road&&id&&!document.hidden&&!$('tracking').hidden){const snapshot=tripSnapshot(state,road,Date.now()+clockOffset);marker?.setLatLng([snapshot.position.lat,snapshot.position.lng]);$('trackingProgress').textContent=`SIMULADO · ${(snapshot.progress*100).toFixed(1)}% · ${snapshot.status} · referencia Cuenca–Guayaquil`; }},150);
 $('copyTracking').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+location.pathname+'#track/'+id);status('Enlace público copiado; no incluye acceso privado');}catch{status('Copia la dirección del navegador para compartir este seguimiento DEMO');}};
 $('closeTracking').onclick=()=>{location.hash='';$('tracking').hidden=true;$('catalog').hidden=false;};
 window.addEventListener('hashchange',open);open();
