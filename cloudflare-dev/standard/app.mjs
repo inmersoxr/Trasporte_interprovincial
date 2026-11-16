@@ -34,7 +34,7 @@ export async function refresh() {
 }
 async function guarded(action) { try { await action(); } catch (e) { status(e.message); } }
 for (const button of document.querySelectorAll('[data-view]')) button.onclick = () => {
-  for (const id of ['catalog','operator','myBookings']) $(id).hidden = id !== button.dataset.view;
+  for (const id of ['catalog','operator','myBookings','privateRequests']) $(id).hidden = id !== button.dataset.view;
   guarded(button.dataset.view === 'operator' ? refresh : catalog);
 };
 $('createSession').onclick = () => guarded(async () => {
@@ -67,3 +67,4 @@ $('access').hidden = !!token;
 guarded(catalog); if (token) guarded(refresh);
 setInterval(() => { if (!document.hidden && !$('catalog').hidden) guarded(catalog); }, 10000);
 import('./reservations.mjs').catch(e => status(e.message));
+import('./market.mjs').catch(e => status(e.message));

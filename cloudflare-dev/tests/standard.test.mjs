@@ -4,12 +4,12 @@ import { readFile } from 'node:fs/promises';
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 
 test('D1 Standard catalog: authorization, persistence, idempotency and vehicle scheduling', async () => {
-  const mf = new Miniflare(convertV4MiniflareOptions({ modules: ['worker.mjs','standard-api.mjs','standard-reservations.mjs','standard-private.mjs'].map(file => ({
+  const mf = new Miniflare(convertV4MiniflareOptions({ modules: ['worker.mjs','standard-api.mjs','standard-reservations.mjs','standard-private.mjs','standard-market.mjs'].map(file => ({
     type: 'ESModule', path: new URL('../' + file, import.meta.url).pathname })),
     d1Databases: ['DB'], r2Buckets: ['BUCKET'], compatibilityDate: '2026-11-01' }));
   try {
     const db = await mf.getD1Database('DB');
-    for (const file of ['0001_initial.sql','0002_standard.sql','0003_shared_bookings.sql','0004_private_fixed.sql']) {
+    for (const file of ['0001_initial.sql','0002_standard.sql','0003_shared_bookings.sql','0004_private_fixed.sql','0005_competitive_private.sql']) {
       const sql = (await readFile(new URL('../../sync-service/migrations/' + file, import.meta.url), 'utf8')).replace(/^--.*$/gm, '');
       const statements = sql.match(/CREATE TRIGGER[\s\S]*?END;|(?:PRAGMA|CREATE TABLE|CREATE INDEX|CREATE UNIQUE INDEX|ALTER TABLE|INSERT)[\s\S]*?;/gi);
       for (const statement of statements) await db.prepare(statement).run();
@@ -74,5 +74,45 @@ test('D1 Standard catalog: authorization, persistence, idempotency and vehicle s
     assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM seat_claims WHERE booking_id=?').bind(privateBooking.id).first()).n,0);
     await call('/bookings/'+privateBooking.id,{action:'cancel'},n===0?a:b);
     assert.equal((await call('/private-route-bookings',privateBody(at),b)).status,200);
+    const customAt=new Date(Date.now()+7*86400000).toISOString();
+    const custom=await create('/private-requests',{origin:'Cuenca',destination:'Manta',people:2,vehicleType:'van',durationMinutes:240,serviceAt:customAt,notes:'Datos ficticios'},b);
+    assert.equal(custom.status,200);assert.equal(custom.data.assignment,'none');
+    const op2=await create('/operators',{name:'Segunda ficticia'}),vehicle2=await create('/vehicles',{operatorId:op2.data.id,type:'van',model:'Van dos',capacity:8});
+    await create('/route-offers',{operatorId:op2.data.id,vehicleId:vehicle2.data.id,origin:'Cuenca',destination:'Quito',serviceType:'private_fixed',priceCents:30000});
+    assert.ok((await call('/private-market',undefined,a)).data.requests.some(r=>r.id===custom.data.id));
+    const proposal=(op,veh,price)=>({privateRequestId:custom.data.id,operatorId:op,vehicleId:veh,priceCents:price,durationMinutes:240});
+    const firstOffer=await create('/private-offers',proposal(op.data.id,vehicle.data.id,20000));
+    assert.equal(firstOffer.status,200);
+    let listed=(await call('/private-requests',undefined,b)).data.requests.find(r=>r.id===custom.data.id);
+    assert.equal(listed.offers.length,1);assert.equal(listed.status,'receiving_offers');assert.equal(listed.booking,null);
+    const nextOffer=await create('/private-offers',proposal(op2.data.id,vehicle2.data.id,18000));
+    assert.equal(nextOffer.status,200);
+    listed=(await call('/private-requests',undefined,b)).data.requests.find(r=>r.id===custom.data.id);assert.equal(listed.offers.length,2);
+    assert.equal((await call('/private-requests/'+custom.data.id+'/select',{offerId:firstOffer.data.id,quotedPriceCents:20000,requestId:crypto.randomUUID()},a)).status,403);
+    const selection={offerId:nextOffer.data.id,quotedPriceCents:18000,requestId:crypto.randomUUID()};
+    const chosen=await call('/private-requests/'+custom.data.id+'/select',selection,b);assert.equal(chosen.status,200);
+    assert.equal((await call('/private-requests/'+custom.data.id+'/select',selection,b)).data.bookingId,chosen.data.bookingId);
+    assert.equal((await call('/private-requests/'+custom.data.id+'/select',{offerId:firstOffer.data.id,quotedPriceCents:20000,requestId:crypto.randomUUID()},b)).status,409);
+    assert.equal((await db.prepare('SELECT offer_id FROM standard_custom_bookings WHERE id=?').bind(chosen.data.bookingId).first()).offer_id,nextOffer.data.id);
+    assert.equal((await call('/private-requests/'+custom.data.id,{action:'cancel'},b)).status,200);
+    const reqPayload=at=>({origin:'Cuenca',destination:'Manta',people:2,vehicleType:'van',durationMinutes:240,serviceAt:at});
+    const staleAt=new Date(Date.now()+10*86400000).toISOString();
+    const stale=await create('/private-requests',reqPayload(staleAt),b);
+    const staleOffer=await create('/private-offers',{...proposal(op.data.id,vehicle.data.id,20000),privateRequestId:stale.data.id});
+    assert.equal(staleOffer.status,200);
+    assert.equal((await call('/private-route-bookings',privateBody(staleAt),a)).status,200);
+    assert.equal((await call('/private-requests/'+stale.data.id+'/select',{offerId:staleOffer.data.id,quotedPriceCents:20000,requestId:crypto.randomUUID()},b)).status,409);
+    const raceAt=new Date(Date.now()+15*86400000).toISOString(),reqRace=await create('/private-requests',reqPayload(raceAt),b);
+    const raceOffers=await Promise.all([
+     create('/private-offers',{...proposal(op.data.id,vehicle.data.id,21000),privateRequestId:reqRace.data.id}),
+     create('/private-offers',{...proposal(op2.data.id,vehicle2.data.id,19000),privateRequestId:reqRace.data.id})]);
+    assert.ok(raceOffers.every(r=>r.status===200));
+    const doubleChoice=await Promise.all(raceOffers.map((r,i)=>call('/private-requests/'+reqRace.data.id+'/select',{offerId:r.data.id,quotedPriceCents:i===0?21000:19000,requestId:crypto.randomUUID()},b)));
+    assert.deepEqual(doubleChoice.map(r=>r.status).sort(),[200,409]);
+    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM standard_custom_bookings WHERE request_id=?').bind(reqRace.data.id).first()).n,1);
+    const withdrawnReq=await create('/private-requests',reqPayload(new Date(Date.now()+20*86400000).toISOString()),b);
+    const withdrawn=await create('/private-offers',{...proposal(op.data.id,vehicle.data.id,20000),privateRequestId:withdrawnReq.data.id});
+    assert.equal((await call('/private-offers/'+withdrawn.data.id,{action:'withdraw'},a)).status,200);
+    assert.equal((await call('/private-requests/'+withdrawnReq.data.id+'/select',{offerId:withdrawn.data.id,quotedPriceCents:20000,requestId:crypto.randomUUID()},b)).status,409);
   } finally { await mf.dispose(); }
 });

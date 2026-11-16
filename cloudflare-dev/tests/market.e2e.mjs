@@ -1,0 +1,68 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+const base='https://rutasec-web-dev.drbrownlabs.workers.dev';
+const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
+const proxy=process.env.https_proxy||process.env.HTTPS_PROXY,options={...(proxy?{proxy:{server:proxy}}:{}),viewport:{width:390,height:844},timezoneId:'America/Guayaquil'};
+const customer=await browser.newContext(options),op1=await browser.newContext(options),op2=await browser.newContext(options);
+const errors=[];
+async function call(ctx,path,body,key){
+ const r=await ctx.request.fetch(base+'/standard-api/api'+path,{method:body?'POST':'GET',headers:key?{Authorization:'Bearer '+key}:{},...(body?{data:body}:{})});
+ return {status:r.status(),data:await r.json()};
+}
+async function setup(ctx,name){
+ const session=await call(ctx,'/sessions',{}),key=session.data.token;
+ const create=async(path,body)=>{const r=await call(ctx,path,{...body,requestId:crypto.randomUUID()},key);assert.equal(r.status,200,JSON.stringify(r.data));return r.data;};
+ const operator=await create('/operators',{name}),vehicle=await create('/vehicles',{operatorId:operator.id,type:'van',model:name+' vehículo',capacity:8});
+ const route=await create('/route-offers',{operatorId:operator.id,vehicleId:vehicle.id,origin:'Cuenca',destination:'Guayaquil',serviceType:'private_fixed',priceCents:20000});
+ await ctx.addInitScript(key=>localStorage.setItem('rutasec-standard-session',key),key);
+ return {key,operator,vehicle,route,create};
+}
+try{
+ const [a,b]=await Promise.all([setup(op1,'Oferta ficticia A'),setup(op2,'Oferta ficticia B')]);
+ const key=(await call(customer,'/sessions',{})).data.token;
+ await customer.addInitScript(key=>localStorage.setItem('rutasec-standard-session',key),key);
+ const passenger=await customer.newPage(),operator=await op1.newPage();
+ for(const p of [passenger,operator])p.on('pageerror',e=>errors.push(e.message));
+ await passenger.goto(base+'/standard/');await passenger.locator('#openPrivateMarket').click();
+ await passenger.locator('#privateRequestForm input[name="serviceAt"]').fill(new Date(Date.now()+8*86400000).toISOString().slice(0,16));
+ const [response]=await Promise.all([passenger.waitForResponse(r=>r.url().endsWith('/api/private-requests')&&r.request().method()==='POST'),passenger.locator('#privateRequestForm button').click()]);
+ const req=(await response.json()).id;assert.equal(response.status(),200);
+ await operator.goto(base+'/standard/');await operator.locator('[data-view="operator"]').click();
+ await operator.locator(`#marketOfferForm select[name="privateRequestId"] option[value="${req}"]`).waitFor({state:'attached'});
+ await operator.locator('#marketOfferForm select[name="privateRequestId"]').selectOption(req);
+ await operator.locator('#marketOfferForm select[name="vehicleId"]').selectOption(a.vehicle.id);
+ await operator.locator('#marketOfferForm input[name="price"]').fill('120');
+ const [offerResponse]=await Promise.all([operator.waitForResponse(r=>r.url().endsWith('/api/private-offers')&&r.request().method()==='POST'),operator.locator('#marketOfferForm button').click()]);
+ const first=(await offerResponse.json()).id;assert.equal(offerResponse.status(),200);
+ await passenger.locator(`[data-offer="${first}"]`).waitFor();
+ const before=(await call(customer,'/private-requests',undefined,key)).data.requests.find(r=>r.id===req);
+ assert.equal(before.offers.length,1);assert.equal(before.booking,null);
+ const second=await b.create('/private-offers',{privateRequestId:req,operatorId:b.operator.id,vehicleId:b.vehicle.id,priceCents:9000,durationMinutes:240});
+ await passenger.locator(`[data-offer="${second.id}"]`).waitFor();
+ const [selected]=await Promise.all([passenger.waitForResponse(r=>r.url().endsWith('/select')&&r.request().method()==='POST'),passenger.locator(`[data-select="${second.id}"]`).click()]);
+ const booking=(await selected.json()).bookingId;assert.equal(selected.status(),200);
+ await passenger.locator(`[data-custom-booking="${booking}"]`).waitFor();
+ await passenger.reload();await passenger.locator('#openPrivateMarket').click();await passenger.locator(`[data-custom-booking="${booking}"]`).waitFor();
+ const chosen=(await call(customer,'/private-requests',undefined,key)).data.requests.find(r=>r.id===req);
+ assert.equal(chosen.booking.offer_id,second.id);assert.equal(chosen.booking.amount_cents,9000);
+ assert.equal((await call(op1,'/private-requests/'+req+'/select',{offerId:first,quotedPriceCents:12000,requestId:crypto.randomUUID()},a.key)).status,403);
+ assert.equal((await call(customer,'/private-requests/'+req,{action:'cancel'},key)).status,200);
+ console.log('J6 UI: eligible in-app alert, first offer visible before second, explicit choice of later offer, persisted booking/reload and 403: PASS');
+ const at=new Date(Date.now()+10*86400000).toISOString();
+ const raceReq=await call(customer,'/private-requests',{origin:'Cuenca',destination:'Manta',serviceAt:at,people:2,vehicleType:'van',durationMinutes:240,requestId:crypto.randomUUID()},key);assert.equal(raceReq.status,200);
+ const proposed=await Promise.all([a,b].map((o,i)=>o.create('/private-offers',{privateRequestId:raceReq.data.id,operatorId:o.operator.id,vehicleId:o.vehicle.id,priceCents:12000-i*1000,durationMinutes:240})));
+ const payloads=proposed.map((o,i)=>({offerId:o.id,quotedPriceCents:12000-i*1000,requestId:crypto.randomUUID()}));
+ const selectedRace=await Promise.all(payloads.map(body=>call(customer,'/private-requests/'+raceReq.data.id+'/select',body,key)));
+ assert.deepEqual(selectedRace.map(r=>r.status).sort(),[200,409]);
+ const winner=selectedRace[0].status===200?0:1;
+ assert.equal((await call(customer,'/private-requests/'+raceReq.data.id+'/select',payloads[winner],key)).data.bookingId,selectedRace[winner].data.bookingId);
+ await call(customer,'/private-requests/'+raceReq.data.id,{action:'cancel'},key);
+ const staleAt=new Date(Date.now()+12*86400000).toISOString();
+ const stale=await call(customer,'/private-requests',{origin:'Cuenca',destination:'Manta',serviceAt:staleAt,people:2,vehicleType:'van',durationMinutes:240,requestId:crypto.randomUUID()},key);
+ const oldOffer=await a.create('/private-offers',{privateRequestId:stale.data.id,operatorId:a.operator.id,vehicleId:a.vehicle.id,priceCents:12000,durationMinutes:240});
+ const occupied=await a.create('/private-route-bookings',{offerId:a.route.id,serviceAt:staleAt,passengers:['Bloqueo ficticio'],quotedPriceCents:20000});
+ assert.equal((await call(customer,'/private-requests/'+stale.data.id+'/select',{offerId:oldOffer.id,quotedPriceCents:12000,requestId:crypto.randomUUID()},key)).status,409);
+ await call(op1,'/bookings/'+occupied.booking.id,{action:'cancel'},a.key);await call(customer,'/private-requests/'+stale.data.id,{action:'cancel'},key);
+ assert.deepEqual(errors,[]);
+ console.log('J6 real D1: two simultaneous selections yield one winner, idempotent retry, vehicle availability revalidated, cleanup: PASS');
+}finally{await browser.close();}

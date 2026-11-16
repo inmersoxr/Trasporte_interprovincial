@@ -1,4 +1,6 @@
 # RutasEC — Memoria persistente del repositorio
+Estado vigente: J1–J5 verificadas en desarrollo. J5 remoto be140f3936a4301690f1ad9fecb20cdee9f35e90, Actions 43899002313 SUCCESS, schema0004. Privado fijo por vehículo/horario propio, tarifa servidor, exclusión horaria y cancelación probados; no consume plazas compartidas. Duración publicada por operadora, no manipulable por pasajero. Próximo J6 competitivo. Snapshot `2026-11-16-j5-verified.md`.
+
 Estado vigente: J1–J4 verificadas en desarrollo. J4 remoto `81465be44615c079008f98dd00e5dd0a35dd793f`, CI `43897933219` SUCCESS; D1 schema0003, reserva compartida atómica/pago simulado, QR, cancelación e idempotencia probados en navegador y carrera real contra D1. J5 es siguiente. Snapshot `2026-11-16-j4-verified.md`. No hay cobros reales ni cuentas comerciales verificadas.
 
 Estado Junior vigente: J1–J3 verificadas en desarrollo. Standard independiente en `/standard/`; backend `j3-catalog-v1`, schema `0002_standard`. CI `43896653022` SUCCESS, commit remoto `93ac2abda89aa7e7878c0071cd8135265ccc511a`. Catálogo D1 y controles 401/403 comprobados en dos sesiones. Sesiones por capacidades de desarrollo (no registro comercial ni recuperación por correo). J4 es la siguiente tarea. Ver snapshot `2026-11-16-j3-verified.md`; las referencias anteriores a D1 solo-health son históricas.

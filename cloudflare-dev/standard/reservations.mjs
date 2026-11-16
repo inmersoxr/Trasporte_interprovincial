@@ -53,7 +53,7 @@ $('reserveForm').onsubmit=async e=>{
 export async function loadBookings(){
  try{
   const {bookings}=await api('/bookings');
-  for(const id of ['catalog','operator'])$(id).hidden=true;$('myBookings').hidden=false;
+  for(const id of ['catalog','operator','privateRequests'])$(id).hidden=true;$('myBookings').hidden=false;
   $('bookingList').innerHTML=bookings.map(b=>`<article data-booking="${b.id}"><strong>${esc(b.origin)} → ${esc(b.destination)}</strong><p>${esc(b.operatorName)} · ${esc(b.vehicle)}</p><p>${esc(b.service_at)} · ${esc(b.status)}</p><p>${esc(b.paymentLabel)} · $${(b.amount_cents/100).toFixed(2)}</p><ul>${b.passengers.map(p=>`<li>${esc(p.name)} · asiento ${p.seatNumber??'privado'}</li>`).join('')}</ul>${b.status==='confirmed'?b.qrCodes.map((qr,i)=>`<p>QR pasajero ${i+1}</p><div id="qr-${b.id}-${i}" class="qr"></div><p class="small">${esc(qr)}</p>`).join('')+`<button data-cancel="${b.id}">Cancelar y simular reembolso</button>`:''}</article>`).join('')||'<p>No hay boletos en este acceso.</p>';
   for(const b of bookings)if(b.status==='confirmed'){
    b.qrCodes.forEach((qr,i)=>new window.QRCode($(`qr-${b.id}-${i}`),{text:qr,width:180,height:180}));

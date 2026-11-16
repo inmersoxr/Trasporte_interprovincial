@@ -5,7 +5,7 @@ import worker from '../worker.mjs';
 const request = (path = '/health', method = 'GET') =>
   new Request(`https://dev.example${path}`, { method });
 const env = {
-  DB: { prepare: () => ({ bind: () => ({ first: async () => ({ version: '0004_private_fixed' }) }) }) },
+  DB: { prepare: () => ({ bind: () => ({ first: async () => ({ version: '0005_competitive_private' }) }) }) },
   BUCKET: { list: async () => ({ objects: [] }) }
 };
 test('health verifies both bindings without cache', async () => {

@@ -1,6 +1,7 @@
 // Development identities use random bearer capabilities, stored hashed in D1.
 // They are not commercial registration, email recovery or verified operators.
 import { handleReservations } from './standard-reservations.mjs';
+import { handleMarket } from './standard-market.mjs';
 export const failure = (message, status = 400) => Object.assign(new Error(message), { status });
 export const hash = async value => Array.from(new Uint8Array(await crypto.subtle.digest(
   'SHA-256', new TextEncoder().encode(value))), b => b.toString(16).padStart(2, '0')).join('');
@@ -43,6 +44,7 @@ export async function command(db, user, body, kind, operations, entityId) {
     const saved = await stmt(db, 'SELECT * FROM standard_commands WHERE user_id=? AND request_id=?', [user.id, body.requestId]).first();
     if (saved?.kind === kind && saved.fingerprint === fingerprint) return saved.entity_id;
     if (String(error.message).includes('vehicle_conflict')) throw failure('El vehículo ya tiene un servicio en ese horario', 409);
+    if (String(error.message).includes('request_limit')) throw failure('Límite de 10 solicitudes abiertas; cancela alguna antes de crear otra', 429);
     throw error;
   }
 }
@@ -72,6 +74,7 @@ export async function handleStandard(request, env) {
     return { token, userId: id, authentication: 'development-capability' };
   }
   if(path.startsWith('/api/bookings')||path==='/api/private-route-bookings')return handleReservations(request,env,{identity,stmt,rows,failure,command,integer,text});
+  if(path.startsWith('/api/private-requests')||path.startsWith('/api/private-offers')||path==='/api/private-market')return handleMarket(request,env,{identity,stmt,rows,failure,owner,command,integer,text});
   if (!['/api/operator', '/api/operators', '/api/vehicles', '/api/route-offers', '/api/departures'].includes(path)) return null;
   const user = await identity(request, env.DB);
   if (path === '/api/operator' && method === 'GET') {
