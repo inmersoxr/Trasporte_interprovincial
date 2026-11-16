@@ -41,7 +41,6 @@ try {
   await page.evaluate(() => show('results'));
   await page.getByText('Conectando a las salidas publicadas…', { exact: true }).waitFor();
   releaseCatalog();
-  await page.unroute('**/api/catalog');
   await page.waitForFunction(() => fleet.every(vehicle => vehicle.ride));
   console.log('Slow catalog navigation shows loading without JavaScript error: PASS');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);

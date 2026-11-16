@@ -1,5 +1,6 @@
-// Isolated infrastructure probe. The demo Worker and ledger are never imported.
-export const REVISION = 'j1-infrastructure-v1';
+import { handleStandard } from './standard-api.mjs';
+// Isolated development API. The original demo Worker/ledger are never imported.
+const REVISION = 'j3-catalog-v1';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -8,6 +9,14 @@ function json(body, status = 200) {
 export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
+    if (path.startsWith('/api/')) {
+      try {
+        const result = await handleStandard(request, env);
+        return result ? json(result) : json({ error: 'Not found' }, 404);
+      } catch (error) {
+        return json({ error: error.status ? error.message : 'No se pudo completar la operación' }, error.status || 503);
+      }
+    }
     if (path !== '/health') return json({ error: 'Not found' }, 404);
     if (request.method !== 'GET') {
       return new Response(null, { status: 405, headers: { Allow: 'GET' } });
@@ -15,10 +24,10 @@ export default {
     try {
       const migration = await env.DB.prepare(
         'SELECT version FROM schema_migrations WHERE version = ?'
-      ).bind('0001_initial').first();
+      ).bind('0002_standard').first();
       // List one object only; never publish object names or content.
       await env.BUCKET.list({ limit: 1 });
-      if (!migration) throw new Error('Migration missing');
+      if (!migration || migration.version !== '0002_standard') throw new Error('Migration missing');
       return json({ service: 'RutasEC development', environment: 'development',
         revision: REVISION, ok: true, d1: true, r2: true,
         schema: migration.version, payments: 'disabled' });
