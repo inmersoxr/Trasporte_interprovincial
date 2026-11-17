@@ -27,3 +27,6 @@ La opción es **Iniciar sesión con Apple**. Comparte el mismo modelo de identid
 
 ## Límites
 PWA es instalación web; no se publica en App Store/Play Store. Instalación nativa/cámara en hardware físico y operación comercial siguen pendientes. Identidad real no activa pagos ni suscripciones comerciales. La autoaprobación de operadoras continúa limitada al entorno de desarrollo.
+
+## Estado comprobado de esta entrega
+2026-11-17: /standard-api/auth/config devuelve google=false, missingGoogleConfiguration=[GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET], apple=false. Implementación A1 desplegada y controles locales/cookie dev verificados; callback con cuenta real Google pendiente. Después de configurar ambas variables, comprobar google=true y realizar login real/vinculación con cuenta autorizada antes de declararlo disponible. No configurar Apple sin su integración/configuración separada.
