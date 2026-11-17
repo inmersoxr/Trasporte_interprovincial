@@ -1,6 +1,7 @@
+import {joinTeam,handleTeam} from './premium-team.mjs';
 // Premium dev extends the same tenant, identity, vehicles and scheduling ledger.
 export async function handlePremium(request,env,c) {
- const {identity,owner,stmt,rows,failure,command,integer,text}=c,db=env.DB;
+ const {identity,owner,stmt,rows,failure,command,integer,text,hash}=c,db=env.DB;
  const url=new URL(request.url),path=url.pathname,user=await identity(request,db);
  let body={};
  if(request.method==='POST') {
@@ -8,15 +9,25 @@ export async function handlePremium(request,env,c) {
   try{body=JSON.parse(raw);}catch{throw failure('JSON no válido');}
   if(!body||typeof body!=='object'||Array.isArray(body))throw failure('Solicitud no válida');
  } else if(request.method!=='GET')throw failure('Método no permitido',405);
+ if(path==='/api/premium/join'&&request.method==='POST')return joinTeam(body,user,db,c);
+ if(path==='/api/premium/operators'&&request.method==='GET')return{userId:user.id,operators:await rows(db,'SELECT o.id,o.display_name,m.role FROM operators o JOIN memberships m ON m.operator_id=o.id WHERE m.user_id=?',[user.id])};
  const operatorId=request.method==='GET'?url.searchParams.get('operatorId'):body.operatorId;
- await owner(db,user.id,operatorId);
+ const membership=await stmt(db,'SELECT role FROM memberships WHERE operator_id=? AND user_id=?',[operatorId,user.id]).first();
+ if(!membership)throw failure('Sin permiso para esta operadora',403);
+ const role=membership.role;
+ const teamPaths=['/api/premium/branches','/api/premium/invites','/api/premium/revoke','/api/premium/assignments'];
+ if(path==='/api/premium/activate'||teamPaths.includes(path))await owner(db,user.id,operatorId);
+ else if(request.method==='POST'&&!['owner','admin'].includes(role))throw failure('El rol no permite esta operación',403);
  const entitlement=await stmt(db,'SELECT plan,active,activated_at FROM premium_tenants WHERE operator_id=?',[operatorId]).first();
  if(path==='/api/premium'&&request.method==='GET') {
   if(!entitlement?.active)return {enabled:false,environment:'development',payments:'disabled'};
-  return {enabled:true,entitlement,environment:'development',payments:'disabled',
+  return {enabled:true,role,entitlement,environment:'development',payments:'disabled',
    vehicles:await rows(db,`SELECT v.*,p.odometer_km,p.next_service_km,p.updated_at FROM vehicles v
-    LEFT JOIN premium_vehicle_profiles p ON p.vehicle_id=v.id WHERE v.operator_id=? ORDER BY v.model`,[operatorId]),
-   maintenance:await rows(db,'SELECT * FROM premium_maintenance WHERE operator_id=? ORDER BY starts_at DESC LIMIT 200',[operatorId])};
+    LEFT JOIN premium_vehicle_profiles p ON p.vehicle_id=v.id WHERE v.operator_id=? AND (?<>'driver' OR EXISTS(SELECT 1 FROM premium_assignments a WHERE a.vehicle_id=v.id AND a.driver_user_id=?)) ORDER BY v.model`,[operatorId,role,user.id]),
+   branches:role==='driver'?[]:await rows(db,'SELECT * FROM premium_branches WHERE operator_id=?',[operatorId]),
+   members:['owner','admin'].includes(role)?await rows(db,'SELECT m.user_id,m.role,u.display_name FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.operator_id=?',[operatorId]):[],
+   assignments:await rows(db,"SELECT * FROM premium_assignments WHERE operator_id=? AND (?<>'driver' OR driver_user_id=?)",[operatorId,role,user.id]),
+   maintenance:role==='driver'?[]:await rows(db,'SELECT * FROM premium_maintenance WHERE operator_id=? ORDER BY starts_at DESC LIMIT 200',[operatorId])};
  }
  if(request.method!=='POST')throw failure('Ruta no encontrada',404);
  if(path==='/api/premium/activate') {
@@ -24,6 +35,7 @@ export async function handlePremium(request,env,c) {
   return {id:operatorId,enabled:true,plan:'premium_dev',payments:'disabled'};
  }
  if(!entitlement?.active)throw failure('Activa Premium de desarrollo para esta operadora',403);
+ if(teamPaths.includes(path))return handleTeam(path,body,user,operatorId,db,c);
  const id=crypto.randomUUID();
  if(path==='/api/premium/vehicle-profile'||path==='/api/premium/maintenance') {
   if(!await stmt(db,'SELECT 1 FROM vehicles WHERE id=? AND operator_id=?',[body.vehicleId,operatorId]).first())throw failure('Vehículo ajeno o inexistente',403);

@@ -1,6 +1,6 @@
 import { handleStandard } from './standard-api.mjs';
 // Isolated development API. The original demo Worker/ledger are never imported.
-const REVISION = 'p1-premium-fleet-v1';
+const REVISION = 'p2-premium-team-v1';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -24,10 +24,10 @@ export default {
     try {
       const migration = await env.DB.prepare(
         'SELECT version FROM schema_migrations WHERE version = ?'
-      ).bind('0007_premium_fleet').first();
+      ).bind('0008_premium_team').first();
       // List one object only; never publish object names or content.
       await env.BUCKET.list({ limit: 1 });
-      if (!migration || migration.version !== '0007_premium_fleet') throw new Error('Migration missing');
+      if (!migration || migration.version !== '0008_premium_team') throw new Error('Migration missing');
       return json({ service: 'RutasEC development', environment: 'development',
         revision: REVISION, ok: true, d1: true, r2: true,
         schema: migration.version, payments: 'disabled' });

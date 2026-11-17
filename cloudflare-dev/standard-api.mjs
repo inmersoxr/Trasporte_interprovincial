@@ -75,7 +75,7 @@ export async function handleStandard(request, env) {
       stmt(env.DB, 'INSERT INTO standard_sessions(token_hash,user_id) VALUES(?,?)', [await hash(token), id])]);
     return { token, userId: id, authentication: 'development-capability' };
   }
-  if(path==='/api/premium'||path.startsWith('/api/premium/'))return handlePremium(request,env,{identity,owner,stmt,rows,failure,command,integer,text});
+  if(path==='/api/premium'||path.startsWith('/api/premium/'))return handlePremium(request,env,{identity,owner,stmt,rows,failure,command,integer,text,hash});
   if(path.startsWith('/api/bookings')||path==='/api/private-route-bookings')return handleReservations(request,env,{identity,stmt,rows,failure,command,integer,text});
   if(path.startsWith('/api/private-requests')||path.startsWith('/api/private-offers')||path==='/api/private-market')return handleMarket(request,env,{identity,stmt,rows,failure,owner,command,integer,text});
   if(path==='/api/operations'||path.startsWith('/api/trips/'))return handleOperations(request,env,{identity,stmt,rows,owner,failure,integer,
