@@ -1,6 +1,6 @@
 import { handleStandard } from './standard-api.mjs';
 // Isolated development API. The original demo Worker/ledger are never imported.
-const REVISION = 'p2-premium-team-v1';
+const REVISION = 'p3-premium-operations-v1';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });

@@ -1,3 +1,4 @@
+import {analytics} from './premium-business.mjs';
 import {joinTeam,handleTeam} from './premium-team.mjs';
 // Premium dev extends the same tenant, identity, vehicles and scheduling ledger.
 export async function handlePremium(request,env,c) {
@@ -29,6 +30,7 @@ export async function handlePremium(request,env,c) {
    assignments:await rows(db,"SELECT * FROM premium_assignments WHERE operator_id=? AND (?<>'driver' OR driver_user_id=?)",[operatorId,role,user.id]),
    maintenance:role==='driver'?[]:await rows(db,'SELECT * FROM premium_maintenance WHERE operator_id=? ORDER BY starts_at DESC LIMIT 200',[operatorId])};
  }
+ if(path==='/api/premium/analytics'&&request.method==='GET'){if(!entitlement?.active||role==='driver')throw failure('Sin permiso para analítica',403);return analytics(url,operatorId,db,c);}
  if(request.method!=='POST')throw failure('Ruta no encontrada',404);
  if(path==='/api/premium/activate') {
   await command(db,user,body,'premium_activation',[stmt(db,'INSERT OR IGNORE INTO premium_tenants(operator_id) VALUES(?)',[operatorId])],operatorId);
