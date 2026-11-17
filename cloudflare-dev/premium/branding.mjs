@@ -1,0 +1,12 @@
+import {$,api,post,run,node,status} from './app.mjs';
+let revision=0;
+export function setupBranding(){
+ $('mediaForm').onsubmit=e=>{e.preventDefault();run(async()=>{const image=e.target.elements.image.files[0];if(!image||image.size>2097152)throw new Error('Elige una imagen de hasta 2 MiB.');const token=localStorage.getItem('rutasec-standard-session');const response=await fetch('/standard-api/api/premium/media?operatorId='+encodeURIComponent($('operator').value),{method:'POST',headers:{'Content-Type':image.type,...(token?{Authorization:'Bearer '+token}:{})},body:image});const data=await response.json();if(!response.ok)throw new Error(data.error);for(const name of ['logoMediaId','coverMediaId'])$('profileForm').elements[name].add(new Option('Imagen '+data.id,data.id));status('Imagen guardada en R2; selecciónala y publica para mostrarla.');e.target.reset();});};
+ $('profileForm').onsubmit=e=>{e.preventDefault();run(async()=>{const f=e.target.elements;await post('/premium/profile',{title:f.title.value,tagline:f.tagline.value,bio:f.bio.value,accent:f.accent.value,website:f.website.value,logoMediaId:f.logoMediaId.value||null,coverMediaId:f.coverMediaId.value||null,published:f.published.checked,expectedRevision:revision});await renderBranding({role:$('business').dataset.role});status('Personalización guardada.');});};
+}
+export async function renderBranding(data){$('branding').hidden=!['owner','admin'].includes(data.role);if($('branding').hidden)return;
+ const result=await api('/premium/profile?operatorId='+encodeURIComponent($('operator').value)),profile=result.profile,f=$('profileForm').elements;revision=profile?.revision||0;
+ for(const name of ['title','tagline','bio','website'])f[name].value=profile?.[name]|| (name==='title'?$('operator').selectedOptions[0]?.textContent.split(' · ')[0]||'':'');f.accent.value=profile?.accent||'#f6c928';f.published.checked=!!profile?.published;
+ for(const [field,column]of [['logoMediaId','logo_media_id'],['coverMediaId','cover_media_id']]){f[field].replaceChildren();f[field].add(new Option('Sin imagen',''));for(const m of result.media)f[field].add(new Option('Imagen '+m.id,m.id));f[field].value=profile?.[column]||'';}
+ $('profileLinks').replaceChildren();if(profile?.published){const link=node('a','Abrir miniapp pública de esta operadora');link.href='/miniapp/?operator='+encodeURIComponent($('operator').value);$('profileLinks').append(link);$('tenantManifest').href='/standard-api/api/miniapps/'+$('operator').value+'/manifest?business=1';}else $('tenantManifest').href='./manifest.webmanifest';
+}

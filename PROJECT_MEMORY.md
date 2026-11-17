@@ -2,6 +2,9 @@
 ## Decisión vigente — Premium autorizado antes de revisión Senior
 El usuario solicitó explícitamente posponer la revisión Senior e iniciar Premium empresarial después de J1–J8. Se conserva Standard y ambos demos; misma identidad/backend/tenant, ruta Premium separada, sin pagos reales. Primer hito P1: habilitación Premium de desarrollo verificada por servidor, flota/kilometraje/mantenimiento con calendario exclusivo. Plan y aceptación en docs/PREMIUM_ROADMAP.md. Esta decisión reemplaza solo la dependencia de revisión Senior previa, no los controles mínimos ni la revisión comercial posterior.
 
+## Avance Premium P4 — verificado
+Costos internos/comprobantes privados no fiscales y totales simulados por período. 26 tests y navegador PASS, remotod7e8a69ba667962585c6e185b6b10142f98dc5fb, Actions44192966311 SUCCESS, schema0009. P5 siguiente; pagos reales no activados. Snapshot2026-11-17-premium-p4.md.
+
 ## Avance Premium P3 — verificado
 Analítica/operaciones D1 por tenant y período UTC, ocupación/calendario/alertas DEMO/historia. 25 tests y navegador PASS. Remoto5e7e8bfa3b2a7298bbb1226f2a60757005fee287, Actions44192310539 SUCCESS. P4 siguiente; snapshot2026-11-17-premium-p3.md.
 

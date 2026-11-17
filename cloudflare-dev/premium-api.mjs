@@ -1,10 +1,13 @@
+import {uploadMedia,profile} from './premium-profiles.mjs';
 import {finance,expense,document} from './premium-finance.mjs';
 import {analytics} from './premium-business.mjs';
 import {joinTeam,handleTeam} from './premium-team.mjs';
 // Premium dev extends the same tenant, identity, vehicles and scheduling ledger.
 export async function handlePremium(request,env,c) {
  const {identity,owner,stmt,rows,failure,command,integer,text,hash}=c,db=env.DB;
- const url=new URL(request.url),path=url.pathname,user=await identity(request,db);
+ const url=new URL(request.url),path=url.pathname;
+ if(path==='/api/premium/media')return uploadMedia(request,env,c);
+ const user=await identity(request,db);
  let body={};
  if(request.method==='POST') {
   const raw=await request.text();if(raw.length>16384)throw failure('Solicitud demasiado grande',413);
@@ -38,6 +41,7 @@ export async function handlePremium(request,env,c) {
   const doc=path.match(/^\/api\/premium\/documents\/([0-9a-f-]{36})$/i);if(doc&&request.method==='GET')return document(doc[1],operatorId,db,c);
   if(request.method==='POST'){const result=await expense(path,body,user,operatorId,db,c);if(result)return result;}
  }
+ if(path==='/api/premium/profile'){if(!entitlement?.active||!['owner','admin'].includes(role))throw failure('Sin permiso para personalización',403);return profile(url,request.method==='POST'?body:null,user,operatorId,db,c);}
  if(request.method!=='POST')throw failure('Ruta no encontrada',404);
  if(path==='/api/premium/activate') {
   await command(db,user,body,'premium_activation',[stmt(db,'INSERT OR IGNORE INTO premium_tenants(operator_id) VALUES(?)',[operatorId])],operatorId);

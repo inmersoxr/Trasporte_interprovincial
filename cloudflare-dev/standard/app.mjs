@@ -16,7 +16,7 @@ export async function api(path, body) {
 export function status(message) { $('status').textContent = message; }
 function options(items, label) { return items.map(item => `<option value="${esc(item.id)}">${esc(label(item))}</option>`).join(''); }
 async function catalog() {
-  const data = await api('/catalog');
+  const data = await api('/catalog'+(new URLSearchParams(location.search).has('operator')?'?operatorId='+encodeURIComponent(new URLSearchParams(location.search).get('operator')):''));
   $('catalogList').innerHTML = data.departures.map(d => `<article data-departure="${esc(d.id)}"><strong>${esc(d.origin)} → ${esc(d.destination)}</strong><p>${esc(d.operatorName)} · ${esc(d.vehicle)}</p><p>${esc(new Date(d.departAt).toLocaleString('es-EC'))} · ${d.capacity} plazas</p><p>$${(d.priceCents/100).toFixed(2)} por asiento</p></article>`).join('') || '<p>No hay salidas publicadas.</p>';
   $('privateList').innerHTML = data.routeOffers.filter(r => r.serviceType === 'private_fixed').map(r => `<article data-private-route="${r.id}"><strong>${esc(r.origin)} → ${esc(r.destination)}</strong><p>${esc(r.vehicle)} · $${(r.priceCents/100).toFixed(2)} por vehículo · ${r.durationMinutes} min</p></article>`).join('') || '<p>No hay rutas privadas publicadas.</p>';
   document.dispatchEvent(new CustomEvent('standard:catalog', { detail: data }));

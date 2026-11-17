@@ -1,3 +1,4 @@
+import {publicMiniapp} from './premium-profiles.mjs';
 // Development identities use random bearer capabilities, stored hashed in D1.
 // They are not commercial registration, email recovery or verified operators.
 import { handleReservations } from './standard-reservations.mjs';
@@ -57,16 +58,19 @@ const catalogSQL = `SELECT d.id, d.depart_at AS departAt,d.status,r.id AS offerI
  (SELECT json_group_array(seat_number) FROM seat_claims sc WHERE sc.departure_id=d.id AND sc.status IN('held','confirmed')) AS reservedSeatsJson
  FROM departures d JOIN route_offers r ON r.id=d.offer_id JOIN operators o ON o.id=r.operator_id
  JOIN vehicles v ON v.id=d.vehicle_id WHERE d.status='published' AND r.active=1
- AND o.status='approved' AND v.status='active' AND d.depart_at>? ORDER BY d.depart_at LIMIT 200`;
+ AND o.status='approved' AND v.status='active' AND d.depart_at>? AND (? IS NULL OR o.id=?) ORDER BY d.depart_at LIMIT 200`;
 
 export async function handleStandard(request, env) {
   const path = new URL(request.url).pathname, method = request.method;
+  if(path.startsWith('/api/miniapps/'))return publicMiniapp(request,env,{stmt,failure});
   if (path === '/api/catalog' && method === 'GET') {
-    return { departures: (await rows(env.DB, catalogSQL, [new Date().toISOString()])).map(({reservedSeatsJson,...d})=>({...d,reservedSeats:JSON.parse(reservedSeatsJson||'[]')})),
+    const operatorId=new URL(request.url).searchParams.get('operatorId');
+    if(operatorId&&!uuid(operatorId))throw failure('Operadora no válida');
+    return { departures: (await rows(env.DB, catalogSQL, [new Date().toISOString(),operatorId,operatorId])).map(({reservedSeatsJson,...d})=>({...d,reservedSeats:JSON.parse(reservedSeatsJson||'[]')})),
       routeOffers: await rows(env.DB, `SELECT r.id,r.operator_id AS operatorId,r.origin,r.destination,r.service_type AS serviceType,
        r.price_cents AS priceCents,o.display_name AS operatorName,v.id AS vehicleId,v.model AS vehicle,v.type AS vehicleType,v.capacity,rv.duration_minutes AS durationMinutes
        FROM route_offers r JOIN operators o ON o.id=r.operator_id JOIN standard_route_vehicles rv ON rv.offer_id=r.id
-       JOIN vehicles v ON v.id=rv.vehicle_id WHERE r.active=1 AND o.status='approved' AND v.status='active' LIMIT 200`),
+       JOIN vehicles v ON v.id=rv.vehicle_id WHERE r.active=1 AND o.status='approved' AND v.status='active' AND (? IS NULL OR o.id=?) LIMIT 200`,[operatorId,operatorId]),
       environment: 'development', payments: 'simulated' };
   }
   if (path === '/api/sessions' && method === 'POST') {
