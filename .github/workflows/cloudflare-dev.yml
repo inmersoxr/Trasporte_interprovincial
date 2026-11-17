@@ -22,7 +22,8 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: cloudflare-development
+  # PR verification must not replace a pending push deployment.
+  group: cloudflare-development-${{ github.event_name == 'pull_request' && 'pull-request' || 'deploy' }}
   cancel-in-progress: false
 jobs:
   verify:
