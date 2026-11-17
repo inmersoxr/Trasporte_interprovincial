@@ -12,7 +12,13 @@
     "test:operations": "node tests/operations.e2e.mjs",
     "test:regression": "node tests/regression.e2e.mjs",
     "deploy:frontend": "wrangler deploy --config frontend.wrangler.json",
-    "test:premium": "node tests/premium.e2e.mjs"
+    "test:premium": "node tests/premium.e2e.mjs",
+    "test:team": "node tests/team.e2e.mjs",
+    "test:business": "node tests/business.e2e.mjs",
+    "test:finance": "node tests/finance.e2e.mjs",
+    "test:profiles": "node tests/profiles.e2e.mjs",
+    "test:identity": "node tests/identity.e2e.mjs",
+    "test:premium-regression": "node tests/premium-regression.e2e.mjs"
   },
   "devDependencies": {
     "miniflare": "5.20261113.0-beta",

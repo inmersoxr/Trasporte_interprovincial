@@ -50,6 +50,7 @@ export async function command(db, user, body, kind, operations, entityId) {
     const saved = await stmt(db, 'SELECT * FROM standard_commands WHERE user_id=? AND request_id=?', [user.id, body.requestId]).first();
     if (saved?.kind === kind && saved.fingerprint === fingerprint) return saved.entity_id;
     if (String(error.message).includes('vehicle_conflict')) throw failure('El vehículo ya tiene un servicio en ese horario', 409);
+    if (String(error.message).includes('assignment_conflict')) throw failure('La asignación cambió; actualiza los miembros y vehículos',409);
     if (String(error.message).includes('request_limit')) throw failure('Límite de 10 solicitudes abiertas; cancela alguna antes de crear otra', 429);
     throw error;
   }

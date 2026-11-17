@@ -8,4 +8,5 @@ try{if(!/^[0-9a-f-]{36}$/i.test(operator||''))throw new Error('Abre el enlace de
  const catalogResponse=await fetch(profile.catalogUrl,{cache:'no-store'});if(!catalogResponse.ok)throw new Error('No se pudo cargar la disponibilidad.');const catalog=await catalogResponse.json();
  for(const route of catalog.routeOffers){const p=document.createElement('p');p.textContent=route.origin+' → '+route.destination+' · '+route.vehicle+' · USD '+(route.priceCents/100).toFixed(2)+(route.serviceType==='shared'?' por asiento':' por vehículo');$('routes').append(p);}
  $('status').textContent=catalog.routeOffers.length?'Perfil publicado por la operadora.':'Esta operadora aún no tiene rutas publicadas.';
-}catch(error){$('status').textContent=error.message;}
+}catch(error){$('status').textContent=error instanceof TypeError?'Sin conexión. No se puede consultar disponibilidad ni reservar; vuelve a conectar.':error.message;}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>$('installStatus').textContent='No se pudo habilitar la aplicación sin conexión');

@@ -2,6 +2,9 @@
 ## Decisión vigente — Premium autorizado antes de revisión Senior
 El usuario solicitó explícitamente posponer la revisión Senior e iniciar Premium empresarial después de J1–J8. Se conserva Standard y ambos demos; misma identidad/backend/tenant, ruta Premium separada, sin pagos reales. Primer hito P1: habilitación Premium de desarrollo verificada por servidor, flota/kilometraje/mantenimiento con calendario exclusivo. Plan y aceptación en docs/PREMIUM_ROADMAP.md. Esta decisión reemplaza solo la dependencia de revisión Senior previa, no los controles mínimos ni la revisión comercial posterior.
 
+## Identidad A1 — preparada, activación Google bloqueada
+Cuenta /account/ unificada, OAuth Code+PKCE/state/nonce y verificación criptográfica JWT, enlace explícito al acceso dev, cookie revocable/CSRF integrados en Standard/Premium. 28 tests PASS con proveedor simulado y navegador cookie dev PASS. Remoto783a235329552d8b6f2e45a309a6d52c73bbee29, Actions44195257116 SUCCESS, schema0011. Google real NO activado: config remoto google=false; faltan credenciales OAuth completas del proyecto Google (no son CLOUDFLARE_API_TOKEN). Guía docs/IDENTITY_AND_APPS.md y snapshot2026-11-17-identity-a1.md. Apple pendiente. P6 continúa en tareas independientes.
+
 ## Avance Premium P5 — verificado
 Miniapp configurable por tenant, logo/portada R2, manifest público/gestión y reservas directas sobre Standard. 27 tests y Chromium PASS; remoto86e359693c8c03d77419e48d4d4b1b8a2a8302b1, Actions44193804300 SUCCESS, schema0010. P6 pendiente; primero preparar A1 Google solicitado. Arquitectura/configuración en docs/IDENTITY_AND_APPS.md. Snapshot2026-11-17-premium-p5.md.
 

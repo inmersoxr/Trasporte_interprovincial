@@ -30,6 +30,7 @@ const digest=createHash('sha256');
 digest.update(await readFile(new URL('build-frontend.mjs',import.meta.url)));
 for(const path of await assetPaths(new URL('public/',output))){digest.update(path.pathname.split('/out/public/')[1]);digest.update(await readFile(path));}
 const revision=digest.digest('hex').slice(0,16);
+for(const app of ['premium','miniapp']){const source=await readFile(new URL(app+'/sw.js',import.meta.url),'utf8');await writeFile(new URL('public/'+app+'/sw.js',output),source.replace('__BUILD_REVISION__',revision));}
 const standardSW=await readFile(new URL('standard/sw.js',import.meta.url),'utf8');
 await writeFile(new URL('public/standard/sw.js',output),standardSW.replace('__BUILD_REVISION__',revision));
 let sw = await readFile(new URL('sw.js', root), 'utf8');

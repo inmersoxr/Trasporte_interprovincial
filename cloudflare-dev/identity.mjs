@@ -21,7 +21,7 @@ export async function verifyGoogleIdToken(token,{audience,nonce,jwks,now=Date.no
 }
 export async function handleAuth(request,env,c,network=fetch){const {identity,stmt,rows,hash,failure}=c,db=env.DB,url=new URL(request.url),path=url.pathname;
  const configured=!!(env.GOOGLE_CLIENT_ID&&env.GOOGLE_CLIENT_SECRET),callback=APP_ORIGIN+'/standard-api/auth/google/callback';
- if(path==='/auth/config'&&request.method==='GET')return response({google:configured,apple:false,environment:'development'});
+ if(path==='/auth/config'&&request.method==='GET')return response({google:configured,missingGoogleConfiguration:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET'].filter(name=>!env[name]),apple:false,environment:'development'});
  if(path==='/auth/session'&&request.method==='GET'){
   if(!cookie(request,COOKIE))return response({authenticated:false});
   try{const user=await identity(new Request(request.url,{headers:{Cookie:request.headers.get('Cookie')}}),db);return response({authenticated:true,user:await stmt(db,'SELECT id,display_name FROM users WHERE id=?',[user.id]).first(),operators:await rows(db,'SELECT o.id,o.display_name,m.role FROM memberships m JOIN operators o ON o.id=m.operator_id WHERE m.user_id=?',[user.id])});}catch{return response({authenticated:false});}

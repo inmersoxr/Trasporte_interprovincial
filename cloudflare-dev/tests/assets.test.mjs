@@ -37,3 +37,9 @@ test('all service worker precache files exist; copied config cannot target origi
   assert.ok(config.includes('location.origin'));
   assert.ok(!config.includes('chatgpt.site'));
 });
+test('Premium and miniapp offline shells cache only assets and bypass all private API/auth requests',()=>{
+ for(const app of ['premium','miniapp']){const source=readFileSync(new URL('out/public/'+app+'/sw.js',root),'utf8'),events={};vm.runInNewContext(source,{self:{addEventListener:(name,fn)=>events[name]=fn,location:{origin:'https://dev.example',href:'https://dev.example/'+app+'/sw.js'}},URL});
+ for(const path of ['/standard-api/api/premium/finance','/standard-api/auth/session','/standard-api/auth/google/callback','/api/catalog']){let handled=false;events.fetch({request:{url:'https://dev.example'+path,method:'GET'},respondWith(){handled=true;}});assert.equal(handled,false);}
+ const core=JSON.parse(source.match(/const CORE=(\[[^;]+\]);/)[1]);for(const path of core)assert.ok(existsSync(new URL('out/public/'+app+'/'+path,root)),path);assert.ok(!source.includes('__BUILD_REVISION__'));
+ }
+});

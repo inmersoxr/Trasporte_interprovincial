@@ -29,3 +29,10 @@ test('Premium P2: invitations are single-use, role enforcement, scoped assignmen
  assert.equal((await db.prepare('SELECT driver_user_id FROM premium_assignments').first()).driver_user_id,null);
  }finally{await mf.dispose();}
 });
+test('P6: D1 rejects stale assignment after membership revocation, even outside API prechecks',async()=>{const {mf,db,call}=await runtime();try{
+ const a=(await call('/sessions',{})).data,b=(await call('/sessions',{})).data;const create=(p,body,t=a.token)=>call(p,{...body,requestId:crypto.randomUUID()},t);
+ const operatorId=(await create('/operators',{name:'Integridad equipo'})).data.id;await create('/premium/activate',{operatorId});const vehicleId=(await create('/vehicles',{operatorId,type:'van',model:'Equipo P6',capacity:8})).data.id;const branchId=(await create('/premium/branches',{operatorId,name:'Central',city:'Cuenca'})).data.id;
+ const token='f'.repeat(64);await create('/premium/invites',{operatorId,role:'driver',token});await create('/premium/join',{token},b.token);await create('/premium/assignments',{operatorId,vehicleId,branchId,driverUserId:b.userId});
+ await db.prepare('DELETE FROM memberships WHERE operator_id=? AND user_id=?').bind(operatorId,b.userId).run();assert.equal((await db.prepare('SELECT driver_user_id FROM premium_assignments').first()).driver_user_id,null);
+ await assert.rejects(()=>db.prepare('UPDATE premium_assignments SET driver_user_id=? WHERE vehicle_id=?').bind(b.userId,vehicleId).run(),/assignment_conflict/);
+ }finally{await mf.dispose();}});
