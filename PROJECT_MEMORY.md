@@ -2,6 +2,9 @@
 ## Decisión vigente — Premium autorizado antes de revisión Senior
 El usuario solicitó explícitamente posponer la revisión Senior e iniciar Premium empresarial después de J1–J8. Se conserva Standard y ambos demos; misma identidad/backend/tenant, ruta Premium separada, sin pagos reales. Primer hito P1: habilitación Premium de desarrollo verificada por servidor, flota/kilometraje/mantenimiento con calendario exclusivo. Plan y aceptación en docs/PREMIUM_ROADMAP.md. Esta decisión reemplaza solo la dependencia de revisión Senior previa, no los controles mínimos ni la revisión comercial posterior.
 
+## Avance Premium P3 — verificado
+Analítica/operaciones D1 por tenant y período UTC, ocupación/calendario/alertas DEMO/historia. 25 tests y navegador PASS. Remoto5e7e8bfa3b2a7298bbb1226f2a60757005fee287, Actions44192310539 SUCCESS. P4 siguiente; snapshot2026-11-17-premium-p3.md.
+
 ## Avance Premium P2 — verificado 2026-11-17
 Equipo/sucursales/invitaciones hash24h de un uso, roles owner/admin/dispatcher/driver, asignaciones y revocación real implementados. 24 tests PASS y Chromium con dos sesiones PASS; remoto5185e363daa04f1c17587fa112a9c556747e3a04, Actions44191748312 SUCCESS. Schema0008. Snapshot2026-11-17-premium-p2.md. Usuario autoriza terminar P2–P6 autónomamente y solicita login común Google para pasajeros/operadoras y aplicación instalable por empresa. Preparar OAuth sin fingir credenciales; Apple posterior sujeto a configuración. Sin pagos reales ni modificación demo.
 

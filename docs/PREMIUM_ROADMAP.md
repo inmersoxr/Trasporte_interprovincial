@@ -12,7 +12,7 @@ El usuario solicitó iniciar Premium posponiendo revisión Senior. Standard J1�
 | P5 | Perfil/miniapp configurable por operadora | Mismo backend, reservas directas y publicación segura por tenant, sin despliegue por operadora |
 | P6 | Regresión y handoff | Móvil/PWA, dos sesiones, concurrencia, respaldo solo con autorización, rollback y límites comerciales documentados |
 
-P1 completado y verificado en desarrollo: Actions43916778658, 23 tests locales/CI, navegador Premium y regresiones demo/Standard PASS. Evidencia en [snapshot P1](snapshots/2026-11-16-premium-p1.md). P2 completado: Actions44191748312, 24 tests y navegador roles/asignaciones/revocación PASS. Siguiente P3. Los siguientes hitos no se marcan implementados por incluirlos en este plan.
+P1 completado y verificado en desarrollo: Actions43916778658, 23 tests locales/CI, navegador Premium y regresiones demo/Standard PASS. Evidencia en [snapshot P1](snapshots/2026-11-16-premium-p1.md). P2 completado: Actions44191748312, 24 tests y navegador roles/asignaciones/revocación PASS. P3 completado: Actions44192310539, 25 tests y navegador métricas/cancelación PASS. Siguiente P4. Los siguientes hitos no se marcan implementados por incluirlos en este plan.
 
 ## Reglas
 Ruta /premium/ en Worker dev independiente de Pages; recursos compartidos con Standard sin duplicar identidades/vehículos/reservas. Activación Premium **de desarrollo**, gratuita/sin cobro, por propietario autenticado; servidor almacena/verifica entitlement, no basta selector local. No sustituye una suscripción comercial.

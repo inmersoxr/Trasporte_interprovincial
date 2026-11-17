@@ -1,5 +1,6 @@
+import {renderFinance} from './finance.mjs';
 import {$,api,run,node,status} from './app.mjs';
-export function setupBusiness(){const form=$('periodForm');form.elements.from.value=new Date(Date.now()-30*86400000).toISOString().slice(0,10);form.elements.to.value=new Date(Date.now()+30*86400000).toISOString().slice(0,10);form.onsubmit=e=>{e.preventDefault();run(()=>renderBusiness({role:$('business').dataset.role}));};}
+export function setupBusiness(){const form=$('periodForm');form.elements.from.value=new Date(Date.now()-30*86400000).toISOString().slice(0,10);form.elements.to.value=new Date(Date.now()+30*86400000).toISOString().slice(0,10);form.onsubmit=e=>{e.preventDefault();run(async()=>{const role=$('business').dataset.role;await renderBusiness({role});await renderFinance({role});});};}
 export function selectedPeriod(){const f=$('periodForm').elements;return'operatorId='+encodeURIComponent($('operator').value)+'&from='+f.from.value+'&to='+f.to.value;}
 export async function renderBusiness(data){$('business').hidden=data.role==='driver';$('business').dataset.role=data.role;if(data.role==='driver')return;
  const result=await api('/premium/analytics?'+selectedPeriod());$('analytics').replaceChildren();

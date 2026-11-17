@@ -1,3 +1,4 @@
+import {setupFinance,renderFinance} from './finance.mjs';
 import {setupBusiness,renderBusiness} from './business.mjs';
 import {setupTeam,renderTeam} from './team.mjs';
 export const $=id=>document.getElementById(id),key='rutasec-standard-session';
@@ -17,7 +18,7 @@ export async function refresh(){
  const data=await api('/premium?operatorId='+encodeURIComponent(operatorId));
  $('activation').hidden=data.enabled;$('workspace').hidden=!data.enabled;
  if(!data.enabled){status('Premium aún no está habilitado para esta operadora.');return;}
- renderTeam(data);await renderBusiness(data);
+ renderTeam(data);await renderBusiness(data);await renderFinance(data);
  const canManage=['owner','admin'].includes(data.role);$('maintenance').hidden=!canManage;
  $('fleet').replaceChildren();$('jobs').replaceChildren();const select=$('maintenance').elements.vehicleId;select.replaceChildren();
  for(const v of data.vehicles){
@@ -34,6 +35,6 @@ export async function refresh(){
 $('activate').onclick=()=>run(async()=>{await post('/premium/activate',{});await refresh();});
 $('refresh').onclick=()=>run(refresh);$('operator').onchange=()=>run(async()=>{$('workspace').hidden=true;$('activation').hidden=true;await refresh();});
 $('maintenance').onsubmit=e=>{e.preventDefault();run(async()=>{const f=e.target.elements;await post('/premium/maintenance',{vehicleId:f.vehicleId.value,summary:f.summary.value,startsAt:new Date(f.startsAt.value).toISOString(),endsAt:new Date(f.endsAt.value).toISOString(),estimatedCostCents:Math.round(Number(f.cost.value)*100)});e.target.reset();await refresh();status('Mantenimiento guardado y horario bloqueado.');});};
-setupTeam();setupBusiness();
+setupTeam();setupBusiness();setupFinance();
 export async function loadOperators(){const data=await api('/premium/operators');$('operator').replaceChildren();for(const op of data.operators)$('operator').add(new Option(op.display_name+' · '+op.role,op.id));await refresh();}
 run(loadOperators);
