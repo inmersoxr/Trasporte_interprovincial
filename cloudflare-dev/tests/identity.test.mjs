@@ -24,3 +24,16 @@ test('A1 Google: signed JWT claims, PKCE/state, explicit dev linking, revocable 
  const logout=await handleAuth(new Request(APP_ORIGIN+'/auth/logout',{method:'POST',headers:{Cookie:sessionCookie,Origin:APP_ORIGIN}}),env,core);assert.equal(logout.status,200);await assert.rejects(()=>identity(new Request(APP_ORIGIN+'/api/operator',{headers:{Cookie:sessionCookie}}),db),e=>e.status===401);
  assert.equal((await call('/operator',undefined,dev.token)).status,200);
  }finally{await mf.dispose();}});
+test('A1: Google customer registration reuses subject, never merges by email or grants enterprise roles',async()=>{const {mf,db}=await runtime();try{
+ const pair=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']),jwk={...await crypto.subtle.exportKey('jwk',pair.publicKey),kid:'customer-key'};
+ const env={DB:db,GOOGLE_CLIENT_ID:'customer-client',GOOGLE_CLIENT_SECRET:'test-only'},core={identity,stmt,rows,hash,failure};
+ async function login(subject,linkToken){const start=await handleAuth(new Request(APP_ORIGIN+'/auth/google/start',linkToken?{method:'POST',headers:{Origin:APP_ORIGIN,Authorization:'Bearer '+linkToken},body:'{"link":true}'}:{}),env,core);const target=linkToken?new URL((await start.json()).url):new URL(start.headers.get('Location')),state=target.searchParams.get('state'),nonce=target.searchParams.get('nonce');
+  const content=b64({alg:'RS256',kid:'customer-key'})+'.'+b64({iss:'https://accounts.google.com',aud:'customer-client',sub:subject,email:'same@example.com',email_verified:true,name:'Google ficticio',nonce,iat:Date.now()/1000,exp:Date.now()/1000+300,role:'owner',operatorId:'untrusted'}),token=content+'.'+Buffer.from(await crypto.subtle.sign('RSASSA-PKCS1-v1_5',pair.privateKey,new TextEncoder().encode(content))).toString('base64url');
+  return handleAuth(new Request(APP_ORIGIN+'/auth/google/callback?code=synthetic&state='+state,{headers:{Cookie:STATE_COOKIE+'='+state}}),env,core,async url=>Response.json(url.includes('/token')?{id_token:token}:{keys:[jwk]}));
+ }
+ assert.ok((await login('subject-A')).headers.get('Location').includes('signedIn=1'));assert.equal((await db.prepare('SELECT COUNT(*) n FROM users').first()).n,1);
+ await login('subject-A');assert.equal((await db.prepare('SELECT COUNT(*) n FROM users').first()).n,1);
+ await login('subject-B');assert.equal((await db.prepare('SELECT COUNT(*) n FROM users').first()).n,2);assert.equal((await db.prepare('SELECT COUNT(*) n FROM memberships').first()).n,0);
+ const devId=crypto.randomUUID(),devToken='1'.repeat(64);await db.prepare('INSERT INTO users(id,display_name) VALUES(?,?)').bind(devId,'Otro acceso dev').run();await db.prepare('INSERT INTO standard_sessions(token_hash,user_id) VALUES(?,?)').bind(await hash(devToken),devId).run();const conflict=await login('subject-A',devToken);assert.ok(conflict.headers.get('Location').includes('error=signin'));assert.equal((await db.prepare('SELECT COUNT(*) n FROM auth_identities WHERE user_id=?').bind(devId).first()).n,0);
+ await db.prepare('UPDATE standard_sessions SET expires_at=? WHERE user_id=?').bind(Date.now()-1,devId).run();await assert.rejects(()=>identity(new Request(APP_ORIGIN+'/api/operator',{headers:{Authorization:'Bearer '+devToken}}),db),e=>e.status===401);
+ }finally{await mf.dispose();}});

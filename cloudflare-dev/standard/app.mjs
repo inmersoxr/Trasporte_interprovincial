@@ -23,7 +23,7 @@ async function catalog() {
   document.dispatchEvent(new CustomEvent('standard:catalog', { detail: data }));
 }
 export async function refresh() {
-  if (!hasAccess()) return;
+  if (!token && !hasAccess()) return;
   const revision = ++refreshRevision, next = await api('/operator');
   if (revision !== refreshRevision) return;
   dashboard = next; const selected = $('operatorSelect').value;
