@@ -1,3 +1,4 @@
+import {hasAccess} from '../account/session.mjs';
 import {api,status} from './app.mjs';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let operatorVehicles=[],queue=[],loadingPrivate=false,loadingMarket=false;
@@ -30,7 +31,7 @@ export async function loadPrivate(){
 }
 async function loadPrivateAfter(){loadingPrivate=false;await loadPrivate();}
 async function loadMarket(){
- if(loadingMarket||!localStorage.getItem('rutasec-standard-session'))return;loadingMarket=true;
+ if(loadingMarket||!hasAccess())return;loadingMarket=true;
  try{
   const data=await api('/private-market');queue=data.requests;
   $('marketConnection').textContent='Conectado · alertas DEMO en la app';
@@ -69,4 +70,4 @@ $('openPrivateMarket').onclick=()=>{
 };
 $('openPrivateMarket').disabled=false;
 setInterval(()=>{if(!document.hidden){if(!$('privateRequests').hidden)loadPrivate();if(!$('operator').hidden)loadMarket();}},3000);
-if(localStorage.getItem('rutasec-standard-session'))api('/operator').then(data=>{operatorVehicles=data.vehicles;updateVehicles();}).catch(e=>status(e.message));
+if(hasAccess())api('/operator').then(data=>{operatorVehicles=data.vehicles;updateVehicles();}).catch(e=>status(e.message));

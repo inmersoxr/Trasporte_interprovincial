@@ -1,7 +1,7 @@
 import {readFile,readdir} from 'node:fs/promises';
 import {Miniflare,convertV4MiniflareOptions} from 'miniflare';
 export async function runtime(){
- const root=new URL('../',import.meta.url),files=['worker.mjs',...(await readdir(root)).filter(f=>/^(standard|premium)-.*\.mjs$/.test(f))];
+ const root=new URL('../',import.meta.url),files=['worker.mjs','identity.mjs',...(await readdir(root)).filter(f=>/^(standard|premium)-.*\.mjs$/.test(f))];
  const mf=new Miniflare(convertV4MiniflareOptions({modules:[...files,'out/reference-route.mjs','../shared/trip-core.mjs'].map(file=>({type:'ESModule',path:new URL(file,root).pathname})),modulesRoot:new URL('../../',import.meta.url).pathname,d1Databases:['DB'],r2Buckets:['BUCKET'],compatibilityDate:'2026-11-01'}));
  const db=await mf.getD1Database('DB');
  for(const file of (await readdir(new URL('../../sync-service/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort()){

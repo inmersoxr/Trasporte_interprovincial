@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import {remote,setup,base} from './remote.mjs';
+const r=await remote();try{const a=await r.actor(),{operatorId}=await setup(a);const config=await(await a.context.request.get(base+'/standard-api/auth/config')).json();
+ await a.page.goto(base+'/account/');if(!config.google){assert.equal(await a.page.locator('#google').isDisabled(),true);const start=await a.context.request.post(base+'/standard-api/auth/google/start',{headers:{Origin:base},data:{link:false}});assert.equal(start.status(),503);}
+ // Test the deployed cookie path with a fictitious development identity; this is NOT a real Google login.
+ await a.context.addCookies([{name:'__Host-rutasec_session',value:a.session.token,url:base,httpOnly:true,secure:true,sameSite:'Lax'}]);await a.page.reload();await a.page.locator('#account').waitFor();await a.page.getByRole('link',{name:/QA Premium/}).waitFor();
+ await a.page.goto(base+'/premium/?operator='+operatorId);await a.page.locator('#workspace').waitFor();assert.equal(await a.page.evaluate(()=>localStorage.getItem('rutasec-standard-session')),null);
+ const csrf=await a.context.request.post(base+'/standard-api/api/premium/branches',{headers:{Origin:'https://evil.example'},data:{operatorId,name:'No permitido',city:'Quito',requestId:crypto.randomUUID()}});assert.equal(csrf.status(),403);
+ await a.page.goto(base+'/standard/');await a.page.getByRole('link',{name:/Mi cuenta · Pasajero de desarrollo/}).waitFor();assert.equal(await a.page.locator('#access').isVisible(),false);await a.page.locator('[data-view="operator"]').click();await a.page.locator('#vehicleForm').waitFor();
+ await a.page.goto(base+'/account/');await a.page.locator('#logout').click();await a.page.locator('#signin').waitFor();const session=await(await a.context.request.get(base+'/standard-api/auth/session')).json();assert.equal(session.authenticated,false);assert.equal((await a.api('/premium?operatorId='+operatorId)).status,401);assert.deepEqual(a.errors,[]);console.log('PASS A1 browser: provider readiness, shared cookie identity, tenant access, CSRF and logout; real Google callback NOT tested');
+}finally{await r.close();}

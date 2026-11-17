@@ -1,3 +1,4 @@
+import {mountAccount,hasAccess} from '../account/session.mjs';
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let token = localStorage.getItem('rutasec-standard-session') || '', dashboard, refreshRevision = 0;
@@ -22,7 +23,7 @@ async function catalog() {
   document.dispatchEvent(new CustomEvent('standard:catalog', { detail: data }));
 }
 export async function refresh() {
-  if (!token) return;
+  if (!hasAccess()) return;
   const revision = ++refreshRevision, next = await api('/operator');
   if (revision !== refreshRevision) return;
   dashboard = next; const selected = $('operatorSelect').value;
@@ -81,3 +82,5 @@ let installPrompt;
 const install=document.createElement('button');install.id='installStandard';install.textContent='Instalar Standard de desarrollo';document.querySelector('header').append(install);
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;});
 install.onclick=async()=>{if(installPrompt){await installPrompt.prompt();installPrompt=null;}else status('Para instalar: menú del navegador → Instalar app o Añadir a inicio. En iPhone: Compartir → Añadir a inicio.');};
+
+mountAccount(document.querySelector('header'),data=>{if(data.authenticated){token='';copyAccess.hidden=true;$('access').hidden=true;guarded(refresh);}});

@@ -1,6 +1,8 @@
+import {handleAuth} from './identity.mjs';
+import {identity,stmt,rows,hash,failure} from './standard-api.mjs';
 import { handleStandard } from './standard-api.mjs';
 // Isolated development API. The original demo Worker/ledger are never imported.
-const REVISION = 'p5-premium-miniapps-v1';
+const REVISION = 'a1-google-identity-v1';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -9,6 +11,7 @@ function json(body, status = 200) {
 export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
+    if(path.startsWith('/auth/')){try{return await handleAuth(request,env,{identity,stmt,rows,hash,failure});}catch(error){return json({error:error.status?error.message:'No se pudo completar el acceso'},error.status||503);}}
     if (path.startsWith('/api/')) {
       try {
         const result = await handleStandard(request, env);
@@ -24,10 +27,10 @@ export default {
     try {
       const migration = await env.DB.prepare(
         'SELECT version FROM schema_migrations WHERE version = ?'
-      ).bind('0010_premium_profiles').first();
+      ).bind('0011_google_identity').first();
       // List one object only; never publish object names or content.
       await env.BUCKET.list({ limit: 1 });
-      if (!migration || migration.version !== '0010_premium_profiles') throw new Error('Migration missing');
+      if (!migration || migration.version !== '0011_google_identity') throw new Error('Migration missing');
       return json({ service: 'RutasEC development', environment: 'development',
         revision: REVISION, ok: true, d1: true, r2: true,
         schema: migration.version, payments: 'disabled' });

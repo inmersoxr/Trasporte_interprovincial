@@ -1,3 +1,4 @@
+import {hasAccess} from '../account/session.mjs';
 import {api,status} from './app.mjs';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let selected,requestId,fixedOffer,fixedRequestId;
@@ -11,7 +12,7 @@ function enhance(data){
   const article=document.querySelector(`[data-private-route="${r.id}"]`);if(!article||article.querySelector('button'))continue;
   const button=document.createElement('button');button.className='yellow';button.textContent='Reservar vehículo completo';
   button.onclick=()=>{
-   if(!localStorage.getItem('rutasec-standard-session')){status('Crea un acceso de desarrollo para reservar');return;}
+   if(!hasAccess()){status('Inicia sesión o crea un acceso de desarrollo para reservar');return;}
    fixedOffer=r;fixedRequestId=crypto.randomUUID();$('privateError').textContent='';
    $('privateSummary').textContent=`${r.origin} → ${r.destination} · $${(r.priceCents/100).toFixed(2)} por vehículo · ${r.durationMinutes} min · hasta ${r.capacity} pasajeros`;
    $('privateReserveForm').querySelector('input[type="checkbox"]').checked=false;$('privateCheckout').showModal();
@@ -28,7 +29,7 @@ $('privateReserveForm').onsubmit=async e=>{
  }catch(error){$('privateError').textContent=error.message;}finally{button.disabled=false;}
 };
 function checkout(d){
- if(!localStorage.getItem('rutasec-standard-session')){status('Crea un acceso de desarrollo para reservar');return;}
+ if(!hasAccess()){status('Inicia sesión o crea un acceso de desarrollo para reservar');return;}
  selected=d;requestId=crypto.randomUUID();$('checkoutSummary').textContent=`${d.origin} → ${d.destination} · $${(d.priceCents/100).toFixed(2)} por asiento`;
  $('seatGrid').innerHTML=Array.from({length:d.capacity},(_,i)=>`<label>${i+1}<input type="checkbox" value="${i+1}" ${d.reservedSeats.includes(i+1)?'disabled':''}></label>`).join('');
  $('passengerNames').innerHTML='';$('checkoutTotal').textContent='Selecciona al menos un asiento';

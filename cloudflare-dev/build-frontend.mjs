@@ -16,6 +16,7 @@ for (const file of await readdir(root)) {
 for (const dir of ['assets', 'vendor', 'shared']) {
   await cp(new URL(dir, root), new URL('public/' + dir, output), { recursive: true });
 }
+await cp(new URL('account/', import.meta.url), new URL('public/account/', output), { recursive: true });
 await cp(new URL('miniapp/', import.meta.url), new URL('public/miniapp/', output), { recursive: true });
 await cp(new URL('premium/', import.meta.url), new URL('public/premium/', output), { recursive: true });
 await cp(new URL('standard/', import.meta.url), new URL('public/standard/', output), { recursive: true });

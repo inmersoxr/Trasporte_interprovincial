@@ -1,3 +1,4 @@
+import {mountAccount} from '../account/session.mjs';
 import {setupBranding,renderBranding} from './branding.mjs';
 import {setupFinance,renderFinance} from './finance.mjs';
 import {setupBusiness,renderBusiness} from './business.mjs';
@@ -6,8 +7,7 @@ export const $=id=>document.getElementById(id),key='rutasec-standard-session';
 export const status=message=>$('status').textContent=message;
 export async function api(path,body){
  const token=localStorage.getItem(key);
- if(!token)throw new Error('Abre Standard y crea o restaura tu acceso de desarrollo en este navegador.');
- const response=await fetch('/standard-api/api'+path,{method:body?'POST':'GET',cache:'no-store',headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
+ const response=await fetch('/standard-api/api'+path,{method:body?'POST':'GET',cache:'no-store',headers:{...(token?{Authorization:'Bearer '+token}:{}),...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
  const data=await response.json();if(!response.ok)throw new Error(data.error||'No se pudo completar la operación');return data;
 }
 export function node(tag,value){const el=document.createElement(tag);el.textContent=value;return el;}
@@ -38,4 +38,4 @@ $('refresh').onclick=()=>run(refresh);$('operator').onchange=()=>run(async()=>{h
 $('maintenance').onsubmit=e=>{e.preventDefault();run(async()=>{const f=e.target.elements;await post('/premium/maintenance',{vehicleId:f.vehicleId.value,summary:f.summary.value,startsAt:new Date(f.startsAt.value).toISOString(),endsAt:new Date(f.endsAt.value).toISOString(),estimatedCostCents:Math.round(Number(f.cost.value)*100)});e.target.reset();await refresh();status('Mantenimiento guardado y horario bloqueado.');});};
 setupTeam();setupBusiness();setupFinance();setupBranding();
 export async function loadOperators(){const data=await api('/premium/operators');$('operator').replaceChildren();for(const op of data.operators)$('operator').add(new Option(op.display_name+' · '+op.role,op.id));const selected=new URLSearchParams(location.search).get('operator');if(data.operators.some(o=>o.id===selected))$('operator').value=selected;await refresh();}
-run(loadOperators);
+mountAccount(document.querySelector('header'),()=>run(loadOperators));

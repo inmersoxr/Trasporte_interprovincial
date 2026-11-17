@@ -1,3 +1,4 @@
+import {cookie,COOKIE,requireOrigin} from './identity.mjs';
 import {publicMiniapp} from './premium-profiles.mjs';
 // Development identities use random bearer capabilities, stored hashed in D1.
 // They are not commercial registration, email recovery or verified operators.
@@ -20,9 +21,11 @@ export function integer(value, min, max, label) {
 export const stmt = (db, sql, args = []) => db.prepare(sql).bind(...args);
 export const rows = async (db, sql, args = []) => (await stmt(db, sql, args).all()).results;
 export async function identity(request, db) {
-  const token = request.headers.get('Authorization')?.replace(/^Bearer /, '');
+  const bearer=request.headers.get('Authorization');
+  const token = bearer?bearer.replace(/^Bearer /, ''):cookie(request,COOKIE);
+  if(!bearer&&token&&!['GET','HEAD'].includes(request.method))requireOrigin(request,failure);
   if (!token || !/^[0-9a-f]{64}$/i.test(token)) throw failure('Acceso requerido', 401);
-  const user = await stmt(db, 'SELECT u.id FROM standard_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND u.status=\'active\'', [await hash(token)]).first();
+  const user = await stmt(db, 'SELECT u.id FROM standard_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND u.status=\'active\' AND (s.expires_at IS NULL OR s.expires_at>?)', [await hash(token),Date.now()]).first();
   if (!user) throw failure('Acceso no válido', 401);
   return user;
 }
