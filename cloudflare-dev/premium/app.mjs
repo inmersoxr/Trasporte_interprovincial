@@ -12,7 +12,7 @@ export async function api(path,body){
 }
 export function node(tag,value){const el=document.createElement(tag);el.textContent=value;return el;}
 function field(form,label,name,value){const wrap=node('label',label),input=document.createElement('input');input.type='number';input.name=name;input.min='0';input.max='10000000';input.step='1';input.value=value??'';input.required=name==='odometerKm';wrap.append(input);form.append(wrap);}
-export async function run(action){const buttons=[...document.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);try{await action();}catch(e){status(e instanceof TypeError?'Sin conexión. Los cambios requieren conexión; revisa los registros antes de reintentar.':e.message);}finally{buttons.forEach(b=>b.disabled=false);}}
+export async function run(action){const operator=$('operator'),wasDisabled=operator.disabled;operator.disabled=true;const buttons=[...document.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);try{await action();}catch(e){status(e instanceof TypeError?'Sin conexión. Los cambios requieren conexión; revisa los registros antes de reintentar.':e.message);}finally{buttons.forEach(b=>b.disabled=false);operator.disabled=wasDisabled;}}
 export const post=(path,data)=>api(path,{...data,operatorId:$('operator').value,requestId:data.requestId||crypto.randomUUID()});
 export async function refresh(){
  const operatorId=$('operator').value;if(!operatorId){status('Crea primero una operadora y vehículos en Standard.');return;}
