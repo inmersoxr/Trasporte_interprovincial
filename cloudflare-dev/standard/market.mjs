@@ -1,4 +1,4 @@
-import {hasAccess} from '../account/session.mjs';
+import {hasAccess,signInFor} from '../account/session.mjs';
 import {api,status} from './app.mjs';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let operatorVehicles=[],queue=[],loadingPrivate=false,loadingMarket=false;
@@ -19,7 +19,7 @@ export async function loadPrivate(){
   };
   for(const r of requests)if(r.booking&&r.booking.status!=='cancelled'){
    const target=document.querySelector(`[data-custom-booking="${r.booking.id}"]`),qr=document.createElement('div');qr.className='qr';target.append(qr);
-   new window.QRCode(qr,{text:'RUTASEC-CUSTOM:'+r.booking.id+':0',width:180,height:180});
+   if(!r.booking.boarded_at)new window.QRCode(qr,{text:'RUTASEC-CUSTOM:'+r.booking.id+':0',width:180,height:180});else{qr.className='';qr.textContent='GRUPO EMBARCADO · QR utilizado';}
    if(r.booking.liveId){const link=document.createElement('a');link.href='#track/'+r.booking.liveId;link.textContent='Seguimiento DEMO del grupo';target.append(link);}
    if(r.booking.boarded_at||r.booking.status!=='confirmed')document.querySelector(`[data-cancel-request="${r.id}"]`)?.remove();
   }
@@ -60,14 +60,18 @@ $('privateRequestForm').elements.immediate.onchange=e=>{const date=$('privateReq
 $('privateRequestForm').onsubmit=async e=>{
  e.preventDefault();const form=e.target,button=form.querySelector('button');button.disabled=true;
  try{const immediate=form.elements.immediate.checked;await api('/private-requests',{origin:form.elements.origin.value,destination:form.elements.destination.value,
-  serviceAt:immediate?null:new Date(form.elements.serviceAt.value).toISOString(),immediate,people:Number(form.elements.people.value),
+  serviceAt:immediate?null:new Date(form.elements.serviceAt.value+'-05:00').toISOString(),immediate,people:Number(form.elements.people.value),
+  passengers:form.elements.passengers.value.split('\n').map(n=>n.trim()).filter(Boolean),contactPhone:form.elements.contactPhone.value,pickupPoint:form.elements.pickupPoint.value,dropoffPoint:form.elements.dropoffPoint.value,
   vehicleType:form.elements.vehicleType.value,durationMinutes:Number(form.elements.durationMinutes.value),notes:form.elements.notes.value,requestId:form.dataset.requestId||=crypto.randomUUID()});
   delete form.dataset.requestId;status('Solicitud publicada: esperando ofertas, sin asignación automática');await loadPrivate();
  }catch(e){status(e.message);}finally{button.disabled=false;}
 };
 $('openPrivateMarket').onclick=()=>{
+ if(!hasAccess()){signInFor({private:'1'});return;}
  for(const id of ['catalog','operator','myBookings','tracking'])$(id).hidden=true;$('privateRequests').hidden=false;loadPrivate();
 };
 $('openPrivateMarket').disabled=false;
+function resumePrivate(){if(hasAccess()&&new URLSearchParams(location.search).has('private')){const url=new URL(location.href);url.searchParams.delete('private');history.replaceState(null,'',url.pathname+url.search);$('openPrivateMarket').click();}}
+document.addEventListener('rutasec:account',resumePrivate);resumePrivate();
 setInterval(()=>{if(!document.hidden){if(!$('privateRequests').hidden)loadPrivate();if(!$('operator').hidden)loadMarket();}},3000);
 if(hasAccess())api('/operator').then(data=>{operatorVehicles=data.vehicles;updateVehicles();}).catch(e=>status(e.message));

@@ -21,9 +21,11 @@
     "test:premium-regression": "node tests/premium-regression.e2e.mjs",
     "test:platform-local": "node tests/platform-local.e2e.mjs",
     "test:platform": "node tests/platform.e2e.mjs",
-    "test:email-local": "node tests/email-local.e2e.mjs"
+    "test:email-local": "node tests/email-local.e2e.mjs",
+    "test:alpha-local": "node tests/alpha-local.e2e.mjs"
   },
   "devDependencies": {
+    "jsqr": "1.4.0",
     "miniflare": "5.20261113.0-beta",
     "playwright": "1.65.1",
     "wrangler": "4.162.0"

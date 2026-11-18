@@ -2,6 +2,14 @@
 Fecha: 2026-11-14
 Estado: plan de trabajo; NO constituye verificación de fases completadas.
 
+## Alcance Alpha vigente — 2026-11-18, posterior a la auditoría
+F cerrado localmente:54 tests y tres navegadores PASS; código de correo sobre A2 y criterios en ALPHA_ACCEPTANCE.md. Entrega G pendiente en CI existente; configuración real Google/correo y piloto con teléfonos siguen sin certificar.
+E1/E2 cerrados localmente con pruebas específicas y navegador; cámara/embarque único, contacto, boleto privado y persistente, inventario vivo e historiales. Ver snapshots correspondientes. F continúa sobre correo existente; Google/correo reales y prueba física siguen pendientes.
+Autorización ampliada posterior: el usuario permite comenzar todas las correcciones restantes de la auditoría, sin pedir confirmación por cada mejora sobre lo existente. C catálogo/búsqueda/aislamiento QA cerrado localmente (48 tests + Chromium PASS); D onboarding/revisión documental, E embarque/cámara/boleto y F verificación por código/regresión/entrega continúan secuencialmente. Las dependencias externas se reportan y no bloquean correcciones independientes. No hay autorización para pagos reales, compras ni alteración del demo.
+Hito D también cerrado localmente:49 tests y tres suites navegador PASS; expediente y revisión manual en panel común, antes de publicación. Ver snapshot2026-11-18-zzzzzz-alpha-onboarding.md. No desplegado, sin aprobación normativa automática; E continúa.
+Usuario autoriza cuenta verificada obligatoria para reservar, Google primero (Apple posterior) y programación recurrente como herramienta Standard básica. Esto reemplaza la compra de invitado propuesta en el onboarding anterior. Consultas/búsqueda públicas. Reutilizar identidad/D1/salidas/calendario actuales; no ampliar Premium ni alterar demo/Pages. No equivale a autorizar cobros reales ni a certificar el circuito Alpha completo.
+Hitos secuenciales: A) acceso verificado y retorno al checkout, implementado/pruebas locales PASS, activación externa Google/correo pendiente; B) salidas recurrentes con vigencia, inventario por fecha y prevención de conflictos, implementado/pruebas locales PASS. Regresión final46 tests y tres suites Chromium locales PASS. Ambos sin desplegar ni migrar remotamente; faltan activación real y los demás cierres de auditoría para certificar v0.1.0 Alpha. Guía [STANDARD_RECURRING.md](STANDARD_RECURRING.md) y snapshots Alpha; no marcar entrega externa por pruebas simuladas.
+
 ## Cambio de orden autorizado por el usuario
 Después del bloque Junior, el usuario pidió saltar por ahora la revisión Senior y comenzar Premium empresarial. Se ejecutará por hitos en [PREMIUM_ROADMAP.md](PREMIUM_ROADMAP.md), con mismo backend/tenant y sin alterar Standard/demo. La revisión Senior queda pospuesta, no realizada ni eliminada como revisión posterior. Pagos reales no autorizados.
 

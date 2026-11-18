@@ -1,8 +1,10 @@
 import {mountAccount,hasAccess} from '../account/session.mjs';
+import {mountSearch} from './search.mjs';
+import {cities} from './cities.mjs';
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let token = localStorage.getItem('rutasec-standard-session') || '', dashboard, refreshRevision = 0;
 const developmentTools=new URLSearchParams(location.search).get('dev')==='1';
+let token = developmentTools ? localStorage.getItem('rutasec-standard-session') || '' : '', dashboard, refreshRevision = 0;
 const copyAccess=document.createElement('button');copyAccess.id='copyStandardAccess';copyAccess.textContent='Copiar clave privada de mi acceso';copyAccess.hidden=!token||!developmentTools;
 copyAccess.onclick=async()=>{try{await navigator.clipboard.writeText(token);status('Clave privada copiada; permite recuperar tu acceso en otro navegador. Consérvala privada.');}catch{status('No se pudo copiar; habilita permiso de portapapeles en este navegador');}};
 document.querySelector('header').append(copyAccess);
@@ -16,10 +18,20 @@ export async function api(path, body) {
  }catch(error){if(error.name==='TimeoutError')throw new Error('La conexión tardó demasiado. Actualiza el historial antes de reintentar.');if(error instanceof TypeError)throw new Error('Sin conexión con el servicio. Las reservas requieren conexión; revisa el historial al volver.');throw error;}
 }
 export function status(message) { $('status').textContent = message; }
+export const apiHeaders=()=>token?{Authorization:'Bearer '+token}:{};
 function options(items, label) { return items.map(item => `<option value="${esc(item.id)}">${esc(label(item))}</option>`).join(''); }
-async function catalog() {
-  const data = await api('/catalog'+(new URLSearchParams(location.search).has('operator')?'?operatorId='+encodeURIComponent(new URLSearchParams(location.search).get('operator')):''));
-  $('catalogList').innerHTML = data.departures.map(d => `<article data-departure="${esc(d.id)}"><strong>${esc(d.origin)} → ${esc(d.destination)}</strong><p>${esc(d.operatorName)} · ${esc(d.vehicle)}</p><p>${esc(new Date(d.departAt).toLocaleString('es-EC'))} · ${d.capacity} plazas</p><p>$${(d.priceCents/100).toFixed(2)} por asiento</p></article>`).join('') || '<p>No hay salidas publicadas.</p>';
+const searchQuery=mountSearch($('catalog'),()=>guarded(catalog));
+for(const name of ['origin','destination']){
+ const previous=$('offerForm').elements[name],select=document.createElement('select');select.name=name;select.required=true;
+ for(const city of cities)select.add(new Option(city,city));select.value=previous.value;previous.replaceWith(select);
+}
+let catalogRevision=0;
+export async function catalog() {
+  const query=searchQuery(),operator=new URLSearchParams(location.search).get('operator');if(operator)query.set('operatorId',operator);
+  const revision=++catalogRevision;let data;
+  try{data=await api('/catalog?'+query);}catch(error){if(revision===catalogRevision){$('catalogList').textContent='No se pudieron actualizar los viajes. Revisa tu conexión.';$('privateList').replaceChildren();}throw error;}
+  if(revision!==catalogRevision)return;
+  $('catalogList').innerHTML = data.departures.map(d => `<article data-departure="${esc(d.id)}"><strong>${esc(d.origin)} → ${esc(d.destination)}</strong><p>${esc(d.operatorName)} · ${esc(d.vehicle)}</p><p>${esc(new Date(d.departAt).toLocaleString('es-EC',{timeZone:'America/Guayaquil'}))} (hora Ecuador continental) · ${d.capacity} plazas</p><p>$${(d.priceCents/100).toFixed(2)} por asiento</p>${d.pickupPoint?`<p>Encuentro: ${esc(d.pickupPoint)} · Llegada: ${esc(d.dropoffPoint)}</p>`:""}</article>`).join('') || '<p>No hay salidas publicadas.</p>';
   $('privateList').innerHTML = data.routeOffers.filter(r => r.serviceType === 'private_fixed').map(r => `<article data-private-route="${r.id}"><strong>${esc(r.origin)} → ${esc(r.destination)}</strong><p>${esc(r.vehicle)} · $${(r.priceCents/100).toFixed(2)} por vehículo · ${r.durationMinutes} min</p></article>`).join('') || '<p>No hay rutas privadas publicadas.</p>';
   document.dispatchEvent(new CustomEvent('standard:catalog', { detail: data }));
 }
@@ -30,12 +42,16 @@ export async function refresh() {
   dashboard = next; const selected = $('operatorSelect').value;
   $('operatorSelect').innerHTML = options(dashboard.operators, o => o.display_name);
   if (dashboard.operators.some(o => o.id === selected)) $('operatorSelect').value = selected;
+  else if(dashboard.operators.some(o=>o.id===new URLSearchParams(location.search).get('operator')))$('operatorSelect').value=new URLSearchParams(location.search).get('operator');
   const operatorId = $('operatorSelect').value;
   const vehicles = dashboard.vehicles.filter(v => v.operator_id === operatorId);
   const offers = dashboard.routeOffers.filter(r => r.operator_id === operatorId);
   $('vehicleForm').hidden = $('offerForm').hidden = $('departureForm').hidden = !operatorId;
-  $('offerForm').elements.vehicleId.innerHTML = options(vehicles, v => `${v.model} · ${v.capacity} plazas`);
+  $('offerForm').elements.vehicleId.innerHTML = options(vehicles.filter(v=>v.status==='active'), v => `${v.model} · ${v.capacity} plazas`);
   $('departureForm').elements.offerId.innerHTML = options(offers.filter(o => o.service_type === 'shared'), r => `${r.origin} → ${r.destination}`);
+  const approved=dashboard.operators.find(o=>o.id===operatorId)?.status==='approved';
+  $('offerForm').querySelector('button').disabled=!approved||!vehicles.some(v=>v.status==='active');
+  $('departureForm').querySelector('button').disabled=!approved||!offers.some(o=>o.service_type==='shared');
   $('operatorData').textContent = `${vehicles.length} vehículos · ${offers.length} rutas · ${dashboard.departures.filter(d => offers.some(o => o.id === d.offer_id)).length} salidas`;
   document.dispatchEvent(new CustomEvent('standard:dashboard', { detail: dashboard }));
 }
@@ -65,7 +81,7 @@ for (const [id, path] of Object.entries(forms)) $(id).onsubmit = async event => 
     }
     if (id === 'vehicleForm') body.capacity = Number(body.capacity);
     if (id === 'offerForm') { body.priceCents = Math.round(Number(body.price) * 100); delete body.price; }
-    if (id === 'departureForm') { body.departAt = new Date(body.departAt).toISOString(); body.durationMinutes = Number(body.durationMinutes); }
+    if (id === 'departureForm') { body.departAt = new Date(body.departAt+'-05:00').toISOString(); body.durationMinutes = Number(body.durationMinutes); }
     await api(path, body); delete form.dataset.requestId; status('Guardado en D1'); await refresh(); await catalog();
   }); button.disabled = false;
 };
@@ -77,6 +93,8 @@ setInterval(() => { if (!document.hidden && !$('catalog').hidden) guarded(catalo
 import('./reservations.mjs').catch(e => status(e.message));
 import('./market.mjs').catch(e => status(e.message));
 import('./operations.mjs').catch(e => status(e.message));
+import('./recurring.mjs').catch(e => status(e.message));
+import('./onboarding.mjs').catch(e => status(e.message));
 import('./tracking.mjs').catch(e => status(e.message));
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>status('No se pudo habilitar el modo sin conexión'));
 let installPrompt;
@@ -84,4 +102,4 @@ const install=document.createElement('button');install.id='installStandard';inst
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;});
 install.onclick=async()=>{if(installPrompt){await installPrompt.prompt();installPrompt=null;}else status('Para instalar: menú del navegador → Instalar app o Añadir a inicio. En iPhone: Compartir → Añadir a inicio.');};
 
-mountAccount(document.querySelector('header'),data=>{if(data.authenticated){token='';copyAccess.hidden=true;$('access').hidden=true;guarded(refresh);}});
+mountAccount(document.querySelector('header'),data=>{if(data.authenticated){token='';copyAccess.hidden=true;$('access').hidden=true;guarded(refresh);if(new URLSearchParams(location.search).has('manage'))document.querySelector('[data-view="operator"]').click();}else{$('access').hidden=!developmentTools||!data.developmentAuth;copyAccess.hidden=!developmentTools||!data.developmentAuth||!token;}});

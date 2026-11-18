@@ -22,6 +22,8 @@ await cp(new URL('account/', import.meta.url), new URL('public/account/', output
 await cp(new URL('miniapp/', import.meta.url), new URL('public/miniapp/', output), { recursive: true });
 await cp(new URL('premium/', import.meta.url), new URL('public/premium/', output), { recursive: true });
 await cp(new URL('standard/', import.meta.url), new URL('public/standard/', output), { recursive: true });
+await cp(new URL('node_modules/jsqr/dist/jsQR.js',import.meta.url),new URL('public/standard/vendor/jsQR.js',output));
+await cp(new URL('node_modules/jsqr/LICENSE',import.meta.url),new URL('public/standard/vendor/jsQR.LICENSE',output));
 await writeFile(new URL('public/bookings.mjs', output),
   patchBookings(await readFile(new URL('bookings.mjs', root), 'utf8')));
 await writeFile(new URL('public/shared/live-config.mjs', output),
@@ -39,13 +41,13 @@ let sw = await readFile(new URL('sw.js', root), 'utf8');
 sw = sw.replace("const CACHE = '", "const CACHE = 'rutasec-cloudflare-dev-"+revision+"-");
 sw = sw.replace("key.startsWith('rutasec-')", "key.startsWith('rutasec-cloudflare-dev-')");
 sw = sw.replace("self.addEventListener('fetch', event => {", `self.addEventListener('fetch', event => {
-  if (/^\\/(api|standard-api)(?:\\/|$)/.test(new URL(event.request.url).pathname)) return;`);
+  if (/^\\/(api|standard-api|standard|account|premium|miniapp)(?:\\/|$)/.test(new URL(event.request.url).pathname)) return;`);
 await writeFile(new URL('public/sw.js', output), sw);
 let html = await readFile(new URL('index.html', root), 'utf8');
 html = html.replace('<title>', '<title>DEV · ');
 await writeFile(new URL('public/index.html', output), html);
 await writeFile(new URL('public/environment.json', output), JSON.stringify({
-  environment: 'development', revision: process.env.RUTASEC_BUILD_LABEL || 'j2-static-v1',
+  environment: 'development', version: '0.1.0-alpha.0', revision: process.env.RUTASEC_BUILD_LABEL || 'alpha-corrections-dev',
   parityApi: '/api', standardApi: '/standard-api', payments: 'simulated'
 }) + '\n');
 execFileSync(process.execPath, [new URL('sync-service/build.mjs', root).pathname], { stdio: 'inherit' });

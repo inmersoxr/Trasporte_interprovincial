@@ -1,13 +1,15 @@
 import {prepareRoad,tripSnapshot,applyTripCommand,ROUTE_ID} from '../shared/trip-core.mjs';
 import route from './out/reference-route.mjs';
+import {cookie,COOKIE} from './identity.mjs';
+import {boardPassenger,boardingWindow} from './standard-boarding.mjs';
 const road=prepareRoad(route),validId=s=>typeof s==='string'&&/^[0-9a-f-]{36}$/i.test(s);
 const notice='Simulación de referencia Cuenca–Guayaquil; no es GPS ni representa necesariamente la ruta contratada. SOS y avisos son DEMO, sin servicios de emergencia.';
 export async function handleOperations(request,env,core){
  const {identity,stmt,rows,owner,failure,integer}=core,db=env.DB,url=new URL(request.url),path=url.pathname;
  const tripMatch=path.match(/^\/api\/trips\/([0-9a-f-]{36})(\/commands)?$/i);
  async function permissions(row){
-  if(!request.headers.get('Authorization'))return {control:false,passenger:false};
-  const user=await identity(request,db);
+  if(!request.headers.get('Authorization')&&!cookie(request,COOKIE))return {control:false,passenger:false};
+  let user;try{user=await identity(request,db);}catch(error){if([401,403].includes(error.status))return{control:false,passenger:false};throw error;}
   const control=!!await stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role='owner'",[user.id,row.operator_id]).first();
   const passenger=!!await stmt(db,`SELECT 1 FROM bookings WHERE customer_id=? AND status='confirmed' AND (id=? OR departure_id=?)
    UNION SELECT 1 FROM standard_custom_bookings WHERE customer_id=? AND id=? AND status<>'cancelled' LIMIT 1`,[user.id,row.booking_id,row.departure_id,user.id,row.custom_booking_id]).first();
@@ -33,12 +35,18 @@ export async function handleOperations(request,env,core){
   return publicView({...row,state_json:JSON.stringify(next),revision:next.revision});
  }
  const user=await identity(request,db);
+ if(path==='/api/operations/history'&&request.method==='GET'){
+  const op=url.searchParams.get('operatorId'),cursor=url.searchParams.get('cursor');await owner(db,user.id,op);let before=null;
+  if(cursor){before=await stmt(db,'SELECT id,at FROM standard_operational_events WHERE id=? AND operator_id=?',[cursor,op]).first();if(!before)throw failure('Página de historial no disponible',404);}
+  const events=await rows(db,`SELECT * FROM standard_operational_events WHERE operator_id=?${before?' AND (at<? OR (at=? AND id<?))':''} ORDER BY at DESC,id DESC LIMIT 101`,[op,...(before?[before.at,before.at,before.id]:[])]);
+  return{events:events.slice(0,100),nextCursor:events.length>100?events[99].id:null};
+ }
  if(path==='/api/operations'&&request.method==='GET'){
   const op=url.searchParams.get('operatorId');await owner(db,user.id,op);
   const departures=await rows(db,`SELECT d.*,r.origin,r.destination,t.id AS liveId,t.service_status AS serviceStatus FROM departures d JOIN route_offers r ON r.id=d.offer_id LEFT JOIN standard_tracking t ON t.departure_id=d.id WHERE r.operator_id=? ORDER BY d.depart_at DESC LIMIT 100`,[op]);
-  const bookings=await rows(db,`SELECT b.*,r.origin,r.destination,v.model AS vehicle,t.id AS liveId,t.service_status AS serviceStatus FROM bookings b
+  const bookings=await rows(db,`SELECT b.*,r.origin,r.destination,v.model AS vehicle,c.passenger_phone AS contactPhone,c.passenger_email AS contactEmail,c.pickup_point AS pickupPoint,c.dropoff_point AS dropoffPoint,t.id AS liveId,t.service_status AS serviceStatus FROM bookings b
    JOIN standard_booking_details m ON m.booking_id=b.id JOIN route_offers r ON r.id=b.offer_id JOIN vehicles v ON v.id=m.vehicle_id
-   LEFT JOIN standard_tracking t ON t.booking_id=b.id WHERE m.operator_id=? ORDER BY b.created_at DESC LIMIT 100`,[op]);
+   LEFT JOIN standard_booking_contacts c ON c.booking_id=b.id LEFT JOIN standard_tracking t ON t.booking_id=b.id WHERE m.operator_id=? ORDER BY b.created_at DESC LIMIT 100`,[op]);
   const passengers=await rows(db,'SELECT p.* FROM standard_passengers p JOIN standard_booking_details m ON m.booking_id=p.booking_id WHERE m.operator_id=?',[op]);
   const custom=await rows(db,`SELECT c.*,r.origin,r.destination,t.id AS liveId FROM standard_custom_bookings c JOIN private_requests r ON r.id=c.request_id LEFT JOIN standard_tracking t ON t.custom_booking_id=c.id WHERE c.operator_id=? ORDER BY c.created_at DESC LIMIT 100`,[op]);
   const tracks=await rows(db,'SELECT id,state_json FROM standard_tracking WHERE operator_id=?',[op]);
@@ -50,29 +58,7 @@ export async function handleOperations(request,env,core){
  const raw=await request.text();if(raw.length>8192)throw failure('Solicitud demasiado grande',413);
  let b;try{b=JSON.parse(raw);}catch{throw failure('JSON no válido');}if(!b||typeof b!=='object')throw failure('Solicitud no válida');
  await owner(db,user.id,b.operatorId);
- if(b.action==='board'){
-  const code=String(b.code||'').match(/^RUTASEC-(STANDARD|CUSTOM):([0-9a-f-]{36}):(\d+)$/i);if(!code)throw failure('QR no válido');
-  const id=code[2],position=integer(Number(code[3]),0,29,'Pasajero'),at=Date.now();
-  if(code[1].toUpperCase()==='STANDARD'){
-   const booking=await stmt(db,'SELECT b.* FROM bookings b JOIN standard_booking_details m ON m.booking_id=b.id WHERE b.id=? AND m.operator_id=?',[id,b.operatorId]).first();
-   if(!booking)throw failure('Boleto de otra operadora o inexistente',403);
-   const result=await db.batch([
-    stmt(db,`UPDATE standard_passengers SET boarded_at=? WHERE booking_id=? AND position=? AND boarded_at IS NULL
-     AND EXISTS(SELECT 1 FROM bookings WHERE id=? AND status='confirmed')
-     AND NOT EXISTS(SELECT 1 FROM departures WHERE id=? AND status NOT IN('published','running'))
-     AND NOT EXISTS(SELECT 1 FROM standard_tracking WHERE booking_id=? AND service_status='completed')`,[at,id,position,id,booking.departure_id,id]),
-    stmt(db,"INSERT OR IGNORE INTO standard_operational_events(id,operator_id,entity_kind,entity_id,event) SELECT ?,?,'booking',?,'boarded' WHERE EXISTS(SELECT 1 FROM standard_passengers WHERE booking_id=? AND position=? AND boarded_at IS NOT NULL)",[id+':board:'+position,b.operatorId,id,id,position])]);
-   if(result[0].meta.changes!==1)throw failure('Pasajero ya embarcado o boleto no habilitado',409);
-  }else{
-   if(position!==0)throw failure('QR de grupo no válido');
-   const own=await stmt(db,'SELECT * FROM standard_custom_bookings WHERE id=? AND operator_id=?',[id,b.operatorId]).first();if(!own)throw failure('Servicio de otra operadora',403);
-   const result=await db.batch([
-    stmt(db,"UPDATE standard_custom_bookings SET boarded_at=? WHERE id=? AND boarded_at IS NULL AND status IN('confirmed','running')",[at,id]),
-    stmt(db,"INSERT OR IGNORE INTO standard_operational_events(id,operator_id,entity_kind,entity_id,event) SELECT ?,?,'custom',?,'group_boarded' WHERE EXISTS(SELECT 1 FROM standard_custom_bookings WHERE id=? AND boarded_at IS NOT NULL)",[id+':board:0',b.operatorId,id,id])]);
-   if(result[0].meta.changes!==1)throw failure('Grupo ya abordado o servicio no habilitado',409);
-  }
-  return {boarded:true,simulated:true};
- }
+ if(b.action==='board')return boardPassenger(env,core,b);
  if(!validId(b.id)||!['departure','booking','custom'].includes(b.kind))throw failure('Servicio no válido');
  const column={departure:'departure_id',booking:'booking_id',custom:'custom_booking_id'}[b.kind];
  let target;
@@ -99,6 +85,7 @@ export async function handleOperations(request,env,core){
  if(b.kind==='booking'&&target.departure_id)throw failure('Controla la salida compartida, no el boleto individual');
  const existing=await stmt(db,`SELECT * FROM standard_tracking WHERE ${column}=?`,[target.id]).first();
  if(b.action==='start'){
+  boardingWindow(env,target.depart_at||target.service_at,failure);
   if(existing){if(existing.service_status==='completed')throw failure('Servicio finalizado',409);return {liveId:existing.id,status:'running'};}
   if(!['published','confirmed'].includes(target.status))throw failure('Servicio no habilitado para iniciar',409);
   const id=crypto.randomUUID(),now=Date.now();

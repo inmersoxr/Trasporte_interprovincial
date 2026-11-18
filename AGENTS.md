@@ -1,4 +1,7 @@
 # Instrucciones persistentes — RutasEC
+## Correcciones Alpha autorizadas — 2026-11-18
+El usuario autorizó expresamente comenzar todas las correcciones de la auditoría y mejorar lo existente. No volver a pedir autorización por cada corrección dentro de este alcance. Trabajar por hitos implementados/probados/documentados sobre Workers/D1/R2 existentes. Cuenta verificada obligatoria al reservar, Google primero, Apple después; recurrencia básica Standard. Preservar demo/Pages y datos, no ampliar Premium ni activar cobros reales. Credenciales/contrataciones externas pendientes se reportan sin frenar trabajo independiente. No declarar v0.1.0 Alpha funcional hasta verificar el circuito completo y sus límites reales.
+
 ## Acceso normal obligatorio (instrucción expresa 2026-11-18)
 El usuario rechazó el acceso mediante IDs, UUIDs o claves de desarrollo. Usar correo/contraseña, verificación del correo, cambio y recuperación de contraseña en cuenta y panel administrativo. No volver a pedir identificadores internos ni secretos de desarrollo para iniciar sesión. El intento de habilitación por UUID quedó cancelado; no ejecutar bootstrap sobre ese UUID. Primera autoridad por correo previamente autorizado solo después de comprobar posesión del buzón; no asignar roles a correos sin verificar ni presentar envíos simulados como reales. Herramientas de prueba pueden mantenerse aisladas y explícitas, nunca como flujo normal.
 
