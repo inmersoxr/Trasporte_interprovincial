@@ -26,4 +26,4 @@ Fachada permite únicamente /platform-api/api/platform/* y /platform-api/auth/*,
 
 ## Alcance, pruebas y rollback
 Migración aditiva0013; datos Standard/Premium preservados. Backoffice G1 es un primer bloque funcional, sin contabilidad fiscal, pasarela bancaria, automatización de suscripciones, gestión de privilegios por UI, respaldos nuevos ni certificación comercial. No altera Pages/demo/API/ledger originales ni main. Rollback: volver versiones API y fachada/assets; conservar registros/auditoría y tablas. Si se retira el panel deshabilitar Worker y revocar platform_admins fuera de UI según autoridad vigente, sin borrar cuotas/pagos. Costos/consumo no medidos, ningún upgrade contratado.
-Evidencia de ejecución/despliegue en snapshot2026-11-18-platform-admin-g1.md.
+Evidencia final en snapshot2026-11-18-z-platform-admin-g1-verified.md: Actions44242242297 SUCCESS,36 tests; panel privilegiado probado localmente y controles remotos401/403 verificados. Primer acceso remoto pendiente del UUID seleccionado y ejecución de infraestructura. Snapshot inicial2026-11-18-platform-admin-g1.md conserva el progreso.
