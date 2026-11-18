@@ -16,3 +16,18 @@ La primera prueba usaba las ubicaciones anteriores de controles ahora ocultos: s
 
 ## Entrega y límites
 Al escribir este snapshot: código local, todavía sin despliegue de UX1. Se entrega mediante PR a rama Cloudflare y CI existentes; registrar resultado antes de afirmar disponibilidad. Sin infraestructura/migraciones/exportaciones ni servicios externos nuevos. Rollback: volver solo assets/módulos de navegación a versión Alpha previa, conservando API0020, guards y datos; sin alterar Pages. Futuro centro corporativo completo, Apple, funcionalidades Premium adicionales y cobros reales permanecen fuera del cambio. OAuth/correo reales y teléfonos físicos continúan pendientes.
+
+## Correcciones de contexto comprobadas
+Se conserva en URL la operadora elegida al cambiar pestañas/empresa; prueba con dos empresas y recarga PASS. Regresar a pasajero elimina filtro de empresa para volver al marketplace completo. Formularios movidos mantienen hidden sin selección e inert durante carga/error; una respuesta fallida no permite enviar datos de otra empresa. Browser prueba503 y recuperación. Último recorrido local PASS29.2s.
+
+## Integración
+PR4 integrado en codex/cloudflare-standard-junior como f4fa4734be2889fa59b9dc936b5a879be8a27272, head0b5dc5ba8d914d808c98291b06b4d01898c382fd. Actions44420682393 SUCCESS:54 tests y tres recorridos Chromium PASS sobre código final. Despliegue en curso al registrar esta línea; verificar cierre antes de afirmar publicación. Main/Pages intactos.
+
+## Cierre remoto UX1
+Actions44420942765 SUCCESS: https://github.com/inmersoxr/Trasporte_interprovincial/actions/runs/44420942765 . Repite54 tests y tres recorridos de navegador, despliega Workers existentes sin migraciones nuevas. Fuente desplegada f4fa4734be2889fa59b9dc936b5a879be8a27272; PR4 https://github.com/inmersoxr/Trasporte_interprovincial/pull/4 integrado solo en rama funcional. Verificación PR final44420682393 SUCCESS.
+
+Comprobación remota Chromium PASS: navegación pasajero independiente, cinco destinos operadora, una pantalla visible, formularios ocultos sin empresa, recarga de Flota, regreso al catálogo general y Atrás/cuenta,360/390/1280 sin desbordamiento; Premium no muestra gestión sin acceso. Sin errores JS, cuentas/publicaciones/reservas de prueba remotas ni cambios de datos privados. El harness remoto conserva la excepción de certificado del proxy administrado en Chromium; curl valida TLS normalmente.
+
+Health200/API0020/D1/R2true. Auth/config sigue google=false,email=false: faltan credenciales OAuth y remitente/transporte autorizado; no se afirma acceso real habilitado. Google/buzón/activación Premium/todas las transacciones de la prueba completa fueron fixtures locales, sin pagos reales ni expansión Premium. Cámara/teléfonos físicos siguen pendientes.
+
+Pages200 conserva SHA256c8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f. Fuentes y workflow Pages intactos. Main84bc16f conceptual se incorporó como referencia sin escribir main. Sin recursos nuevos, compras ni exportaciones. Rollback de assets a Alpha previa conserva backend/schema0020 y registros; no se ejecutó rollback remoto por este cambio. Siguiente trabajo dependiente: activación de Google/correo y piloto real; centro corporativo completo conserva su planificación separada.
