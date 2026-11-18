@@ -17,7 +17,7 @@ function driverFields(){const driver=data?.drivers.find(d=>d.id===$('operatorDri
 function vehicleFields(){const vehicle=data?.vehicles.find(v=>v.id===$('vehicleDetailsForm').elements.vehicleId.value);fill($('vehicleDetailsForm'),{plate:vehicle?.plate,brand:vehicle?.brand,model:vehicle?.model,year:vehicle?.year,color:vehicle?.color,capacity:vehicle?.capacity,driverId:vehicle?.driver_id});delete $('vehicleDetailsForm').dataset.requestId;}
 function documentSubjects(){if(!data)return;const kind=documentKinds.find(k=>k.kind===$('operatorDocumentForm').elements.kind.value),items=kind.subject==='operator'?[data.operator]:kind.subject==='driver'?data.drivers:data.vehicles;options($('operatorDocumentForm').elements.subjectId,items,item=>item.full_name||item.display_name||`${item.model} · ${item.plate||'Ficha pendiente'}`);$('operatorDocumentForm').elements.expiresOn.required=kind.expiry;delete $('operatorDocumentForm').dataset.requestId;}
 async function load(){
- const op=$('operatorSelect').value,turn=++revision;section.hidden=!op;if(!op)return;section.inert=true;section.setAttribute('aria-busy','true');
+ const op=$('operatorSelect').value,turn=++revision;section.hidden=!op;if(!op)return;section.inert=true;for(const id of ['operatorDriverForm','vehicleDetailsForm','operatorDocumentForm'])$(id).inert=true;section.setAttribute('aria-busy','true');
  try{const result=await api('/operator-onboarding?operatorId='+encodeURIComponent(op));if(turn!==revision)return;data=result;
   const p=data.profile,f=$('operatorProfileForm');fill(f,{kind:p?.kind||'individual',name:data.operator.display_name,legalName:data.operator.legal_name,responsibleName:p?.responsible_name,phone:p?.phone,contactEmail:p?.contact_email,baseCity:p?.base_city||'Cuenca',address:p?.address,taxId:data.operator.tax_id});
   $('onboardingState').textContent=(data.operator.data_scope==='qa'?'Pruebas aisladas · ':'')+(labels[p?.review_state]||'Completa tu expediente')+(p?.review_note?' · '+p.review_note:'');
@@ -30,7 +30,7 @@ async function load(){
   for(const form of ['offerForm','departureForm'])$(form).querySelector('button').disabled=!canPublish;
   $('submitOperatorReview').disabled=!data.documented||!p||!['draft','changes_requested'].includes(p.review_state);
   $('operatorDocuments').innerHTML='<h3>Documentos guardados</h3>'+data.documents.map(d=>`<p>${esc(documentKinds.find(k=>k.kind===d.kind)?.label||d.kind)} · <a href="/standard-api/api/operator-documents/${d.id}" target="_blank" rel="noopener">${esc(d.filename)}</a>${d.expires_on?' · vence '+esc(d.expires_on):''}</p>`).join('');
- }catch(error){status(error.message);}finally{if(turn===revision){section.inert=false;section.setAttribute('aria-busy','false');}}
+ }catch(error){status(error.message);}finally{if(turn===revision){section.inert=false;for(const id of ['operatorDriverForm','vehicleDetailsForm','operatorDocumentForm'])$(id).inert=false;section.setAttribute('aria-busy','false');}}
 }
 for(const [formId,path]of [['operatorProfileForm','/operator-profile'],['operatorDriverForm','/operator-drivers'],['vehicleDetailsForm','/vehicle-details']]){
  const form=$(formId);form.addEventListener('input',()=>delete form.dataset.requestId);

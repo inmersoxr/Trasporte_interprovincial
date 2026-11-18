@@ -1,0 +1,18 @@
+# UX1 — consola de operadoras como aplicación
+
+El usuario actualiza main84bc16f con propuesta de cinco pestañas y solicita expresamente simplificar la interfaz, agrupar tareas y separar públicos. Esta instrucción autoriza el ajuste visual sobre Cloudflare; sustituye la espera de autorización indicada en la propuesta original. Main/Pages/demo intactos. Rama funcional antes de cambios:cef8800; no hay trabajo de código paralelo en ella. Misma infraestructura/API/esquema0020.
+
+## Implementación
+- Standard: navegación inferior persistente Inicio, Viajes, Reservas, Flota y Más. Una pantalla principal visible. Opciones secundarias por contexto: rutas/salidas/recurrentes; manifiesto/embarque/historial/solicitudes; vehículos/conductores; empresa/documentos/cuenta. Inicio con resumen real y accesos a tareas.
+- Pasajero conserva búsqueda, reservas y boletos en navegación independiente. Gestión de operadora abre un contexto distinto, con regreso a vista de pasajero desde Más/Cuenta. Recarga, URL y Atrás conservan pantalla. Cuenta/instalación quedan en Más durante gestión, liberando cabecera. Demo sigue accesible por su URL independiente, fuera de la navegación habitual.
+- Premium adopta las mismas cinco entradas; Viajes/Reservas enlazan a consola Standard con operadora y pantalla seleccionadas, sin duplicar procesos. Flota/mantenimiento y Más/equipo/finanzas/marca reutilizan herramientas existentes. Contenedores de navegación separados de los hidden que controlan los permisos: no se reemplazan comprobaciones de rol ni se habilitan planes/cobros nuevos.
+- Se trasladan nodos/formularios existentes conservando handlers, IDs, datos y estado. Guardias de carga documental aplicadas también a formularios movidos. Salir de pantalla detiene cámara. SW incorpora módulos nuevos; backend y esquema no cambian.
+- Nueva memoria main se conserva como propuesta histórica; implementación y límites actuales quedan arriba en PROJECT_MEMORY.
+
+## Pruebas locales
+54/54 npm test PASS136.5s, incluida regresión de autorización, asientos, horarios, documentos, Premium y demo. Alpha Chromium PASS29.8s: varios contextos, expediente/revisión, viajes recurrentes, compra persistente, último asiento, QR decodificado de vídeo simulado, embarque/replay, nueva sesión; ahora navegando por pestañas. Cinco pantallas con capturas390px, una visible, recarga en conductores, regreso pasajero y Atrás; Premium activo solo como fixture local, flota/finanzas en secciones distintas. Google/correo siguen SIMULADOS en este harness. Revisadas capturas Inicio/Flota; no desbordamiento360/390/1280. Ajustes menores posteriores de cabecera/indicador de pestaña se verifican en CI antes de integrar.
+
+La primera prueba usaba las ubicaciones anteriores de controles ahora ocultos: se actualizó el recorrido para abrir sus pantallas, sin forzar clics sobre elementos ocultos. También se adaptó la inserción de recurrentes para conservar el padre real del nodo movido. `git diff --check` PASS; fuentes originales Pages/demo idénticas.
+
+## Entrega y límites
+Al escribir este snapshot: código local, todavía sin despliegue de UX1. Se entrega mediante PR a rama Cloudflare y CI existentes; registrar resultado antes de afirmar disponibilidad. Sin infraestructura/migraciones/exportaciones ni servicios externos nuevos. Rollback: volver solo assets/módulos de navegación a versión Alpha previa, conservando API0020, guards y datos; sin alterar Pages. Futuro centro corporativo completo, Apple, funcionalidades Premium adicionales y cobros reales permanecen fuera del cambio. OAuth/correo reales y teléfonos físicos continúan pendientes.
