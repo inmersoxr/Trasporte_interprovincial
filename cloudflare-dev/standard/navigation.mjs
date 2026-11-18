@@ -22,7 +22,7 @@ export function mountNavigation({refresh,catalog,status}){
   for(const [id,p]of Object.entries(pages))p.hidden=id!==tab;
   for(const [page,items]of Object.entries(groups))for(const [id]of items){sections[id].hidden=id!==section;const b=subnav[page].querySelector('[data-operator-section="'+id+'"]');b.setAttribute('aria-current',id===section?'page':'false');}
   for(const b of nav.querySelectorAll('button'))b.setAttribute('aria-current',b.dataset.operatorTab===tab?'page':'false');
-  if(write){const u=new URL(location.href);u.searchParams.set('manage','1');u.searchParams.set('panel',tab);section?u.searchParams.set('section',section):u.searchParams.delete('section');history.pushState(null,'',u);status('');pages[tab].querySelector('h2').setAttribute('tabindex','-1');pages[tab].querySelector('h2').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
+  if(write){const u=new URL(location.href);u.searchParams.set('manage','1');u.searchParams.set('panel',tab);if($('operatorSelect').value)u.searchParams.set('operator',$('operatorSelect').value);section?u.searchParams.set('section',section):u.searchParams.delete('section');history.pushState(null,'',u);status('');pages[tab].querySelector('h2').setAttribute('tabindex','-1');pages[tab].querySelector('h2').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
   document.dispatchEvent(new CustomEvent('standard:navigation',{detail:{managing,tab,section}}));
  }
  function mode(value){managing=value;for(const el of [document.querySelector('a[href="/account/"]:not(.account-action)'),$('installStandard')])if(el)(value?sections.account:header).append(el);if(value)sections.account.append(back);nav.hidden=!value;publicNav.hidden=value;switcher.hidden=value;back.hidden=!value;title.textContent=value?'Mi operadora':'RutasEC';shell.classList.toggle('is-operator',value);}
@@ -33,7 +33,7 @@ export function mountNavigation({refresh,catalog,status}){
  function move(id,target){const el=$(id);if(el&&el.parentElement!==target)target.append(el);}
  // Labels/selectors remain visible across operator screens; bodies live in their task.
  const h=root.querySelector(':scope > h2');if(h)h.hidden=true;const hint=root.querySelector(':scope > p');if(hint)hint.hidden=true;
- const select=$('operatorSelect'),label=select.closest('label');label.classList.add('operator-context');root.prepend(label);label.append($('refreshOperator'));$('refreshOperator').textContent='↻';$('refreshOperator').setAttribute('aria-label','Actualizar panel');
+ const select=$('operatorSelect'),label=select.closest('label');label.classList.add('operator-context');root.prepend(label);label.append($('refreshOperator'));select.addEventListener('change',()=>{const u=new URL(location.href);if(managing){u.searchParams.set('operator',select.value);history.replaceState(null,'',u);}});$('refreshOperator').textContent='↻';$('refreshOperator').setAttribute('aria-label','Actualizar panel');
  function organize(){
   move('operatorData',pages.home);move('operatorForm',sections.company);move('vehicleForm',sections.vehicles);move('offerForm',sections.routes);move('departureForm',sections.departures);move('recurringSchedules',sections.recurring);move('operatorMarket',sections.requests);
   move('operatorOnboarding',sections.company);move('operatorDriverForm',sections.drivers);move('vehicleDetailsForm',sections.vehicles);move('operatorDocumentForm',sections.documents);move('operatorDocuments',sections.documents);move('submitOperatorReview',sections.documents);

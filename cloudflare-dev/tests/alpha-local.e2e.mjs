@@ -175,6 +175,8 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     await a.page.goto(APP_ORIGIN+'/premium/');await a.page.locator('.operator-bottom').waitFor();assert.equal(await a.page.locator('.operator-bottom button').count(),5);
     await a.page.locator('[data-destination="fleet"]').click();await a.page.locator('#fleet').waitFor();assert.equal(await a.page.locator('#finance').isVisible(),false);
     await a.page.locator('[data-destination="more"]').click();await a.page.locator('.operator-subnav').getByRole('button',{name:'Finanzas',exact:true}).click();await a.page.locator('#finance').waitFor();assert.equal(await a.page.locator('#team').isVisible(),false);
+    const secondOperator=await a.page.evaluate(async()=>{const r=await fetch('/standard-api/api/operators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Segunda operadora de prueba',requestId:crypto.randomUUID()})});return(await r.json()).id;});
+    await a.page.goto(APP_ORIGIN+'/standard/?manage=1&panel=fleet&section=drivers');await a.page.locator('#operatorSelect option').filter({hasText:'Segunda operadora de prueba'}).waitFor({state:'attached'});await a.page.locator('#operatorSelect').selectOption(secondOperator);await a.page.reload();await a.page.waitForFunction(id=>document.querySelector('#operatorSelect').value===id,secondOperator);assert.equal(new URL(a.page.url()).searchParams.get('operator'),secondOperator);
     assert.equal((await db.prepare('SELECT COUNT(*) n FROM auth_identities').first()).n,4);
     assert.deepEqual(errors,[]);
   }finally{await browser?.close();await mf.dispose();}
