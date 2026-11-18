@@ -113,3 +113,6 @@ Este orden prevalece sobre estimaciones de calendario y propuestas anteriores qu
 **Bloque Senior (solo después de J8):** auditoría integral de arquitectura, seguridad, privacidad, calidad, rendimiento, deuda técnica y escalabilidad; revisión crítica de decisiones y refactorización justificada. Posteriormente planificar Premium empresarial por separado. Integración de pasarela y cobros reales únicamente en última fase autorizada y tras piloto, sin bloquear el Standard funcional.
 
 **Cierre obligatorio por fase:** pruebas ejecutadas y resultados, código/commit, URL real y entorno, limitaciones, rollback, snapshot, estado `pendiente / en curso / verificado`. Un commit no es un deploy; una pantalla no es un flujo funcional. Mantener controles mínimos de integridad, autorización y protección de datos durante Junior; posponer solo el endurecimiento avanzado, nunca fallos críticos.
+
+## UX1 — aplicación por contexto
+Instrucción actual del usuario autoriza navegación inferior de cinco destinos en consola Standard/Premium y pantallas contextuales, preservando funciones existentes. Pasajero y administración tienen espacios propios. Implementación/pruebas locales en snapshot2026-11-18-zzzzzzzzzzz-operator-app-navigation.md; verificar CI/despliegue antes de declarar disponible. Sin backend nuevo, demo ni ampliación Premium.

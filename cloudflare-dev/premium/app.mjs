@@ -1,3 +1,4 @@
+import {mountPremiumNavigation} from './navigation.mjs';
 import {mountAccount} from '../account/session.mjs';
 import {setupBranding,renderBranding} from './branding.mjs';
 import {setupFinance,renderFinance} from './finance.mjs';
@@ -42,3 +43,5 @@ for(const form of document.forms){form.addEventListener('input',()=>delete form.
 mountAccount(document.querySelector('header'),data=>data.offline?status('Sin conexión. Consulta y cambios requieren conexión; no se confirma ninguna operación.'):run(loadOperators));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>status('No se pudo habilitar la aplicación sin conexión'));
 let installPrompt;window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;});window.addEventListener('rutasec:manifest',()=>installPrompt=null);const install=node('button','Instalar aplicación de gestión');install.id='installPremium';document.querySelector('header').append(install);install.onclick=async()=>{if(installPrompt){await installPrompt.prompt();installPrompt=null;}else status('En Android: menú → Instalar app. En iPhone: Compartir → Añadir a inicio.');};
+
+mountPremiumNavigation();

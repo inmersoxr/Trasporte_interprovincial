@@ -12,7 +12,7 @@ section.innerHTML=`<h2>Viajes recurrentes</h2><p>Publica tus horarios habituales
 <p>El vehículo, precio y capacidad son los de la ruta. Hasta 90 días y 90 salidas por programación. Los horarios deben permitir que el vehículo complete cada recorrido.</p>
 <button id="previewRecurring" type="button">Revisar salidas</button><div id="recurringPreview" role="status" aria-live="polite"></div><button id="publishRecurring" class="yellow" disabled>Publicar programación</button></form>
 <h3>Mis programaciones</h3><p>Para cambiar horarios, detén las próximas salidas sin reservas y crea otra programación. Las salidas con reservas se conservan. Puedes cancelar una fecha concreta desde Operación y manifiestos.</p><div id="recurringList"></div>`;
-$('operator').insertBefore(section,$('operatorMarket'));
+$('operatorMarket').before(section);
 const form=$('recurringForm'); let previewBody=null,requestId=null,busy=false,loadRevision=0;
 const date = offset => new Date(Date.now()-5*3600000+offset*86400000).toISOString().slice(0,10);
 form.elements.startDate.value=date(1); form.elements.endDate.value=date(7);

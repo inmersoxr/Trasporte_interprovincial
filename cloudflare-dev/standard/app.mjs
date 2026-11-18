@@ -1,3 +1,4 @@
+import {mountNavigation} from './navigation.mjs';
 import {mountAccount,hasAccess} from '../account/session.mjs';
 import {mountSearch} from './search.mjs';
 import {cities} from './cities.mjs';
@@ -98,8 +99,9 @@ import('./onboarding.mjs').catch(e => status(e.message));
 import('./tracking.mjs').catch(e => status(e.message));
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>status('No se pudo habilitar el modo sin conexión'));
 let installPrompt;
-const install=document.createElement('button');install.id='installStandard';install.textContent='Instalar Standard de desarrollo';document.querySelector('header').append(install);
+const install=document.createElement('button');install.id='installStandard';install.textContent='Instalar app';document.querySelector('header').append(install);
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;});
 install.onclick=async()=>{if(installPrompt){await installPrompt.prompt();installPrompt=null;}else status('Para instalar: menú del navegador → Instalar app o Añadir a inicio. En iPhone: Compartir → Añadir a inicio.');};
 
-mountAccount(document.querySelector('header'),data=>{if(data.authenticated){token='';copyAccess.hidden=true;$('access').hidden=true;guarded(refresh);if(new URLSearchParams(location.search).has('manage'))document.querySelector('[data-view="operator"]').click();}else{$('access').hidden=!developmentTools||!data.developmentAuth;copyAccess.hidden=!developmentTools||!data.developmentAuth||!token;}});
+const navigation=mountNavigation({refresh,catalog,status});
+mountAccount(document.querySelector('header'),data=>{if(data.authenticated){token='';copyAccess.hidden=true;$('access').hidden=true;guarded(refresh);if(new URLSearchParams(location.search).has('manage'))navigation.open();}else{$('access').hidden=!developmentTools||!data.developmentAuth;copyAccess.hidden=!developmentTools||!data.developmentAuth||!token;}});

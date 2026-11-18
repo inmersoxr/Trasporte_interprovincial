@@ -67,35 +67,38 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     const a=await actor('operator-alpha');
     await a.page.goto(APP_ORIGIN+'/account/');await a.google();await a.page.locator('#account').waitFor();
     assert.equal(await a.page.locator('#passwordSettings').isVisible(),false);
-    await a.page.goto(APP_ORIGIN+'/standard/');await a.page.getByRole('button',{name:'Operadora',exact:true}).click();
+    await a.page.goto(APP_ORIGIN+'/standard/');await a.page.getByRole('button',{name:'Gestionar mi operadora',exact:true}).click();
+    const operatorTab=async(tab,section)=>{await a.page.locator('[data-operator-tab="'+tab+'"]').click();if(section)await a.page.locator('[data-operator-section="'+section+'"]').click();};
+    assert.equal(await a.page.locator('.operator-navigation button').count(),5);
+    await operatorTab('more','company');
     await a.page.locator('#operatorForm [name="name"]').fill('Operadora Alpha de prueba');await a.page.locator('#operatorForm button').click();
-    await a.page.locator('#vehicleForm').waitFor();await a.page.locator('#vehicleForm [name="model"]').fill('Vehículo Alpha de prueba');await a.page.locator('#vehicleForm [name="capacity"]').fill('2');await a.page.locator('#vehicleForm button').click();
+    await operatorTab('fleet','vehicles');await a.page.locator('#vehicleForm').waitFor();await a.page.locator('#vehicleForm [name="model"]').fill('Vehículo Alpha de prueba');await a.page.locator('#vehicleForm [name="capacity"]').fill('2');await a.page.locator('#vehicleForm button').click();
     await a.page.locator('#vehicleDetailsForm [name="vehicleId"] option').waitFor({state:'attached'});
-    const profile=a.page.locator('#operatorProfileForm');
+    await operatorTab('more','company');const profile=a.page.locator('#operatorProfileForm');
     for(const [name,value]of Object.entries({legalName:'Prestador Alpha de prueba',responsibleName:'Responsable de prueba',phone:'+593990000000',contactEmail:'contacto@example.com',address:'Dirección de prueba'}))await profile.locator(`[name="${name}"]`).fill(value);
     await profile.getByRole('button',{name:'Guardar perfil'}).click();await a.page.locator('#onboardingState').getByText(/Borrador/).waitFor();
-    const driver=a.page.locator('#operatorDriverForm');
+    await operatorTab('fleet','drivers');const driver=a.page.locator('#operatorDriverForm');
     for(const [name,value]of Object.entries({fullName:'Conductor Alpha',phone:'+593990000000',identityNumber:'Identidad de prueba',licenseNumber:'LIC-ALPHA',licenseCategory:'AB',licenseExpiresOn:'2099-12-31'}))await driver.locator(`[name="${name}"]`).fill(value);
     await driver.getByRole('button',{name:'Guardar conductor'}).click();await a.page.locator('#vehicleDetailsForm [name="driverId"] option').waitFor({state:'attached'});
-    const vehicle=a.page.locator('#vehicleDetailsForm');
+    await operatorTab('fleet','vehicles');const vehicle=a.page.locator('#vehicleDetailsForm');
     await vehicle.locator('[name="driverId"]').selectOption({label:'Conductor Alpha'});
     for(const [name,value]of Object.entries({plate:'ALP-1234',brand:'Marca de prueba',year:'2024',color:'Blanco'}))await vehicle.locator(`[name="${name}"]`).fill(value);
     await vehicle.getByRole('button',{name:'Guardar ficha del vehículo'}).click();
-    const documents=a.page.locator('#operatorDocumentForm');
+    await operatorTab('more','documents');const documents=a.page.locator('#operatorDocumentForm');
     for(const kind of ['identity','authorization','license','registration','insurance','inspection']){
       await documents.locator('[name="kind"]').selectOption(kind);await documents.locator('[name="expiresOn"]').fill('2099-12-31');
       await documents.locator('[name="file"]').setInputFiles({name:kind+'.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF-1.4\nDocumento de prueba\n%%EOF')});
       await documents.getByRole('button',{name:'Guardar documento'}).click();await a.page.getByRole('link',{name:kind+'.pdf',exact:true}).waitFor();
     }
-    await a.page.getByRole('button',{name:'Solicitar revisión para operar'}).click();await a.page.locator('#onboardingState').getByText(/En revisión/).waitFor();
+    await a.page.getByRole('button',{name:'Solicitar revisión para operar'}).click();await operatorTab('more','company');await a.page.locator('#onboardingState').getByText(/En revisión/).waitFor();
     assert.equal((await db.prepare('SELECT COUNT(*) n FROM departures').first()).n,0);
     const admin=await actor('administrator-alpha');await admin.page.goto(ADMIN_ORIGIN+'/');await admin.google();await admin.page.locator('#workspace').waitFor();
     await admin.page.getByRole('button',{name:'Revisar operadora'}).click();await admin.page.locator('#operatorReview [name="decision"]').selectOption('approved');
     await admin.page.locator('#operatorReview [name="note"]').fill('Documentos ficticios revisados en la prueba local');await admin.page.getByRole('button',{name:'Guardar revisión documental'}).click();
     await admin.page.getByText('Revisión documental guardada.',{exact:true}).waitFor();
     await a.page.locator('#refreshOperator').click();await a.page.locator('#onboardingState').getByText(/Aprobado/).waitFor();
-    await a.page.locator('#offerForm [name="vehicleId"] option').waitFor({state:'attached'});await a.page.locator('#offerForm [name="pickupPoint"]').fill('Encuentro de prueba en Cuenca');await a.page.locator('#offerForm [name="dropoffPoint"]').fill('Llegada de prueba en Guayaquil');await a.page.locator('#offerForm button').click();
-    await a.page.locator('#recurringForm [name="offerId"] option').waitFor({state:'attached'});
+    await operatorTab('trips','routes');await a.page.locator('#offerForm [name="vehicleId"] option').waitFor({state:'attached'});await a.page.locator('#offerForm [name="pickupPoint"]').fill('Encuentro de prueba en Cuenca');await a.page.locator('#offerForm [name="dropoffPoint"]').fill('Llegada de prueba en Guayaquil');await a.page.locator('#offerForm button').click();
+    await operatorTab('trips','recurring');await a.page.locator('#recurringForm [name="offerId"] option').waitFor({state:'attached'});
     const localService=new Date(Date.now()+15*60000-5*3600000).toISOString(),publishedDate=localService.slice(0,10);
     const finalDate=new Date(Date.parse(publishedDate+'T00:00:00Z')+2*86400000).toISOString().slice(0,10);
     await a.page.locator('#recurringForm [name="startDate"]').fill(publishedDate);await a.page.locator('#recurringForm [name="endDate"]').fill(finalDate);await a.page.locator('#recurringForm [name="durationMinutes"]').fill('60');await a.page.locator('#recurringForm [name="times"]').fill(localService.slice(11,16));
@@ -108,6 +111,7 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
 
     const b=await actor('passenger-alpha','Europe/Madrid');
     await b.page.goto(APP_ORIGIN+'/standard/');
+    await b.page.getByRole('button',{name:'Gestionar mi operadora',exact:true}).click();await b.page.locator('[data-operator-tab="fleet"]').click();assert.equal(await b.page.locator('#vehicleDetailsForm').isVisible(),false);assert.equal(await b.page.locator('#operatorDriverForm').isVisible(),false);await b.page.locator('[data-operator-tab="more"]').click();await b.page.locator('[data-operator-section="account"]').click();await b.page.getByRole('button',{name:'Vista de pasajero',exact:true}).click();
     await b.page.locator('#searchTrips [name="origin"]').selectOption('Quito');await b.page.locator('#searchTrips button[type="submit"],#searchTrips button.yellow').click();
     await b.page.getByText('No hay salidas publicadas.',{exact:true}).waitFor();
     await b.page.locator('#searchTrips [name="origin"]').selectOption('Cuenca');await b.page.locator('#searchTrips [name="destination"]').selectOption('Guayaquil');
@@ -125,9 +129,9 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     await b.page.reload();await b.page.getByRole('button',{name:'Mis boletos'}).click();await b.page.locator(`[data-booking="${booking.id}"]`).waitFor();
     const qrImage=await b.page.locator('.qr canvas').first().evaluate(canvas=>canvas.toDataURL('image/png'));
 
-    await a.page.locator('#refreshOperations').click();await a.page.locator(`[data-manifest="${booking.id}"]`).getByText(/Pasajero Alpha de prueba/).waitFor();
+    await operatorTab('reservations','manifest');await a.page.locator('#refreshOperations').click();await a.page.locator(`[data-manifest="${booking.id}"]`).getByText(/Pasajero Alpha de prueba/).waitFor();
     await a.page.bringToFront();
-    await a.page.locator('#boardForm [name="service"]').selectOption('departure:'+departures[0].id);
+    await operatorTab('reservations','boarding');await a.page.locator('#boardForm [name="service"]').selectOption('departure:'+departures[0].id);
     await a.page.evaluate(async imageData=>{
       // Simulated camera frames, real jsQR pixel decoding and real D1 validation.
       globalThis.BarcodeDetector=undefined;
@@ -148,8 +152,8 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     assert.equal((await db.prepare("SELECT COUNT(*) n FROM standard_operational_events WHERE event='boarded'").first()).n,1);
     assert.equal(await a.page.evaluate(()=>globalThis.testCameraStreams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))),true);
     await b.page.reload();await b.page.getByRole('button',{name:'Mis boletos'}).click();await b.page.getByText('EMBARCADO',{exact:true}).waitFor();
-    await a.page.locator(`[data-service="${departures[1].id}"]`).getByRole('button',{name:'Cancelar salida y simular reembolsos'}).click();
-    await a.page.locator(`[data-service="${departures[1].id}"]`).getByText(/cancelled/).waitFor();
+    await operatorTab('reservations','manifest');await a.page.locator(`[data-service="${departures[1].id}"]`).getByRole('button',{name:'Cancelar salida y simular reembolsos'}).click();
+    await operatorTab('reservations','manifest');await a.page.locator(`[data-service="${departures[1].id}"]`).getByText(/cancelled/).waitFor();
     assert.equal((await db.prepare("SELECT COUNT(*) n FROM departures WHERE status='published'").first()).n,2);
     // A second customer takes the last seat while the first customer's checkout is open.
     await b.page.getByRole('button',{name:'Explorar',exact:true}).click();await b.page.locator(`[data-departure="${departures[0].id}"] button`).click();await b.page.locator('#seatGrid input[value="2"]').check();
@@ -161,6 +165,19 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     await c.page.getByText('EMBARCADO',{exact:true}).waitFor();
     await c.page.goto(APP_ORIGIN+'/account/');await c.page.locator('#account').waitFor();assert.equal(await c.page.locator('#accountProfile [name="phone"]').inputValue(),'+593981112233');
     for(const page of [a.page,b.page,c.page,admin.page])for(const width of [360,390,1280]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);}
+    await a.page.setViewportSize({width:390,height:844});
+    for(const tab of ['home','trips','reservations','fleet','more']){await operatorTab(tab);assert.equal(await a.page.locator('.operator-page:visible').count(),1);assert.equal(await a.page.locator('.operator-navigation').isVisible(),true);await a.page.screenshot({path:new URL('../qa-output/operator-'+tab+'-390.png',import.meta.url).pathname});}
+    await operatorTab('fleet','drivers');await a.page.reload();await a.page.locator('#operatorDriverForm').waitFor();assert.equal(await a.page.locator('#offerForm').isVisible(),false);
+    await operatorTab('more','account');await a.page.getByRole('button',{name:'Vista de pasajero',exact:true}).click();assert.equal(await a.page.locator('.operator-navigation').isVisible(),false);assert.equal(await a.page.locator('#operator').isVisible(),false);assert.equal(new URL(a.page.url()).searchParams.has('operator'),false);
+    assert.equal(await a.page.getByRole('link',{name:/Mi cuenta ·/}).isVisible(),true);await a.page.goBack();await a.page.locator('#operatorSection-account').waitFor();
+    // Existing Premium capabilities use the same five destinations; no plan is purchased.
+    const enable=await a.page.evaluate(async operatorId=>{const r=await fetch('/standard-api/api/premium/activate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({operatorId,requestId:crypto.randomUUID()})});return r.status;},(await db.prepare("SELECT id FROM operators WHERE data_scope='alpha'").first()).id);assert.equal(enable,200);
+    await a.page.goto(APP_ORIGIN+'/premium/');await a.page.locator('.operator-bottom').waitFor();assert.equal(await a.page.locator('.operator-bottom button').count(),5);
+    await a.page.locator('[data-destination="fleet"]').click();await a.page.locator('#fleet').waitFor();assert.equal(await a.page.locator('#finance').isVisible(),false);
+    await a.page.locator('[data-destination="more"]').click();await a.page.locator('.operator-subnav').getByRole('button',{name:'Finanzas',exact:true}).click();await a.page.locator('#finance').waitFor();assert.equal(await a.page.locator('#team').isVisible(),false);
+    const secondOperator=await a.page.evaluate(async()=>{const r=await fetch('/standard-api/api/operators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Segunda operadora de prueba',requestId:crypto.randomUUID()})});return(await r.json()).id;});
+    await a.page.goto(APP_ORIGIN+'/standard/?manage=1&panel=fleet&section=drivers');await a.page.locator('#operatorSelect option').filter({hasText:'Segunda operadora de prueba'}).waitFor({state:'attached'});await a.page.locator('#operatorSelect').selectOption(secondOperator);await a.page.reload();await a.page.waitForFunction(id=>document.querySelector('#operatorSelect').value===id,secondOperator);assert.equal(new URL(a.page.url()).searchParams.get('operator'),secondOperator);
+    await a.context.route('**/standard-api/api/operator-onboarding?**',r=>r.fulfill({status:503,json:{error:'Prueba de conexión interrumpida'}}));await a.page.locator('#refreshOperator').click();await a.page.getByText('Prueba de conexión interrumpida',{exact:true}).waitFor();assert.equal(await a.page.locator('#operatorDriverForm').evaluate(f=>f.inert),true);await a.context.unroute('**/standard-api/api/operator-onboarding?**');await a.page.locator('#refreshOperator').click();await a.page.waitForFunction(()=>!document.querySelector('#operatorDriverForm').inert);
     assert.equal((await db.prepare('SELECT COUNT(*) n FROM auth_identities').first()).n,4);
     assert.deepEqual(errors,[]);
   }finally{await browser?.close();await mf.dispose();}
