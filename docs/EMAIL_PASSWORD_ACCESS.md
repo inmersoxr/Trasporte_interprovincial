@@ -2,6 +2,8 @@
 
 Actualización Alpha2026-11-18: registro normal por correo, contraseña y código numérico de seis dígitos; se reutiliza A2, D1 y el transporte existente. Cuenta verificada obligatoria al reservar; Google como primer proveedor social, Apple posterior. Retorno seguro al checkout. Google y correo reales requieren configuración externa; los tests usan proveedores/buzones simulados. QA exige ALLOW_DEVELOPMENT_AUTH=true en entorno aislado y ?dev=1; configuración normal false. Ver snapshots Alpha para distinguir fuente, pruebas y despliegue.
 
+Entrega G: Actions44415780046 SUCCESS, esquema0020 y formularios de código desplegados.54 tests y tres navegadores CI PASS; auth/config remoto todavía email=false/google=false. No se afirma entrega real ni propietario activado. Ver snapshot2026-11-18-zzzzzzzzzz-alpha-delivery.md.
+
 ## Experiencia de usuario
 En /account/ y rutasec-admin-dev: Entrar (correo/contraseña), Crear cuenta (correo, nombre opcional y contraseña), código de correo y activación, Olvidé mi contraseña, cambio de contraseña dentro de la sesión. No se muestran IDs/UUIDs/claves de desarrollo ni se solicitan para asignar el acceso del propietario. El bootstrap por UUID quedó cancelado por el usuario. Google queda opcional y se muestra deshabilitado si no está configurado.
 
@@ -31,5 +33,5 @@ Preflight read-only en CI inspecciona solo conteos de zonas/domain readiness sin
 ## Rollback
 Mantener esquema/credenciales y roles, no restablecer passwords ni borrar datos para volver versión. Volver versiones API/assets y desactivar altas si hace falta; conservar acceso de mantenimiento solo como QA, sin obligar al usuario a copiar claves. Demo Pages/API/ledger originales intactos. No pagos, compras de dominio, exportaciones ni upgrades automáticos.
 
-## Estado remoto comprobado
+## Estado remoto histórico A2
 2026-11-18, Actions44352814016 SUCCESS,39 tests. Cuenta y admin desplegados con email/password; Google oculto si no disponible, IDs y claves de desarrollo ausentes del acceso normal. Native scrypt verificado por login inválido401 en navegador remoto. Preflight zonas Cloudflare:0; /auth/config email=false y remitente/transporte ausentes. La entrega real está BLOQUEADA: no se creó ni verificó todavía la cuenta real del propietario y no se asignó rol por el UUID cancelado. Se necesita configurar un remitente de dominio autorizado (o proveedor ya autorizado) antes de prometer recepción. No comprar dominios ni planes automáticamente.
