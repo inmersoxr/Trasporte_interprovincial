@@ -3,6 +3,8 @@ Fecha: 2026-11-14
 Estado: plan de trabajo; NO constituye verificación de fases completadas.
 
 ## Alcance Alpha vigente — 2026-11-18, posterior a la auditoría
+**Estado actual G:** correcciones A–F desplegadas y verificadas en Workers/D1/R2 existentes por Actions44415780046,54 tests + tres navegadores PASS. Health0020, Standard abre por defecto, catálogo solo Alpha, Pages intacto. Continúa pendiente aceptación con Google/correo reales (faltan configuración OAuth/remitente/transporte) y teléfonos físicos; ver ALPHA_ACCEPTANCE.md y snapshot2026-11-18-zzzzzzzzzz-alpha-delivery.md. Los estados locales y bloqueos anteriores de abajo son históricos.
+
 F cerrado localmente:54 tests y tres navegadores PASS; código de correo sobre A2 y criterios en ALPHA_ACCEPTANCE.md. Entrega G pendiente en CI existente; configuración real Google/correo y piloto con teléfonos siguen sin certificar.
 E1/E2 cerrados localmente con pruebas específicas y navegador; cámara/embarque único, contacto, boleto privado y persistente, inventario vivo e historiales. Ver snapshots correspondientes. F continúa sobre correo existente; Google/correo reales y prueba física siguen pendientes.
 Autorización ampliada posterior: el usuario permite comenzar todas las correcciones restantes de la auditoría, sin pedir confirmación por cada mejora sobre lo existente. C catálogo/búsqueda/aislamiento QA cerrado localmente (48 tests + Chromium PASS); D onboarding/revisión documental, E embarque/cámara/boleto y F verificación por código/regresión/entrega continúan secuencialmente. Las dependencias externas se reportan y no bloquean correcciones independientes. No hay autorización para pagos reales, compras ni alteración del demo.

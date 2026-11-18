@@ -28,7 +28,7 @@ Rutas de backend indicadas relativas al Worker API; la web las expone bajo /stan
 - rutasec-parity-dev-files: ledger de paridad separado, sin reutilizarlo para asientos Alpha.
 - GitHub Pages, sus fuentes originales, workflow y API demo externa permanecen intactos. Solo la copia generada para Cloudflare ajusta aislamiento de caché/rutas.
 
-Antes de la entrega, health remoto seguía0014 y /auth/config devolvía google=false,email=false. No confundir este código local con despliegue: consultar el snapshot de entrega más reciente y su run de Actions.
+Entrega G comprobada: Actions44415780046 SUCCESS,commit2a3df1c,health0020/D1/R2true; API/web/admin desplegados.54 tests y tres navegadores CI PASS, más smoke remoto y Pages intacto. /auth/config sigue google=false,email=false; ninguna identidad/proveedor real certificado. Fuente y pruebas locales no sustituyen los criterios de aceptación real de abajo. Evidencia en snapshot2026-11-18-zzzzzzzzzz-alpha-delivery.md.
 
 ## Criterios obligatorios para aceptación real
 
@@ -44,3 +44,5 @@ Antes de la entrega, health remoto seguía0014 y /auth/config devolvía google=f
 ## Continuación y rollback
 
 Corregir cualquier fallo de CI/despliegue antes del piloto; luego resolver configuración Google/correo y ejecutar el circuito real. Apple, Premium adicional, pasarelas reales y GPS/SOS integrados quedan posteriores. Respaldo/restore remoto actual no certificado; no programar exportaciones automáticas. Migraciones aditivas preservan registros: un rollback de API/assets debe respetar los datos existentes, sin borrar QA ni rebajar validación para aparentar funcionamiento. Registrar decisión de rollback y comprobar health/catálogo/permisos/demo después.
+
+La decisión corporativa documentada en main305cd719 se incorpora sin sobrescribirla: el futuro centro integral RutasEC Admin (analítica global, soporte contextual, comisiones/liquidaciones, incidentes y configuración comercial) sigue siendo una propuesta pendiente. El panel básico G1 y su revisión documental Alpha existentes no equivalen a todos esos módulos. No se implementan ni se rellenan métricas ficticias por esta entrega Standard.
