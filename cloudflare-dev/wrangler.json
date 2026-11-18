@@ -3,6 +3,10 @@
   "main": "worker.mjs",
   "compatibility_date": "2026-11-01",
   "workers_dev": true,
+  "keep_vars": true,
+  "vars": {
+    "ALLOW_DEVELOPMENT_AUTH": "false"
+  },
   "d1_databases": [
     {
       "binding": "DB",

@@ -1,9 +1,11 @@
-export async function createPrivate(db,user,body,core){
+import {operatorScope} from './standard-catalog.mjs';
+import {bookingContacts} from './standard-contact.mjs';
+export async function createPrivate(db,user,body,core,env){
  const {stmt,integer,text,failure,command}=core;
  if(typeof body.offerId!=='string')throw failure('Ruta requerida');
  const offer=await stmt(db,`SELECT r.*,rv.vehicle_id,rv.duration_minutes,v.capacity FROM route_offers r
  JOIN standard_route_vehicles rv ON rv.offer_id=r.id JOIN vehicles v ON v.id=rv.vehicle_id JOIN operators o ON o.id=r.operator_id
- WHERE r.id=? AND r.service_type='private_fixed' AND r.active=1 AND v.status='active' AND o.status='approved'`,[body.offerId]).first();
+ WHERE r.id=? AND r.service_type='private_fixed' AND r.active=1 AND v.status='active' AND o.status='approved' AND ${operatorScope(env)}`,[body.offerId]).first();
  if(!offer)throw failure('Ruta privada no disponible',409);
  if(body.quotedPriceCents!==offer.price_cents)throw failure('El precio cambió; revisa la tarifa por vehículo',409);
  if(typeof body.serviceAt!=='string')throw failure('Elige fecha y hora');
@@ -17,6 +19,7 @@ export async function createPrivate(db,user,body,core){
  stmt(db,'INSERT INTO standard_booking_details(booking_id,operator_id,vehicle_id) VALUES(?,?,?)',[id,offer.operator_id,offer.vehicle_id]),
  stmt(db,'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,booking_id) VALUES(?,?,?,?,?)',[crypto.randomUUID(),offer.vehicle_id,at,at+offer.duration_minutes*60000,id]),
  stmt(db,"INSERT INTO payments(id,booking_id,provider,method,amount_cents,status,idempotency_key,paid_at) VALUES(?,?,'simulated','other',?,'paid',?,CURRENT_TIMESTAMP)",[crypto.randomUUID(),id,offer.price_cents,user.id+':'+body.requestId])];
+ operations.push(...bookingContacts(db,user,body,env,id,offer.id,offer.vehicle_id,core));
  names.forEach((name,i)=>operations.push(stmt(db,'INSERT INTO standard_passengers(booking_id,position,name) VALUES(?,?,?)',[id,i,name])));
  return command(db,user,body,'private_fixed',operations,id);
 }

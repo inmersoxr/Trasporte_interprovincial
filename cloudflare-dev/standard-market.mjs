@@ -1,4 +1,6 @@
 // Competitive private market: offers never reserve a vehicle. Selection does.
+import {operatorScope} from './standard-catalog.mjs';
+import {contactPhone,accountEmail} from './standard-contact.mjs';
 export async function handleMarket(request,env,core){
  const {identity,stmt,rows,failure,owner,command,integer,text}=core,db=env.DB;
  const user=await identity(request,db),path=new URL(request.url).pathname;
@@ -21,7 +23,7 @@ export async function handleMarket(request,env,core){
     FROM private_requests r JOIN standard_private_specs s ON s.request_id=r.id JOIN vehicles v ON v.capacity>=s.people AND v.status='active'
     JOIN memberships m ON m.operator_id=v.operator_id AND m.user_id=? AND m.role='owner'
     JOIN operators o ON o.id=v.operator_id AND o.status='approved'
-    WHERE r.status IN('requested','receiving_offers') AND s.expires_at>? AND (s.vehicle_type='any' OR s.vehicle_type=v.type)
+    WHERE ${operatorScope(env)} AND r.status IN('requested','receiving_offers') AND s.expires_at>? AND (s.vehicle_type='any' OR s.vehicle_type=v.type)
     AND EXISTS(SELECT 1 FROM route_offers ro WHERE ro.operator_id=v.operator_id AND ro.origin=r.origin AND ro.active=1)
     AND NOT EXISTS(SELECT 1 FROM standard_vehicle_slots x WHERE x.vehicle_id=v.id AND x.active=1
      AND x.starts_at<unixepoch(r.requested_at)*1000+s.duration_minutes*60000 AND x.ends_at>unixepoch(r.requested_at)*1000)
@@ -41,9 +43,12 @@ export async function handleMarket(request,env,core){
   const at=b.immediate===true?Date.now()+300000:Date.parse(b.serviceAt);
   if(!Number.isFinite(at)||at<=Date.now()||at>Date.now()+366*86400000)throw failure('Horario futuro no válido');
   const notes=String(b.notes||'').trim();if(notes.length>500)throw failure('Notas demasiado largas');
-  const id=crypto.randomUUID(),passengers=Array.from({length:people},(_,i)=>'Invitado ficticio '+(i+1));
+  const id=crypto.randomUUID(),phone=contactPhone(b,env,failure),email=await accountEmail(db,user.id,stmt);
+  let passengers;if(env.ALLOW_DEVELOPMENT_AUTH==='true'&&!b.passengers)passengers=Array.from({length:people},(_,i)=>'Invitado ficticio '+(i+1));
+  else{if(!Array.isArray(b.passengers)||b.passengers.length!==people)throw failure('Escribe el nombre de cada pasajero');passengers=b.passengers.map(name=>text(name,'Nombre de pasajero',80));}
+  const pickupPoint=env.ALLOW_DEVELOPMENT_AUTH==='true'&&!b.pickupPoint?'':text(b.pickupPoint,'Punto de encuentro',250),dropoffPoint=env.ALLOW_DEVELOPMENT_AUTH==='true'&&!b.dropoffPoint?'':text(b.dropoffPoint,'Punto de llegada',250);
   const saved=await command(db,user,b,'private_request',[
-   stmt(db,'INSERT INTO private_requests(id,customer_id,origin,destination,requested_at,details) VALUES(?,?,?,?,?,?)',[id,user.id,origin,destination,new Date(at).toISOString(),JSON.stringify({notes,passengers})]),
+   stmt(db,'INSERT INTO private_requests(id,customer_id,origin,destination,requested_at,details) VALUES(?,?,?,?,?,?)',[id,user.id,origin,destination,new Date(at).toISOString(),JSON.stringify({notes,passengers,contactPhone:phone,contactEmail:email,pickupPoint,dropoffPoint})]),
    stmt(db,'INSERT INTO standard_private_specs(request_id,people,vehicle_type,duration_minutes,expires_at) VALUES(?,?,?,?,?)',[id,people,b.vehicleType,duration,new Date(Math.min(at,Date.now()+86400000)).toISOString()])],id);
   return {id:saved,status:'requested',assignment:'none'};
  }
@@ -53,7 +58,7 @@ export async function handleMarket(request,env,core){
   if(!req)throw failure('Solicitud no encontrada',404);
   const duration=integer(b.durationMinutes,req.duration_minutes,2880,'Duración propuesta'),price=integer(b.priceCents,1,1000000,'Precio');
   const vehicle=await stmt(db,`SELECT v.* FROM vehicles v WHERE v.id=? AND v.operator_id=? AND v.status='active' AND v.capacity>=?
-   AND (?='any' OR v.type=?) AND EXISTS(SELECT 1 FROM operators WHERE id=v.operator_id AND status='approved')
+   AND (?='any' OR v.type=?) AND EXISTS(SELECT 1 FROM operators o WHERE o.id=v.operator_id AND status='approved' AND ${operatorScope(env)})
    AND EXISTS(SELECT 1 FROM route_offers WHERE operator_id=v.operator_id AND origin=? AND active=1)`,[b.vehicleId,b.operatorId,req.people,req.vehicle_type,req.vehicle_type,req.origin]).first();
   if(!vehicle)throw failure('Operadora/vehículo no elegible para esta solicitud',403);
   const at=Date.parse(req.requested_at);
@@ -96,10 +101,11 @@ export async function handleMarket(request,env,core){
   }
   const offer=await stmt(db,'SELECT * FROM standard_private_offers WHERE id=? AND request_id=?',[b.offerId,req.id]).first();
   if(!offer)throw failure('Oferta no encontrada',404);if(b.quotedPriceCents!==offer.price_cents)throw failure('Precio no vigente',409);
+  if(!await stmt(db,`SELECT 1 FROM operators o JOIN vehicles v ON v.operator_id=o.id WHERE o.id=? AND v.id=? AND o.status='approved' AND v.status='active' AND ${operatorScope(env)}`,[offer.operator_id,offer.vehicle_id]).first())throw failure('La operadora o el vehículo ya no están habilitados',409);
   const id=crypto.randomUUID(),at=Date.parse(req.requested_at);
   try{
    const saved=await command(db,user,b,'custom_booking',[
-    stmt(db,'INSERT INTO standard_custom_bookings(id,request_id,offer_id,customer_id,operator_id,vehicle_id,service_at,duration_minutes,amount_cents,passengers_json) VALUES(?,?,?,?,?,?,?,?,?,?)',[id,req.id,offer.id,user.id,offer.operator_id,offer.vehicle_id,req.requested_at,offer.duration_minutes,offer.price_cents,JSON.stringify(JSON.parse(req.details).passengers)]),
+    stmt(db,'INSERT INTO standard_custom_bookings(id,request_id,offer_id,customer_id,operator_id,vehicle_id,service_at,duration_minutes,amount_cents,passengers_json,contact_phone,contact_email,pickup_point,dropoff_point) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',[id,req.id,offer.id,user.id,offer.operator_id,offer.vehicle_id,req.requested_at,offer.duration_minutes,offer.price_cents,JSON.stringify(JSON.parse(req.details).passengers),JSON.parse(req.details).contactPhone||'',JSON.parse(req.details).contactEmail||null,JSON.parse(req.details).pickupPoint||'',JSON.parse(req.details).dropoffPoint||'']),
     stmt(db,'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,custom_booking_id) VALUES(?,?,?,?,?)',[crypto.randomUUID(),offer.vehicle_id,at,at+offer.duration_minutes*60000,id]),
     stmt(db,"UPDATE private_requests SET status='booked' WHERE id=?",[req.id]),
     stmt(db,"UPDATE standard_private_offers SET status='selected' WHERE id=?",[offer.id]),

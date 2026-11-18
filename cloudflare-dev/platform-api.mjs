@@ -1,8 +1,12 @@
+import {onboardingData,reviewOperator,readDocument} from './standard-onboarding.mjs';
+import {owner} from './standard-api.mjs';
 export function date(value,label,failure){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(value))||new Date(value).toISOString().slice(0,10)!==value)throw failure(label+' no válida');return value;}
 const uuid=value=>typeof value==='string'&&/^[0-9a-f-]{36}$/i.test(value);
 const balanceSQL=`SELECT i.*,COALESCE((SELECT SUM(p.amount_cents) FROM platform_payments p WHERE p.invoice_id=i.id AND p.status='recorded'),0) AS paid_cents FROM platform_invoices i`;
 export async function handlePlatform(request,env,c){const {identity,stmt,rows,failure,integer,text,command,hash}=c,db=env.DB,url=new URL(request.url),path=url.pathname,user=await identity(request,db);
  const admin=await stmt(db,'SELECT role FROM platform_admins WHERE user_id=?',[user.id]).first();if(!admin)throw failure('Acceso exclusivo para administración de RutasEC',403);
+ const document=path.match(/^\/api\/platform\/documents\/([0-9a-f-]{36})$/i);
+ if(document&&request.method==='GET')return readDocument(request,env,user,document[1],{...c,owner},true);
  if(path==='/api/platform/me'&&request.method==='GET')return{userId:user.id,role:admin.role,environment:'development',payments:'manual-records-only'};
  if(path==='/api/platform/operators'&&request.method==='GET'){
   const q=url.searchParams.get('q')||'',cursor=url.searchParams.get('cursor')||'';if(q.length>120||cursor&&!uuid(cursor))throw failure('Filtro no válido');
@@ -20,11 +24,12 @@ export async function handlePlatform(request,env,c){const {identity,stmt,rows,fa
  const detail=path.match(/^\/api\/platform\/operators\/([0-9a-f-]{36})$/i);
  if(detail&&request.method==='GET'){
   const operator=await stmt(db,'SELECT id,display_name,legal_name,status,created_at FROM operators WHERE id=?',[detail[1]]).first();if(!operator)throw failure('Operadora no encontrada',404);
-  return{operator,subscription:await stmt(db,'SELECT * FROM platform_subscriptions WHERE operator_id=?',[operator.id]).first(),invoices:await rows(db,balanceSQL+' WHERE i.operator_id=? ORDER BY i.due_on DESC,i.id DESC LIMIT 100',[operator.id]),payments:await rows(db,'SELECT p.* FROM platform_payments p JOIN platform_invoices i ON i.id=p.invoice_id WHERE i.operator_id=? ORDER BY p.created_at DESC,p.id DESC LIMIT 200',[operator.id]),limits:{invoices:100,payments:200},fiscal:false};
+  return{operator,onboarding:admin.role==='owner'?await onboardingData(db,operator.id,c):null,subscription:await stmt(db,'SELECT * FROM platform_subscriptions WHERE operator_id=?',[operator.id]).first(),invoices:await rows(db,balanceSQL+' WHERE i.operator_id=? ORDER BY i.due_on DESC,i.id DESC LIMIT 100',[operator.id]),payments:await rows(db,'SELECT p.* FROM platform_payments p JOIN platform_invoices i ON i.id=p.invoice_id WHERE i.operator_id=? ORDER BY p.created_at DESC,p.id DESC LIMIT 200',[operator.id]),limits:{invoices:100,payments:200},fiscal:false};
  }
  if(request.method!=='POST')throw failure('Ruta no encontrada',404);if(admin.role!=='owner')throw failure('Tu acceso es de consulta',403);
  const raw=await request.text();if(raw.length>16384)throw failure('Solicitud demasiado grande',413);let body;try{body=JSON.parse(raw);}catch{throw failure('JSON no válido');}if(!body||typeof body!=='object'||Array.isArray(body)||!uuid(body.requestId))throw failure('Solicitud o requestId no válido');
  const operatorId=body.operatorId;if(!uuid(operatorId)||!await stmt(db,'SELECT 1 FROM operators WHERE id=?',[operatorId]).first())throw failure('Operadora no encontrada',404);
+ if(path==='/api/platform/operator-review')return reviewOperator(db,user,body,c);
  if(path==='/api/platform/subscriptions'){
   if(!['standard','premium'].includes(body.plan)||!['trial','active','paused','cancelled'].includes(body.status))throw failure('Plan o estado no válido');
   const fee=body.feeCents==null?null:integer(body.feeCents,0,100000000,'Cuota'),due=body.nextDueOn?date(body.nextDueOn,'Vencimiento',failure):null,cycle=integer(body.cycleMonths,1,12,'Ciclo'),revision=integer(body.expectedRevision,0,100000000,'Revisión');

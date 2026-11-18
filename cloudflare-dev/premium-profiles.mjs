@@ -29,7 +29,7 @@ export async function profile(url,body,user,operatorId,db,c){const {stmt,rows,fa
 }
 export async function publicMiniapp(request,env,c){const {stmt,failure}=c,url=new URL(request.url),match=url.pathname.match(/^\/api\/miniapps\/([0-9a-f-]{36})(?:\/(manifest|media\/([0-9a-f-]{36})))?$/i);if(!match) return null;
  if(request.method!=='GET')throw failure('Método no permitido',405);
- const row=await stmt(env.DB,`SELECT p.* FROM premium_profiles p JOIN premium_tenants t ON t.operator_id=p.operator_id JOIN operators o ON o.id=p.operator_id WHERE p.operator_id=? AND p.published=1 AND t.active=1 AND o.status='approved'`,[match[1]]).first();if(!row)throw failure('Miniapp no publicada',404);
+ const row=await stmt(env.DB,`SELECT p.* FROM premium_profiles p JOIN premium_tenants t ON t.operator_id=p.operator_id JOIN operators o ON o.id=p.operator_id WHERE p.operator_id=? AND p.published=1 AND t.active=1 AND o.status='approved' AND (o.data_scope='alpha' OR ?=1)`,[match[1],env.ALLOW_DEVELOPMENT_AUTH==='true'?1:0]).first();if(!row)throw failure('Miniapp no publicada',404);
  if(match[2]==='manifest'){
   const business=url.searchParams.get('business')==='1',start=(business?'/premium/':'/miniapp/')+'?operator='+row.operator_id;
   return new Response(JSON.stringify({id:start,name:row.title+(business?' · Gestión':''),short_name:row.title.slice(0,24),start_url:start,scope:business?'/premium/':'/miniapp/',display:'standalone',background_color:'#f4f6f9',theme_color:row.accent,icons:[{src:appOrigin+'/assets/icon-192.png',sizes:'192x192',type:'image/png'},{src:appOrigin+'/assets/icon-512.png',sizes:'512x512',type:'image/png'}]}),{headers:{'Content-Type':'application/manifest+json','Cache-Control':'no-store'}});

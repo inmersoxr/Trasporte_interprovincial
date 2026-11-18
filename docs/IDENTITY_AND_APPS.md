@@ -1,5 +1,12 @@
 # Acceso vigente: correo y contraseña
 
+## Actualización Alpha 2026-11-18 — implementada localmente
+El usuario pide cuenta verificada al reservar y Google como primer proveedor; Apple posterior. Consultar el catálogo sigue siendo público. Reutilizamos A1/A2: correo verificado por enlace o Google con email_verified=true, retorno a la salida elegida y mismo historial por identidad entre sesiones. Si ya existe cuenta con contraseña, entrar primero y pulsar «Vincular Google a esta cuenta»; no se fusionan usuarios solo por email coincidente. Google acredita la identidad, no la documentación o autorización de la operadora.
+
+GET remoto sigue google=false/email=false. Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET del cliente OAuth web. Configurarlo en [Google Cloud → Clientes OAuth](https://console.cloud.google.com/auth/clients) para el origen y callback exactos indicados abajo; después variables/secretos del Worker existente. keep_vars=true conserva las variables externas en próximos deploys; secretos siempre separados del frontend. El token API Cloudflare no sustituye las credenciales de Google. No se creó proyecto Google, otro Worker ni una base de datos.
+
+Migración0015 preparada; Google real no probado ni estas correcciones desplegadas. Pruebas locales verifican firma/state/nonce/PKCE, callback y cookies, continuidad de boleto e imposibilidad de comprar con acceso no verificado. Navegador usa Google explícitamente SIMULADO. QA legacy requiere ALLOW_DEVELOPMENT_AUTH=true en un entorno aislado y ?dev=1 para controles de interfaz; false en la configuración normal. Lo que sigue documenta también estados históricos A1/A2, no una activación actual.
+
 El propietario pide acceso normal, sin IDs ni claves de desarrollo. A2 implementa registro de correo, enlace de confirmación para elegir contraseña, inicio de sesión, cambio y recuperación. Cuenta pública y entrada administrativa comparten identidad, manteniendo cookies por host y autorización separada. Google es opcional; las instrucciones históricas siguientes no sustituyen el flujo A2 ni obligan al usuario a configurar OAuth para entrar. Ver [EMAIL_PASSWORD_ACCESS.md](EMAIL_PASSWORD_ACCESS.md).
 
 # Una cuenta RutasEC, múltiples espacios de operadora

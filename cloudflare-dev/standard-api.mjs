@@ -6,6 +6,10 @@ import { handleReservations } from './standard-reservations.mjs';
 import { handleMarket } from './standard-market.mjs';
 import { handlePremium } from './premium-api.mjs';
 import { handleOperations } from './standard-operations.mjs';
+import { handleRecurring } from './standard-recurring.mjs';
+import {catalog,operatorReady,vehicleReady} from './standard-catalog.mjs';
+import {handleOnboarding} from './standard-onboarding.mjs';
+import {cities} from './standard/cities.mjs';
 export const failure = (message, status = 400) => Object.assign(new Error(message), { status });
 export const hash = async value => Array.from(new Uint8Array(await crypto.subtle.digest(
   'SHA-256', new TextEncoder().encode(value))), b => b.toString(16).padStart(2, '0')).join('');
@@ -27,6 +31,18 @@ export async function identity(request, db) {
   if (!token || !/^[0-9a-f]{64}$/i.test(token)) throw failure('Acceso requerido', 401);
   const user = await stmt(db, 'SELECT u.id FROM standard_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND u.status=\'active\' AND (s.expires_at IS NULL OR s.expires_at>?)', [await hash(token),Date.now()]).first();
   if (!user) throw failure('Acceso no válido', 401);
+  return user;
+}
+export async function verifiedIdentity(request, env) {
+  const user = await identity(request, env.DB);
+  // Synthetic identities are allowed only in an explicitly configured QA runtime.
+  if (env.ALLOW_DEVELOPMENT_AUTH === 'true') return user;
+  if (request.headers.has('Authorization')) throw failure('Inicia sesión con tu cuenta de RutasEC',403);
+  const verified = await stmt(env.DB, `SELECT 1 FROM standard_sessions WHERE token_hash=? AND user_id=? AND expires_at>?
+    AND (EXISTS(SELECT 1 FROM auth_email_accounts WHERE user_id=? AND verified_at IS NOT NULL)
+    OR EXISTS(SELECT 1 FROM auth_identities WHERE user_id=? AND provider='google' AND email IS NOT NULL))`,
+    [await hash(cookie(request,COOKIE)),user.id,Date.now(),user.id,user.id]).first();
+  if (!verified) throw failure('Inicia sesión con una cuenta verificada para continuar', 403);
   return user;
 }
 export async function owner(db, userId, operatorId) {
@@ -52,46 +68,35 @@ export async function command(db, user, body, kind, operations, entityId) {
     if (String(error.message).includes('vehicle_conflict')) throw failure('El vehículo ya tiene un servicio en ese horario', 409);
     if (String(error.message).includes('assignment_conflict')) throw failure('La asignación cambió; actualiza los miembros y vehículos',409);
     if (String(error.message).includes('request_limit')) throw failure('Límite de 10 solicitudes abiertas; cancela alguna antes de crear otra', 429);
+    if (String(error.message).includes('operator_not_ready')) throw failure('La operadora, el conductor o el vehículo necesitan revisión vigente para publicar o reservar',409);
     throw error;
   }
 }
-const catalogSQL = `SELECT d.id, d.depart_at AS departAt,d.status,r.id AS offerId,r.operator_id AS operatorId,
- r.origin,r.destination,r.price_cents AS priceCents,o.display_name AS operatorName,
- v.id AS vehicleId,v.type AS vehicleType,v.model AS vehicle,v.capacity,
- v.capacity-(SELECT COUNT(*) FROM seat_claims sc WHERE sc.departure_id=d.id AND sc.status IN('held','confirmed')) AS available,
- (SELECT json_group_array(seat_number) FROM seat_claims sc WHERE sc.departure_id=d.id AND sc.status IN('held','confirmed')) AS reservedSeatsJson
- FROM departures d JOIN route_offers r ON r.id=d.offer_id JOIN operators o ON o.id=r.operator_id
- JOIN vehicles v ON v.id=d.vehicle_id WHERE d.status='published' AND r.active=1
- AND o.status='approved' AND v.status='active' AND d.depart_at>? AND (? IS NULL OR o.id=?) ORDER BY d.depart_at LIMIT 200`;
-
 export async function handleStandard(request, env) {
   const path = new URL(request.url).pathname, method = request.method;
-  if(path==='/api/me'&&method==='GET'){const user=await identity(request,env.DB);return stmt(env.DB,'SELECT id,display_name FROM users WHERE id=?',[user.id]).first();}
+  const authenticate = request => verifiedIdentity(request, env);
+  if(path==='/api/me'&&method==='GET'){const user=await authenticate(request);return stmt(env.DB,'SELECT id,display_name FROM users WHERE id=?',[user.id]).first();}
   if(path.startsWith('/api/miniapps/'))return publicMiniapp(request,env,{stmt,failure});
   if (path === '/api/catalog' && method === 'GET') {
-    const operatorId=new URL(request.url).searchParams.get('operatorId');
-    if(operatorId&&!uuid(operatorId))throw failure('Operadora no válida');
-    return { departures: (await rows(env.DB, catalogSQL, [new Date().toISOString(),operatorId,operatorId])).map(({reservedSeatsJson,...d})=>({...d,reservedSeats:JSON.parse(reservedSeatsJson||'[]')})),
-      routeOffers: await rows(env.DB, `SELECT r.id,r.operator_id AS operatorId,r.origin,r.destination,r.service_type AS serviceType,
-       r.price_cents AS priceCents,o.display_name AS operatorName,v.id AS vehicleId,v.model AS vehicle,v.type AS vehicleType,v.capacity,rv.duration_minutes AS durationMinutes
-       FROM route_offers r JOIN operators o ON o.id=r.operator_id JOIN standard_route_vehicles rv ON rv.offer_id=r.id
-       JOIN vehicles v ON v.id=rv.vehicle_id WHERE r.active=1 AND o.status='approved' AND v.status='active' AND (? IS NULL OR o.id=?) LIMIT 200`,[operatorId,operatorId]),
-      environment: 'development', payments: 'simulated' };
+    return catalog(request,env,{rows,failure});
   }
   if (path === '/api/sessions' && method === 'POST') {
+    if (env.ALLOW_DEVELOPMENT_AUTH !== 'true') throw failure('Usa tu cuenta de RutasEC para iniciar sesión', 403);
     const id = crypto.randomUUID(), token = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
     await env.DB.batch([stmt(env.DB, 'INSERT INTO users(id,display_name) VALUES(?,?)', [id, 'Pasajero de desarrollo']),
       stmt(env.DB, 'INSERT INTO standard_sessions(token_hash,user_id) VALUES(?,?)', [await hash(token), id])]);
     return { token, userId: id, authentication: 'development-capability' };
   }
-  if(path==='/api/premium'||path.startsWith('/api/premium/'))return handlePremium(request,env,{identity,owner,stmt,rows,failure,command,integer,text,hash});
-  if(path.startsWith('/api/bookings')||path==='/api/private-route-bookings')return handleReservations(request,env,{identity,stmt,rows,failure,command,integer,text});
-  if(path.startsWith('/api/private-requests')||path.startsWith('/api/private-offers')||path==='/api/private-market')return handleMarket(request,env,{identity,stmt,rows,failure,owner,command,integer,text});
-  if(path==='/api/operations'||path.startsWith('/api/trips/'))return handleOperations(request,env,{identity,stmt,rows,owner,failure,integer,
-   cancelBooking:id=>handleReservations(new Request(new URL('/api/bookings/'+id,request.url),{method:'POST',headers:request.headers,body:JSON.stringify({action:'cancel'})}),env,{identity,stmt,rows,failure,command,integer,text}),
-   cancelCustom:id=>handleMarket(new Request(new URL('/api/private-requests/'+id,request.url),{method:'POST',headers:request.headers,body:JSON.stringify({action:'cancel'})}),env,{identity,stmt,rows,failure,owner,command,integer,text})});
+  if(['/api/operator-onboarding','/api/operator-profile','/api/operator-drivers','/api/vehicle-details','/api/operator-documents','/api/operator-submit'].includes(path)||path.startsWith('/api/operator-documents/'))return handleOnboarding(request,env,{identity:authenticate,owner,stmt,rows,failure,command,integer,text,hash});
+  if(path==='/api/premium'||path.startsWith('/api/premium/'))return handlePremium(request,env,{identity:authenticate,owner,stmt,rows,failure,command,integer,text,hash});
+  if(path==='/api/recurring-schedules'||path.startsWith('/api/recurring-schedules/'))return handleRecurring(request,env,{identity:authenticate,owner,stmt,rows,failure,command,hash});
+  if(path.startsWith('/api/bookings')||path==='/api/private-route-bookings')return handleReservations(request,env,{identity:authenticate,stmt,rows,failure,command,integer,text});
+  if(path.startsWith('/api/private-requests')||path.startsWith('/api/private-offers')||path==='/api/private-market')return handleMarket(request,env,{identity:authenticate,stmt,rows,failure,owner,command,integer,text});
+  if(path==='/api/operations'||path.startsWith('/api/operations/')||path.startsWith('/api/trips/'))return handleOperations(request,env,{identity:authenticate,stmt,rows,owner,failure,integer,
+   cancelBooking:id=>handleReservations(new Request(new URL('/api/bookings/'+id,request.url),{method:'POST',headers:request.headers,body:JSON.stringify({action:'cancel'})}),env,{identity:authenticate,stmt,rows,failure,command,integer,text}),
+   cancelCustom:id=>handleMarket(new Request(new URL('/api/private-requests/'+id,request.url),{method:'POST',headers:request.headers,body:JSON.stringify({action:'cancel'})}),env,{identity:authenticate,stmt,rows,failure,owner,command,integer,text})});
   if (!['/api/operator', '/api/operators', '/api/vehicles', '/api/route-offers', '/api/departures'].includes(path)) return null;
-  const user = await identity(request, env.DB);
+  const user = await authenticate(request);
   if (path === '/api/operator' && method === 'GET') {
     const operators = await rows(env.DB, "SELECT o.* FROM operators o JOIN memberships m ON m.operator_id=o.id WHERE m.user_id=? AND m.role='owner'", [user.id]);
     const owned = `SELECT operator_id FROM memberships WHERE user_id=? AND role='owner'`;
@@ -108,23 +113,25 @@ export async function handleStandard(request, env) {
   if (path === '/api/operators') {
     const name = text(body.name, 'Nombre');
     saved = await command(env.DB, user, body, 'operator', [
-      stmt(env.DB, "INSERT INTO operators(id,legal_name,display_name,status) VALUES(?,?,?,'approved')", [id, name, name]),
+      stmt(env.DB, "INSERT INTO operators(id,legal_name,display_name,status,data_scope) VALUES(?,?,?,?,?)", [id, name, name,env.ALLOW_DEVELOPMENT_AUTH==='true'?'approved':'pending',env.ALLOW_DEVELOPMENT_AUTH==='true'?'qa':'alpha']),
       stmt(env.DB, "INSERT INTO memberships(user_id,operator_id,role) VALUES(?,?,'owner')", [user.id, id])], id);
   } else {
     await owner(env.DB, user.id, body.operatorId);
     if (path === '/api/vehicles') {
       if (!['auto','suv','van','minivan'].includes(body.type)) throw failure('Tipo de vehículo no válido');
-      saved = await command(env.DB, user, body, 'vehicle', [stmt(env.DB, 'INSERT INTO vehicles(id,operator_id,type,model,capacity) VALUES(?,?,?,?,?)',
-        [id, body.operatorId, body.type, text(body.model, 'Modelo'), integer(body.capacity, 1, 30, 'Capacidad')])], id);
+      saved = await command(env.DB, user, body, 'vehicle', [stmt(env.DB, 'INSERT INTO vehicles(id,operator_id,type,model,capacity,status) VALUES(?,?,?,?,?,?)',
+        [id, body.operatorId, body.type, text(body.model, 'Modelo'), integer(body.capacity, 1, 30, 'Capacidad'),env.ALLOW_DEVELOPMENT_AUTH==='true'?'active':'pending'])], id);
     }
     if (path === '/api/route-offers') {
       const origin = text(body.origin, 'Origen'), destination = text(body.destination, 'Destino');
       if (origin.toLocaleLowerCase() === destination.toLocaleLowerCase()) throw failure('Origen y destino deben ser distintos');
       if (!['shared','private_fixed'].includes(body.serviceType)) throw failure('Modalidad no válida');
-      const vehicle = await stmt(env.DB, "SELECT * FROM vehicles WHERE id=? AND operator_id=? AND status='active'", [body.vehicleId, body.operatorId]).first();
+      if(env.ALLOW_DEVELOPMENT_AUTH!=='true'&&(!cities.includes(origin)||!cities.includes(destination)))throw failure('Selecciona ciudades del catálogo de Ecuador');
+      const pickup=env.ALLOW_DEVELOPMENT_AUTH==='true'&&!body.pickupPoint?'':text(body.pickupPoint,'Punto de encuentro',250),dropoff=env.ALLOW_DEVELOPMENT_AUTH==='true'&&!body.dropoffPoint?'':text(body.dropoffPoint,'Punto de llegada',250);
+      const vehicle = await stmt(env.DB, `SELECT v.* FROM vehicles v JOIN operators o ON o.id=v.operator_id WHERE v.id=? AND v.operator_id=? AND v.status='active' AND o.status='approved' AND ${operatorReady()} AND ${vehicleReady()}`, [body.vehicleId, body.operatorId]).first();
       if (!vehicle) throw failure('Vehículo ajeno o no disponible', 403);
-      saved = await command(env.DB, user, body, 'offer', [stmt(env.DB, 'INSERT INTO route_offers(id,operator_id,origin,destination,service_type,vehicle_type,price_cents) VALUES(?,?,?,?,?,?,?)',
-        [id, body.operatorId, origin, destination, body.serviceType, vehicle.type, integer(body.priceCents, 1, 1000000, 'Precio en centavos')]),
+      saved = await command(env.DB, user, body, 'offer', [stmt(env.DB, 'INSERT INTO route_offers(id,operator_id,origin,destination,service_type,vehicle_type,price_cents,pickup_point,dropoff_point) VALUES(?,?,?,?,?,?,?,?,?)',
+        [id, body.operatorId, origin, destination, body.serviceType, vehicle.type, integer(body.priceCents, 1, 1000000, 'Precio en centavos'),pickup,dropoff]),
         stmt(env.DB, 'INSERT INTO standard_route_vehicles(offer_id,vehicle_id,duration_minutes) VALUES(?,?,?)', [id, vehicle.id,integer(body.durationMinutes??240,1,2880,'Duración')])], id);
     }
     if (path === '/api/departures') {
