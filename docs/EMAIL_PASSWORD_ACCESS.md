@@ -24,3 +24,6 @@ Preflight read-only en CI inspecciona solo conteos de zonas/domain readiness sin
 
 ## Rollback
 Mantener esquema/credenciales y roles, no restablecer passwords ni borrar datos para volver versión. Volver versiones API/assets y desactivar altas si hace falta; conservar acceso de mantenimiento solo como QA, sin obligar al usuario a copiar claves. Demo Pages/API/ledger originales intactos. No pagos, compras de dominio, exportaciones ni upgrades automáticos.
+
+## Estado remoto comprobado
+2026-11-18, Actions44352814016 SUCCESS,39 tests. Cuenta y admin desplegados con email/password; Google oculto si no disponible, IDs y claves de desarrollo ausentes del acceso normal. Native scrypt verificado por login inválido401 en navegador remoto. Preflight zonas Cloudflare:0; /auth/config email=false y remitente/transporte ausentes. La entrega real está BLOQUEADA: no se creó ni verificó todavía la cuenta real del propietario y no se asignó rol por el UUID cancelado. Se necesita configurar un remitente de dominio autorizado (o proveedor ya autorizado) antes de prometer recepción. No comprar dominios ni planes automáticamente.

@@ -1,5 +1,7 @@
 # RutasEC Premium — entrega funcional de desarrollo
 
+Acceso actualizado A2 (2026-11-18): correo y contraseña, confirmación, cambio y recuperación; ya no pedir IDs/claves de desarrollo. Google queda opcional. Configuración de envío real pendiente: docs/EMAIL_PASSWORD_ACCESS.md.
+
 ## Entradas y modelo
 - Gestión: https://rutasec-web-dev.drbrownlabs.workers.dev/premium/
 - Cuenta común: https://rutasec-web-dev.drbrownlabs.workers.dev/account/
