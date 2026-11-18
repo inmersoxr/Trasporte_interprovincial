@@ -111,6 +111,7 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
 
     const b=await actor('passenger-alpha','Europe/Madrid');
     await b.page.goto(APP_ORIGIN+'/standard/');
+    await b.page.getByRole('button',{name:'Gestionar mi operadora',exact:true}).click();await b.page.locator('[data-operator-tab="fleet"]').click();assert.equal(await b.page.locator('#vehicleDetailsForm').isVisible(),false);assert.equal(await b.page.locator('#operatorDriverForm').isVisible(),false);await b.page.locator('[data-operator-tab="more"]').click();await b.page.locator('[data-operator-section="account"]').click();await b.page.getByRole('button',{name:'Vista de pasajero',exact:true}).click();
     await b.page.locator('#searchTrips [name="origin"]').selectOption('Quito');await b.page.locator('#searchTrips button[type="submit"],#searchTrips button.yellow').click();
     await b.page.getByText('No hay salidas publicadas.',{exact:true}).waitFor();
     await b.page.locator('#searchTrips [name="origin"]').selectOption('Cuenca');await b.page.locator('#searchTrips [name="destination"]').selectOption('Guayaquil');
