@@ -19,7 +19,8 @@
     "test:profiles": "node tests/profiles.e2e.mjs",
     "test:identity": "node tests/identity.e2e.mjs",
     "test:premium-regression": "node tests/premium-regression.e2e.mjs",
-    "test:platform-local": "node tests/platform-local.e2e.mjs"
+    "test:platform-local": "node tests/platform-local.e2e.mjs",
+    "test:platform": "node tests/platform.e2e.mjs"
   },
   "devDependencies": {
     "miniflare": "5.20261113.0-beta",
