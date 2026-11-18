@@ -66,6 +66,7 @@ const catalogSQL = `SELECT d.id, d.depart_at AS departAt,d.status,r.id AS offerI
 
 export async function handleStandard(request, env) {
   const path = new URL(request.url).pathname, method = request.method;
+  if(path==='/api/me'&&method==='GET'){const user=await identity(request,env.DB);return stmt(env.DB,'SELECT id,display_name FROM users WHERE id=?',[user.id]).first();}
   if(path.startsWith('/api/miniapps/'))return publicMiniapp(request,env,{stmt,failure});
   if (path === '/api/catalog' && method === 'GET') {
     const operatorId=new URL(request.url).searchParams.get('operatorId');

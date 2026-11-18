@@ -1,8 +1,9 @@
 // Pinned development origin; production must use separate OAuth configuration.
 export const APP_ORIGIN='https://rutasec-web-dev.drbrownlabs.workers.dev';
+export const ADMIN_ORIGIN='https://rutasec-admin-dev.drbrownlabs.workers.dev';
 export const COOKIE='__Host-rutasec_session',STATE_COOKIE='__Host-rutasec_oauth';
 export function cookie(request,name){return request.headers.get('Cookie')?.split(';').map(p=>p.trim()).find(p=>p.startsWith(name+'='))?.slice(name.length+1)||'';}
-export function requireOrigin(request,failure){if(request.headers.get('Origin')!==APP_ORIGIN)throw failure('Origen no permitido',403);}
+export function requireOrigin(request,failure){if(![APP_ORIGIN,ADMIN_ORIGIN].includes(request.headers.get('Origin'))||request.headers.get('Origin')!==new URL(request.url).origin)throw failure('Origen no permitido',403);}
 const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join('');
 const b64=bytes=>btoa(String.fromCharCode(...new Uint8Array(bytes))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
 const decode=value=>Uint8Array.from(atob(value.replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0));
@@ -20,7 +21,8 @@ export async function verifyGoogleIdToken(token,{audience,nonce,jwks,now=Date.no
  return claims;
 }
 export async function handleAuth(request,env,c,network=fetch){const {identity,stmt,rows,hash,failure}=c,db=env.DB,url=new URL(request.url),path=url.pathname;
- const configured=!!(env.GOOGLE_CLIENT_ID&&env.GOOGLE_CLIENT_SECRET),callback=APP_ORIGIN+'/standard-api/auth/google/callback';
+ const origin=url.origin===ADMIN_ORIGIN?ADMIN_ORIGIN:APP_ORIGIN,adminOrigin=origin===ADMIN_ORIGIN;
+ const configured=!!(env.GOOGLE_CLIENT_ID&&env.GOOGLE_CLIENT_SECRET),callback=origin+(adminOrigin?'/platform-api':'/standard-api')+'/auth/google/callback';
  if(path==='/auth/config'&&request.method==='GET')return response({google:configured,missingGoogleConfiguration:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET'].filter(name=>!env[name]),apple:false,environment:'development'});
  if(path==='/auth/session'&&request.method==='GET'){
   if(!cookie(request,COOKIE))return response({authenticated:false});
@@ -46,8 +48,8 @@ export async function handleAuth(request,env,c,network=fetch){const {identity,st
    if(userId&&!await stmt(db,"SELECT 1 FROM users WHERE id=? AND status='active'",[userId]).first())throw Error('Account inactive');
    if(!existing){userId||=crypto.randomUUID();const operations=[];if(!tx.link_user_id)operations.push(stmt(db,'INSERT INTO users(id,display_name) VALUES(?,?)',[userId,String(claims.name||'Usuario RutasEC').slice(0,120)]));operations.push(stmt(db,"INSERT INTO auth_identities(provider,subject,user_id,email) VALUES('google',?,?,?)",[claims.sub,userId,claims.email||null]));try{await db.batch(operations);}catch(error){const saved=await stmt(db,"SELECT user_id FROM auth_identities WHERE provider='google' AND subject=?",[claims.sub]).first();if(!saved||(tx.link_user_id&&saved.user_id!==tx.link_user_id))throw error;userId=saved.user_id;}}
    const token=random();await stmt(db,'INSERT INTO standard_sessions(token_hash,user_id,expires_at) VALUES(?,?,?)',[await hash(token),userId,Date.now()+7*86400000]).run();issued=setCookie(COOKIE,token,7*86400);
-   const r=new Response(null,{status:302,headers:{Location:APP_ORIGIN+'/account/?signedIn=1','Cache-Control':'no-store'}});r.headers.append('Set-Cookie',issued);r.headers.append('Set-Cookie',setCookie(STATE_COOKIE,'',0));return r;
-  }catch{const r=new Response(null,{status:302,headers:{Location:APP_ORIGIN+'/account/?error=signin','Cache-Control':'no-store'}});r.headers.append('Set-Cookie',setCookie(STATE_COOKIE,'',0));return r;}
+   const r=new Response(null,{status:302,headers:{Location:origin+(adminOrigin?'/?signedIn=1':'/account/?signedIn=1'),'Cache-Control':'no-store'}});r.headers.append('Set-Cookie',issued);r.headers.append('Set-Cookie',setCookie(STATE_COOKIE,'',0));return r;
+  }catch{const r=new Response(null,{status:302,headers:{Location:origin+(adminOrigin?'/?error=signin':'/account/?error=signin'),'Cache-Control':'no-store'}});r.headers.append('Set-Cookie',setCookie(STATE_COOKIE,'',0));return r;}
  }
  return response({error:'Not found'},404);
 }

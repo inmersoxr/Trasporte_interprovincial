@@ -30,3 +30,6 @@ PWA es instalación web; no se publica en App Store/Play Store. Instalación nat
 
 ## Estado comprobado de esta entrega
 2026-11-17: /standard-api/auth/config devuelve google=false, missingGoogleConfiguration=[GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET], apple=false. Implementación A1 desplegada y controles locales/cookie dev verificados; callback con cuenta real Google pendiente. Después de configurar ambas variables, comprobar google=true y realizar login real/vinculación con cuenta autorizada antes de declararlo disponible. No configurar Apple sin su integración/configuración separada.
+
+## Entrada administrativa de plataforma (G1)
+Se añade rutasec-admin-dev.drbrownlabs.workers.dev como fachada independiente sobre la misma identidad. En el mismo cliente Google web agregar origen https://rutasec-admin-dev.drbrownlabs.workers.dev y redirect exacto https://rutasec-admin-dev.drbrownlabs.workers.dev/platform-api/auth/google/callback, conservando ambos valores de la aplicación pública. Las cookies quedan separadas por host; Google identifica al mismo user_id. Platform ACL separado y sin concesión automática por OAuth/roles de operadora. Ver PLATFORM_ADMIN.md.
