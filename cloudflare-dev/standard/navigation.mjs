@@ -27,7 +27,7 @@ export function mountNavigation({refresh,catalog,status}){
  }
  function mode(value){managing=value;for(const el of [document.querySelector('a[href="/account/"]:not(.account-action)'),$('installStandard')])if(el)(value?sections.account:header).append(el);if(value)sections.account.append(back);nav.hidden=!value;publicNav.hidden=value;switcher.hidden=value;back.hidden=!value;title.textContent=value?'Mi operadora':'RutasEC';shell.classList.toggle('is-operator',value);}
  const original=switcher.onclick;switcher.onclick=()=>{original();mode(true);go('home',null,true);};
- back.onclick=()=>{const u=new URL(location.href);for(const k of ['manage','panel','section'])u.searchParams.delete(k);history.pushState(null,'',u);mode(false);document.querySelector('[data-view="catalog"]').click();};
+ back.onclick=()=>{const u=new URL(location.href);for(const k of ['manage','panel','section','operator'])u.searchParams.delete(k);history.pushState(null,'',u);mode(false);document.querySelector('[data-view="catalog"]').click();};
  function restore(){const q=new URLSearchParams(location.search),value=q.has('manage');mode(value);if(value){for(const id of ['catalog','myBookings','privateRequests','tracking'])$(id).hidden=true;root.hidden=false;go(q.get('panel'),q.get('section'));refresh().catch(e=>status(e.message));}else{root.hidden=true;$('catalog').hidden=false;}}
  window.addEventListener('popstate',restore);document.addEventListener('rutasec:account',()=>mode(managing));
  function move(id,target){const el=$(id);if(el&&el.parentElement!==target)target.append(el);}
