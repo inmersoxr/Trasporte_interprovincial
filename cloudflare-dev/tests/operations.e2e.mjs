@@ -15,7 +15,7 @@ try{
  await passenger.addInitScript(key=>localStorage.setItem('rutasec-standard-session',key),buyerKey);
  let operator=await owner.newPage();const buyer=await passenger.newPage(),watcher=await observer.newPage();
  for(const p of [operator,buyer,watcher])p.on('pageerror',e=>errors.push(e.message));
- await operator.goto(base+'/standard/');await operator.locator('[data-view="operator"]').click();
+ await operator.goto(base+'/standard/?dev=1');await operator.locator('[data-view="operator"]').click();
  await operator.locator(`[data-manifest="${ticket.id}"]`).waitFor();
  await operator.locator('#boardForm input').fill(ticket.qrCodes[0]);
  await operator.locator('#boardForm button').click();await operator.getByText('Embarque registrado en D1',{exact:true}).waitFor();
@@ -38,7 +38,7 @@ try{
  await watcher.waitForFunction(p=>Number(document.getElementById('trackingProgress').textContent.match(/([\d.]+)%/)?.[1]||0)/100>p,before);
  const after=(await call(observer,'/trips/'+liveId)).data;assert.ok(after.snapshot.progress>before);assert.equal(after.expiresAt,null);
  assert.equal(JSON.stringify(after).includes('Ficticio Uno J7'),false);
- operator=await owner.newPage();operator.on('pageerror',e=>errors.push(e.message));await operator.goto(base+'/standard/');await operator.locator('[data-view="operator"]').click();
+ operator=await owner.newPage();operator.on('pageerror',e=>errors.push(e.message));await operator.goto(base+'/standard/?dev=1');await operator.locator('[data-view="operator"]').click();
  await operator.locator(`[data-service="${departure.id}"] [data-action="finish"]`).click();
  await watcher.waitForFunction(()=>document.getElementById('trackingProgress').textContent.includes('100.0%'));
  await watcher.reload();await watcher.getByText('Conectado · posición SIMULADA · enlace persistente',{exact:true}).waitFor();

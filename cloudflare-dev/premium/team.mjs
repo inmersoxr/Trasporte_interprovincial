@@ -10,8 +10,8 @@ export function setupTeam(){
 export function renderTeam(data){
  $('team').hidden=data.role==='driver';$('teamManage').hidden=data.role!=='owner';$('teamData').replaceChildren();
  for(const b of data.branches)$('teamData').append(node('p',b.name+' · '+b.city));
- for(const m of data.members){const row=node('p',m.display_name+' · '+m.role+' · '+m.user_id);if(data.role==='owner'&&m.role!=='owner'){const button=node('button','Revocar acceso');button.onclick=()=>run(async()=>{await post('/premium/revoke',{userId:m.user_id});await refresh();status('Acceso revocado.');});row.append(button);}$('teamData').append(row);}
+ for(const m of data.members){const row=node('p',m.display_name+' · '+({owner:'Propietario',admin:'Administrador',dispatcher:'Despachador',driver:'Conductor'}[m.role]||'Miembro'));if(data.role==='owner'&&m.role!=='owner'){const button=node('button','Revocar acceso');button.onclick=()=>run(async()=>{await post('/premium/revoke',{userId:m.user_id});await refresh();status('Acceso revocado.');});row.append(button);}$('teamData').append(row);}
  const form=$('assignmentForm').elements;for(const field of ['vehicleId','branchId','driverUserId'])form[field].replaceChildren();form.driverUserId.add(new Option('Sin conductor',''));
- for(const v of data.vehicles)form.vehicleId.add(new Option(v.model,v.id));for(const b of data.branches)form.branchId.add(new Option(b.name,b.id));for(const m of data.members.filter(m=>m.role==='driver'))form.driverUserId.add(new Option(m.display_name+' · '+m.user_id,m.user_id));
+ for(const v of data.vehicles)form.vehicleId.add(new Option(v.model,v.id));for(const b of data.branches)form.branchId.add(new Option(b.name,b.id));for(const m of data.members.filter(m=>m.role==='driver'))form.driverUserId.add(new Option(m.display_name,m.user_id));
  for(const a of data.assignments)$('teamData').append(node('p',(data.vehicles.find(v=>v.id===a.vehicle_id)?.model||'Vehículo')+' → '+(data.branches.find(b=>b.id===a.branch_id)?.name||'Sucursal')+' · '+(a.driver_user_id?'Conductor asignado':'Sin conductor')));
 }

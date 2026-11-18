@@ -2,7 +2,8 @@ import {mountAccount,hasAccess} from '../account/session.mjs';
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let token = localStorage.getItem('rutasec-standard-session') || '', dashboard, refreshRevision = 0;
-const copyAccess=document.createElement('button');copyAccess.id='copyStandardAccess';copyAccess.textContent='Copiar clave privada de mi acceso';copyAccess.hidden=!token;
+const developmentTools=new URLSearchParams(location.search).get('dev')==='1';
+const copyAccess=document.createElement('button');copyAccess.id='copyStandardAccess';copyAccess.textContent='Copiar clave privada de mi acceso';copyAccess.hidden=!token||!developmentTools;
 copyAccess.onclick=async()=>{try{await navigator.clipboard.writeText(token);status('Clave privada copiada; permite recuperar tu acceso en otro navegador. Consérvala privada.');}catch{status('No se pudo copiar; habilita permiso de portapapeles en este navegador');}};
 document.querySelector('header').append(copyAccess);
 for (const id of ['vehicleForm','offerForm','departureForm']) $(id).hidden = true;
@@ -46,11 +47,11 @@ for (const button of document.querySelectorAll('[data-view]')) button.onclick = 
 };
 $('createSession').onclick = () => guarded(async () => {
   const data = await api('/sessions', {}); token = data.token;
-  localStorage.setItem('rutasec-standard-session', token); $('access').hidden = true;copyAccess.hidden=false; status('Acceso privado de desarrollo creado'); await refresh();
+  localStorage.setItem('rutasec-standard-session', token); $('access').hidden = true;copyAccess.hidden=!developmentTools; status('Acceso privado de desarrollo creado'); await refresh();
 });
 $('restoreSession').onsubmit = event => { event.preventDefault(); guarded(async () => {
   const next = event.target.elements.token.value.trim(), previous = token; token = next;
-  try { await refresh(); localStorage.setItem('rutasec-standard-session', token); $('access').hidden = true;copyAccess.hidden=false; status('Acceso recuperado'); }
+  try { await refresh(); localStorage.setItem('rutasec-standard-session', token); $('access').hidden = true;copyAccess.hidden=!developmentTools; status('Acceso recuperado'); }
   catch(e) { token = previous; throw e; }
 }); };
 const forms = { operatorForm: '/operators', vehicleForm: '/vehicles', offerForm: '/route-offers', departureForm: '/departures' };
@@ -70,7 +71,7 @@ for (const [id, path] of Object.entries(forms)) $(id).onsubmit = async event => 
 };
 $('operatorSelect').onchange = () => guarded(refresh);
 $('refreshOperator').onclick = () => guarded(refresh);
-$('access').hidden = !!token;
+$('access').hidden = !!token||!developmentTools;
 guarded(catalog); if (token) guarded(refresh);
 setInterval(() => { if (!document.hidden && !$('catalog').hidden) guarded(catalog); }, 10000);
 import('./reservations.mjs').catch(e => status(e.message));

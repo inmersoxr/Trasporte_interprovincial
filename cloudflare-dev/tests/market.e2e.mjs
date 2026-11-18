@@ -23,11 +23,11 @@ try{
  await customer.addInitScript(key=>localStorage.setItem('rutasec-standard-session',key),key);
  const passenger=await customer.newPage(),operator=await op1.newPage();
  for(const p of [passenger,operator])p.on('pageerror',e=>errors.push(e.message));
- await passenger.goto(base+'/standard/');await passenger.locator('#openPrivateMarket').click();
+ await passenger.goto(base+'/standard/?dev=1');await passenger.locator('#openPrivateMarket').click();
  await passenger.locator('#privateRequestForm input[name="serviceAt"]').fill(new Date(Date.now()+8*86400000).toISOString().slice(0,16));
  const [response]=await Promise.all([passenger.waitForResponse(r=>r.url().endsWith('/api/private-requests')&&r.request().method()==='POST'),passenger.locator('#privateRequestForm button').click()]);
  const req=(await response.json()).id;assert.equal(response.status(),200);
- await operator.goto(base+'/standard/');await operator.locator('[data-view="operator"]').click();
+ await operator.goto(base+'/standard/?dev=1');await operator.locator('[data-view="operator"]').click();
  await operator.locator(`#marketOfferForm select[name="privateRequestId"] option[value="${req}"]`).waitFor({state:'attached'});
  await operator.locator('#marketOfferForm select[name="privateRequestId"]').selectOption(req);
  await operator.locator('#marketOfferForm select[name="vehicleId"]').selectOption(a.vehicle.id);

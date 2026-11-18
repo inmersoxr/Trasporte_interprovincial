@@ -11,6 +11,9 @@ J1–J8 funcionales de desarrollo verificadas, sin dar por terminadas las fases 
 ## Administración de plataforma autorizada (2026-11-18)
 El usuario solicita una tercera interfaz propia e independiente por subdominio, sobre el mismo backend. G1: directorio global de operadoras, planes/vencimientos y registros manuales de cuotas/pagos/auditoría, con autoridad de plataforma separada de roles empresariales. Sin cobros reales ni asignación de administradores a identidades supuestas. G1 publicado/verificado en desarrollo: Actions44242242297,36 tests; CRUD global en navegador local y rechazo remoto por roles comprobados. Primer acceso del propietario pendiente de su UUID explícito y aprovisionamiento; no asignado a QA. Main86d3750 documental conservado. Guía docs/PLATFORM_ADMIN.md y snapshot2026-11-18-z-platform-admin-g1-verified.md.
 
+## Acceso A2 autorizado (2026-11-18)
+El usuario cancela el alta por IDs y pide correo/contraseña, confirmación, cambio y recuperación. Reemplazar el onboarding técnico en ambas entradas sin alterar datos/demo. Primera autoridad solo tras verificar el correo autorizado; sin bootstrap del UUID anterior. Integrar entrega real y reportar su bloqueo si no está disponible, sin fingir correo enviado.
+
 ## Principios
 Preservar UI aprobada y demo, tres modalidades diferenciadas, bajo costo total, despliegue progresivo, snapshots por hito. Consultar PROJECT_MEMORY.md y AGENTS.md. Cloudflare Workers + D1 + R2; migración controlada del frontend a Cloudflare Workers Static Assets, conservando GitHub Pages como demo intacta; sin cobros reales hasta autorización y pruebas.
 

@@ -3,7 +3,7 @@ import {handleAuth} from './identity.mjs';
 import {identity,stmt,rows,hash,failure,integer,text,command} from './standard-api.mjs';
 import { handleStandard } from './standard-api.mjs';
 // Isolated development API. The original demo Worker/ledger are never imported.
-const REVISION = 'g1-platform-admin-v1';
+const REVISION = 'a2-email-password-v1';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -28,10 +28,10 @@ export default {
     try {
       const migration = await env.DB.prepare(
         'SELECT version FROM schema_migrations WHERE version = ?'
-      ).bind('0013_platform_admin').first();
+      ).bind('0014_email_password').first();
       // List one object only; never publish object names or content.
       await env.BUCKET.list({ limit: 1 });
-      if (!migration || migration.version !== '0013_platform_admin') throw new Error('Migration missing');
+      if (!migration || migration.version !== '0014_email_password') throw new Error('Migration missing');
       return json({ service: 'RutasEC development', environment: 'development',
         revision: REVISION, ok: true, d1: true, r2: true,
         schema: migration.version, payments: 'disabled' });

@@ -8,6 +8,7 @@ const output = new URL('./out/', import.meta.url);
 await rm(output, { recursive: true, force: true });
 await mkdir(new URL('public/', output), { recursive: true });
 await cp(new URL('admin/',import.meta.url),new URL('admin-public/',output),{recursive:true});
+await cp(new URL('account/email-ui.mjs',import.meta.url),new URL('admin-public/email-ui.mjs',output));
 await writeFile(new URL('reference-route.mjs', output), 'export default '+await readFile(new URL('shared/route.json', root),'utf8')+';\n');
 for (const file of await readdir(root)) {
   if (/\.(html|css|js|mjs|svg|webmanifest)$/.test(file)) {

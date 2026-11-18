@@ -1,3 +1,7 @@
+# Acceso vigente: correo y contraseña
+
+El propietario pide acceso normal, sin IDs ni claves de desarrollo. A2 implementa registro de correo, enlace de confirmación para elegir contraseña, inicio de sesión, cambio y recuperación. Cuenta pública y entrada administrativa comparten identidad, manteniendo cookies por host y autorización separada. Google es opcional; las instrucciones históricas siguientes no sustituyen el flujo A2 ni obligan al usuario a configurar OAuth para entrar. Ver [EMAIL_PASSWORD_ACCESS.md](EMAIL_PASSWORD_ACCESS.md).
+
 # Una cuenta RutasEC, múltiples espacios de operadora
 
 La persona inicia sesión una vez. Su user_id sirve para reservar como pasajero y para acceder a operadoras donde memberships autorice un rol. Google/Apple acreditan una identidad, nunca un rol empresarial, una aprobación comercial o un plan Premium. No confiar en operatorId/role enviados por cliente. El servidor comprueba pertenencia y entitlement en cada operación.

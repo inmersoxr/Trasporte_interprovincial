@@ -12,7 +12,7 @@ async function submit(form,endpoint){
  const data=await response.json();assert.equal(response.status(),200,JSON.stringify(data));return data;
 }
 try{
- await page.goto(base+'/standard/');await page.locator('#createSession').click();
+ await page.goto(base+'/standard/?dev=1');await page.locator('#createSession').click();
  await page.getByText('Acceso privado de desarrollo creado',{exact:true}).waitFor();
  await page.locator('[data-view="operator"]').click();
  await page.locator('#operatorForm input').fill('Operadora D1 ficticia '+Date.now());
@@ -24,7 +24,7 @@ try{
  await page.locator('#departureForm select[name="offerId"]').selectOption(offer.id);
  await page.locator('#departureForm input[name="departAt"]').fill(new Date(Date.now()+86400000).toISOString().slice(0,16));
  const departure=await submit('#departureForm','departures');
- await other.goto(base+'/standard/');
+ await other.goto(base+'/standard/?dev=1');
  await other.locator(`[data-departure="${departure.id}"]`).waitFor();
  await other.reload();await other.locator(`[data-departure="${departure.id}"]`).waitFor();
  const anonymous=await passenger.request.get(base+'/standard-api/api/operator');assert.equal(anonymous.status(),401);

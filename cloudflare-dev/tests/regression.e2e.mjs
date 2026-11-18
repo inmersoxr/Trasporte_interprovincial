@@ -8,7 +8,7 @@ try{
  for(const width of [360,390,1280]){
   const context=await browser.newContext({...options,viewport:{width,height:width===1280?900:844}}),page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
-  assert.equal((await page.goto(base+'/standard/')).status(),200);
+  assert.equal((await page.goto(base+'/standard/?dev=1')).status(),200);
   await page.getByRole('button',{name:'Privado personalizado',exact:true}).waitFor({state:'visible'});
   await page.waitForFunction(()=>!document.getElementById('openPrivateMarket').disabled);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
@@ -18,7 +18,7 @@ try{
   const key=await page.evaluate(()=>navigator.clipboard.readText());
   assert.ok(await page.evaluate(key=>localStorage.getItem('rutasec-standard-session')===key,key),'Copied access matches private session');
   const restore=await browser.newContext({...options,viewport:{width,height:844}}),restored=await restore.newPage();
-  await restored.goto(base+'/standard/');await restored.locator('summary').click();
+  await restored.goto(base+'/standard/?dev=1');await restored.locator('summary').click();
   await restored.locator('#restoreSession input').fill('0'.repeat(64));await restored.locator('#restoreSession button').click();
   await restored.getByText('Acceso no válido',{exact:true}).waitFor();
   assert.equal(await restored.evaluate(()=>localStorage.getItem('rutasec-standard-session')),null);

@@ -16,5 +16,8 @@
       "binding": "BUCKET",
       "bucket_name": "rutasec-dev-files"
     }
+  ],
+  "compatibility_flags": [
+    "nodejs_compat"
   ]
 }

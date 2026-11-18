@@ -8,13 +8,10 @@ Directorio global de operadoras con búsqueda/paginación, conteo de flota, esta
 
 Owner de plataforma modifica; auditor consulta. Los roles de operadora, incluyendo owner/admin, nunca dan acceso global. API comprueba platform_admins en cada petición. No existe endpoint público de bootstrap ni alta de administradores desde la UI. La primera cuenta privilegiada no se asigna a correos sin verificar ni a cuentas de QA.
 
-## Primera habilitación — dato requerido del propietario
-1. Abrir https://rutasec-web-dev.drbrownlabs.workers.dev/account/ y crear/restaurar el acceso de desarrollo (o Google cuando esté disponible).
-2. Copiar **ID de mi cuenta** y comunicar ese UUID al responsable que aprovisiona la plataforma. Es identificador, no clave privada. Necesitamos que el usuario identifique su cuenta antes de asignar ese primer permiso.
-3. El responsable de infraestructura ejecuta bootstrap-platform-owner.py con BOOTSTRAP_USER_ID igual al UUID explícito y las credenciales dev ya autorizadas. El script exige usuario activo y solo permite la primera autoridad; no puede reemplazar administradores ni crea usuarios. Trigger SQL guarda auditoría atómicamente. Está preparado además el job manual workflow_dispatch (bootstrap_platform_owner, deploy=false, verify_restore=false), pero se verificó que este workflow aún no existe en main: GitHub puede no ofrecer el botón Run workflow mientras solo esté en la rama de desarrollo. No indicar al usuario que use un botón no disponible ni publicar secretos para solventarlo. No se ejecuta aprovisionamiento por push. La activación sigue pendiente de identificar la cuenta y ejecutar el procedimiento de infraestructura.
-4. En el hostname administrativo iniciar sesión Google (configurado) o pegar la clave privada del acceso dev en el formulario autorizado. La clave se copia en Mi cuenta y se pega solo en el panel, nunca en chat/Git/URL. Solo se conserva allí después de comprobar permiso global.
-
-Nadie queda habilitado por instalar o conocer la URL. El provisionamiento inicial espera el ID que el usuario elija; no se ejecuta con un UUID supuesto. Pruebas locales usan usuarios/ACL exclusivamente ficticios sin conceder roles en remoto.
+## Acceso actual por correo y contraseña (A2)
+El usuario rechazó explícitamente el procedimiento anterior por UUID/claves. Ese procedimiento queda cancelado para onboarding normal y el UUID enviado no se aprovisiona. La cuenta normal y el panel muestran correo/contraseña, crear cuenta, confirmar correo, cambiar y recuperar contraseña. No exponer identificadores internos para entrar.
+Primera autoridad reservada al hash del correo previamente autorizado del propietario, almacenado en política de infraestructura. Solo después de verificar el enlace enviado a ese buzón y elegir contraseña se crea la credencial y, si no existe otra autoridad, su rol owner con auditoría SQL. Otro correo nunca se convierte en administrador por registrarse. No se usará una cuenta QA remota para certificar este paso.
+Google es opcional y solo se muestra cuando esté configurado. Las herramientas legacy de bootstrap quedan como mantenimiento interno, sin job de autoalta y sin solicitar IDs al usuario. El flujo principal no necesita esos scripts ni claves de prueba. Configuración de remitente y evidencia en EMAIL_PASSWORD_ACCESS.md.
 
 ## Google y sesiones
 Mismo cliente/usuario RutasEC; cookies separadas por hostname. Agregar al cliente web Google este callback adicional:

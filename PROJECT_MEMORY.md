@@ -1,4 +1,7 @@
 # RutasEC — Memoria persistente del repositorio
+## Acceso A2 — correo y contraseña (2026-11-18, decisión vigente)
+Usuario detiene el alta por UUID y rechaza pasos de IDs/claves de desarrollo: pide registro por correo, confirmación, contraseña, cambio y recuperación normales. NO ejecutar el bootstrap del UUID enviado antes ni volver a pedirlo. Se implementan formularios normales en /account/ y host admin, cookies revocables, enlaces temporales y hashing scrypt; permiso inicial ligado al correo ya autorizado únicamente tras verificación real. IDs y claves retirados de UI normal; QA explícito ?dev=1 conserva compatibilidad de datos. Implementación local39 tests PASS, navegador local completo con correo SIMULADO PASS; despliegue y entrega real pendientes. Guía docs/EMAIL_PASSWORD_ACCESS.md y snapshot2026-11-18-zz-email-password-a2.md. La configuración de envío debe verificarse antes de afirmar que el usuario puede recibir confirmaciones.
+
 ## Decisión vigente — Premium autorizado antes de revisión Senior
 El usuario solicitó explícitamente posponer la revisión Senior e iniciar Premium empresarial después de J1–J8. Se conserva Standard y ambos demos; misma identidad/backend/tenant, ruta Premium separada, sin pagos reales. Primer hito P1: habilitación Premium de desarrollo verificada por servidor, flota/kilometraje/mantenimiento con calendario exclusivo. Plan y aceptación en docs/PREMIUM_ROADMAP.md. Esta decisión reemplaza solo la dependencia de revisión Senior previa, no los controles mínimos ni la revisión comercial posterior.
 

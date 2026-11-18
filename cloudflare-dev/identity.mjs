@@ -1,3 +1,4 @@
+import {handlePassword,mailReady} from './password-auth.mjs';
 // Pinned development origin; production must use separate OAuth configuration.
 export const APP_ORIGIN='https://rutasec-web-dev.drbrownlabs.workers.dev';
 export const ADMIN_ORIGIN='https://rutasec-admin-dev.drbrownlabs.workers.dev';
@@ -21,12 +22,13 @@ export async function verifyGoogleIdToken(token,{audience,nonce,jwks,now=Date.no
  return claims;
 }
 export async function handleAuth(request,env,c,network=fetch){const {identity,stmt,rows,hash,failure}=c,db=env.DB,url=new URL(request.url),path=url.pathname;
+ if(path.startsWith('/auth/email/'))return handlePassword(request,env,c,network);
  const origin=url.origin===ADMIN_ORIGIN?ADMIN_ORIGIN:APP_ORIGIN,adminOrigin=origin===ADMIN_ORIGIN;
  const configured=!!(env.GOOGLE_CLIENT_ID&&env.GOOGLE_CLIENT_SECRET),callback=origin+(adminOrigin?'/platform-api':'/standard-api')+'/auth/google/callback';
- if(path==='/auth/config'&&request.method==='GET')return response({google:configured,missingGoogleConfiguration:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET'].filter(name=>!env[name]),apple:false,environment:'development'});
+ if(path==='/auth/config'&&request.method==='GET')return response({google:configured,email:mailReady(env),emailMissing:[...(!env.AUTH_EMAIL_FROM?['AUTH_EMAIL_FROM']:[]),...(!env.AUTH_EMAIL?.send&&!env.RESEND_API_KEY?['AUTH_EMAIL binding or RESEND_API_KEY']:[])],missingGoogleConfiguration:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET'].filter(name=>!env[name]),apple:false,environment:'development'});
  if(path==='/auth/session'&&request.method==='GET'){
   if(!cookie(request,COOKIE))return response({authenticated:false});
-  try{const user=await identity(new Request(request.url,{headers:{Cookie:request.headers.get('Cookie')}}),db);return response({authenticated:true,user:await stmt(db,'SELECT id,display_name FROM users WHERE id=?',[user.id]).first(),operators:await rows(db,'SELECT o.id,o.display_name,m.role FROM memberships m JOIN operators o ON o.id=m.operator_id WHERE m.user_id=?',[user.id])});}catch{return response({authenticated:false});}
+  try{const user=await identity(new Request(request.url,{headers:{Cookie:request.headers.get('Cookie')}}),db);return response({authenticated:true,user:await stmt(db,'SELECT u.id,u.display_name,a.email FROM users u LEFT JOIN auth_email_accounts a ON a.user_id=u.id WHERE u.id=?',[user.id]).first(),operators:await rows(db,'SELECT o.id,o.display_name,m.role FROM memberships m JOIN operators o ON o.id=m.operator_id WHERE m.user_id=?',[user.id])});}catch{return response({authenticated:false});}
  }
  if(path==='/auth/logout'&&request.method==='POST'){requireOrigin(request,failure);const token=cookie(request,COOKIE);if(token)await stmt(db,'DELETE FROM standard_sessions WHERE token_hash=?',[await hash(token)]).run();const r=response({signedOut:true});r.headers.append('Set-Cookie',setCookie(COOKIE,'',0));return r;}
  if(path==='/auth/google/start'&&['GET','POST'].includes(request.method)){
