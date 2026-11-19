@@ -122,4 +122,4 @@ Autorización expresa del usuario para implementar propuesta main0e893488. Se re
 
 
 ## UX2 — recuperación de paridad del demo
-Corregir experiencia Cloudflare con portada/buscador/navegación contextual del demo, identidad gráfica solicitada y tarjetas/detalle conectados a catálogo/reservas/operación persistentes. Implementación y prueba Alpha local verificadas; CI y despliegue se registran en snapshot2026-11-19-app-parity-menu.md. No modificar Pages ni sustituir backend/cuentas, ni insertar ejemplos en Alpha.
+Corregir experiencia Cloudflare con portada/buscador/navegación contextual del demo, identidad gráfica solicitada y tarjetas/detalle conectados a catálogo/reservas/operación persistentes. Entregado y comprobado: código128d5c62, Actions44456841493 SUCCESS,57 tests y tres flujos de navegador; API/web/admin e identidad desplegados, comprobaciones remotas HTTP/Chromium PASS. Evidencia y límites en snapshot2026-11-19-app-parity-menu.md. No modificar Pages ni sustituir backend/cuentas, ni insertar ejemplos en Alpha.
