@@ -127,3 +127,6 @@ Corregir experiencia Cloudflare con portada/buscador/navegación contextual del 
 
 ## I1–I4 — entrega integrada autorizada 2026-11-19
 El usuario autoriza resolver el conjunto de hallazgos de la revisión y los personalizados espontáneos; posteriormente descarta WhatsApp. Prioridad: inscripción voluntaria y capacidad/calendario, avisos internos/push, personal y permisos, planes efectivos, operación sin simulador, cambios/renovación/paginación y supervisión. Mantener pagos simulados, sin aplicaciones/backend duplicados ni modificaciones a Pages. Desarrollo por bloques comprobables, una entrega común tras regresión; evidencia y cierre en snapshot2026-11-19-zz4-integrated-delivery.md y guía INTEGRATED_OPERATIONS.md. Google/correo y recepción física real no se dan por habilitados por tener código.
+
+
+Cierre I1–I4: entregado en entorno Cloudflare existente, a69c5bd4/Actions44622073845 SUCCESS,65 pruebas + tres recorridos Chromium. Migraciones0022–0024, push configurado y smoke remoto PASS; Pages/main intactos. Límites: autenticación externa Google/correo pendiente, recepción física push no comprobada. Recuperación nativa inspeccionada y restaurador probado localmente; exportación/copia privada remota pendiente de workflow_dispatch manual, sin mecanismo alternativo por mensajes de commit. No declarar Alpha comercial ni piloto físico completos.

@@ -49,3 +49,6 @@ El panel global incluye salud de tareas push/recurrencia, pendientes y reintento
 Google/correo reales requieren su configuración externa pendiente. El código no considera enviados correos que no se entregaron al transporte. Los push necesitan permiso, navegador compatible y sesión. Las pruebas locales de identidad y transporte se identifican como simuladas. Cobros bancarios, facturación fiscal, liquidación, GPS real, aplicaciones nativas, respaldo externo independiente y certificación comercial no forman parte de esta activación. No afirmar piloto físico ni recepción real de push en un teléfono sin evidencia.
 
 Referencias de límites comprobadas al preparar la entrega: [Workers](https://developers.cloudflare.com/workers/platform/limits/) y [D1](https://developers.cloudflare.com/d1/platform/limits/). Se acotan lotes/red y se respetan100 parámetros por sentencia; no se certifica capacidad comercial sin medir consumo real.
+
+
+Recuperación autorizada: workflow_dispatch con deploy=false, verify_restore=true y, para copia privada, save_private_backup=true, seleccionando la rama codex/cloudflare-standard-junior. La herramienta GitHub disponible no inicia workflow_dispatch; requiere ejecutarlo desde GitHub Actions. Las actualizaciones normales no exportan datos.
