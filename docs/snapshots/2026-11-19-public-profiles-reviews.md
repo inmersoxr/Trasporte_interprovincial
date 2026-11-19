@@ -25,3 +25,6 @@ El usuario pide expresamente «Lo hiciste? Sino hazlo» después de confirmar la
 Implementado y probado localmente; CI/migración/despliegue todavía pendientes en este registro inicial. No declarar la versión publicada antes del cierre remoto. Sin operadores/viajes/opiniones sintéticos remotos. Google/correo reales continúan pendientes de configuración externa; pruebas físicas y aceptación comercial no certificadas.
 
 Rollback: mantener tablas/filenames/opiniones/reportes/auditoría, volver API/assets compatibles sin desactivar guards Alpha. No volver a versiones que expongan QA ni borrar opiniones para recuperar servicio. La migración es aditiva, sin recrear base/bucket. La revisión documental sigue siendo manual y distinta del correo. Pagos reales, Apple, expansión Premium y centro corporativo completo permanecen posteriores.
+
+## Corrección detectada por CI
+Run44429897316 falló56/57: en una carrera de solicitudes idénticas la base guardaba una sola opinión, pero la respuesta podía devolver el UUID local descartado en lugar del identificador canónico de command(). Se corrige el retorno tanto al crear opinión como al reportar; se comprueban respuestas idénticas y un solo registro en ambos casos. No se relajó la prueba ni hubo despliegue del fallo. Se repiten los casos dirigidos y CI antes de integrar.

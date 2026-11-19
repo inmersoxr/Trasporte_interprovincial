@@ -53,8 +53,8 @@ export async function handleReviews(request,env,c){
   if(!await c.stmt(db,"SELECT 1 FROM operators WHERE id=? AND (data_scope='alpha' OR ?=1)",[eligible.operator_id,env.ALLOW_DEVELOPMENT_AUTH==='true'?1:0]).first())throw c.failure('Este registro pertenece al entorno de pruebas aislado',403);
   if(await c.stmt(db,'SELECT 1 FROM memberships WHERE user_id=? AND operator_id=?',[user.id,eligible.operator_id]).first())throw c.failure('Los miembros de una operadora no pueden valorar su propia empresa',403);
   const name=(await c.stmt(db,'SELECT display_name FROM users WHERE id=?',[user.id]).first()).display_name,label=name.includes('@')||(name.match(/\d/g)||[]).length>=7?'Pasajero':name.trim().split(/\s+/)[0].slice(0,40)||'Pasajero',id=crypto.randomUUID();
-  try{await c.command(db,user,b,kind,[c.stmt(db,'INSERT INTO standard_reviews(id,operator_id,user_id,booking_id,booking_kind,service_key,rating,comment,author_label,last_nonce) VALUES(?,?,?,?,?,?,?,?,?,?)',[id,eligible.operator_id,user.id,b.bookingId,b.bookingKind,eligible.service_key,c.integer(b.rating,1,5,'Estrellas'),bodyText(b.comment??'',1000,0,c),label,id])],id);}catch(e){if(/UNIQUE.*standard_reviews/.test(e.message))throw c.failure('Ya valoraste este servicio',409);if(e.message.includes('review_not_eligible'))throw c.failure('El viaje ya no es elegible',409);throw e;}
-  return{id};
+  let saved;try{saved=await c.command(db,user,b,kind,[c.stmt(db,'INSERT INTO standard_reviews(id,operator_id,user_id,booking_id,booking_kind,service_key,rating,comment,author_label,last_nonce) VALUES(?,?,?,?,?,?,?,?,?,?)',[id,eligible.operator_id,user.id,b.bookingId,b.bookingKind,eligible.service_key,c.integer(b.rating,1,5,'Estrellas'),bodyText(b.comment??'',1000,0,c),label,id])],id);}catch(e){if(/UNIQUE.*standard_reviews/.test(e.message))throw c.failure('Ya valoraste este servicio',409);if(e.message.includes('review_not_eligible'))throw c.failure('El viaje ya no es elegible',409);throw e;}
+  return{id:saved};
  }
  const match=path.match(/^\/api\/(?:platform\/)?reviews\/([0-9a-f-]{36})\/(reply|report|moderate)$/i);if(!match)throw c.failure('Ruta no encontrada',404);
  const r=await c.stmt(db,'SELECT * FROM standard_reviews WHERE id=?',[match[1]]).first();if(!r)throw c.failure('Opinión no encontrada',404);
@@ -65,7 +65,7 @@ export async function handleReviews(request,env,c){
  }
  if(match[2]==='report'){
   if(r.status!=='visible')throw c.failure('Opinión no disponible',404);
-  const id=crypto.randomUUID();try{await c.command(db,user,b,'review_reported',[c.stmt(db,'INSERT INTO standard_review_reports(id,review_id,reporter_id,reason) VALUES(?,?,?,?)',[id,r.id,user.id,bodyText(b.reason,500,5,c)])],id);}catch(e){if(/UNIQUE.*standard_review_reports/.test(e.message))throw c.failure('Ya reportaste esta opinión',409);throw e;}return{id,message:'Reporte recibido. La opinión permanece visible hasta revisión de RutasEC.'};
+  const id=crypto.randomUUID();let saved;try{saved=await c.command(db,user,b,'review_reported',[c.stmt(db,'INSERT INTO standard_review_reports(id,review_id,reporter_id,reason) VALUES(?,?,?,?)',[id,r.id,user.id,bodyText(b.reason,500,5,c)])],id);}catch(e){if(/UNIQUE.*standard_review_reports/.test(e.message))throw c.failure('Ya reportaste esta opinión',409);throw e;}return{id:saved,message:'Reporte recibido. La opinión permanece visible hasta revisión de RutasEC.'};
  }
  throw c.failure('Ruta no encontrada',404);
 }
