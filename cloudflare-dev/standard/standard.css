@@ -14,3 +14,5 @@
 .standard-shell .passenger-navigation button[aria-current=page]{color:#f2ce45;background:#f2ce4515;font-weight:700}
 
 .standard-shell .profile-preview{display:block;width:100%;max-width:240px;max-height:160px;object-fit:contain;background:#202730;border-radius:12px;margin:10px 0}
+
+.standard-shell .rating-invitation{display:block;min-height:44px;padding:12px 0;margin:8px 0}

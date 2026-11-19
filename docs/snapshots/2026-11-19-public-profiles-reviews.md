@@ -28,3 +28,6 @@ Rollback: mantener tablas/filenames/opiniones/reportes/auditoría, volver API/as
 
 ## Corrección detectada por CI
 Run44429897316 falló56/57: en una carrera de solicitudes idénticas la base guardaba una sola opinión, pero la respuesta podía devolver el UUID local descartado en lugar del identificador canónico de command(). Se corrige el retorno tanto al crear opinión como al reportar; se comprueban respuestas idénticas y un solo registro en ambos casos. No se relajó la prueba ni hubo despliegue del fallo. Se repiten los casos dirigidos y CI antes de integrar.
+
+## Primera entrega y conexión final de personalizados
+PR5 integrado comoe2b0a31ac203ad7cb75719c71cbedc4562d2cbfd; Actions44430857767 SUCCESS (57 tests y tres navegadores), migración0021 y API/web/admin existentes desplegados. Smoke remoto: health21/D1/R2true, assets200, privados401, perfiles inexistentes404, catálogo vacío y Pages SHA256 intacto; navegador sin datos ficticios/errores JS. La revisión final detecta texto anterior «Sin valoraciones» en ofertas personalizadas: se conecta a conteo/promedio reales y perfil/opiniones, más invitación al completar un personalizado. Se verifica como corrección final del mismo hito antes de cerrar.

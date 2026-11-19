@@ -12,7 +12,7 @@ export async function handleMarket(request,env,core){
   if(path==='/api/private-requests'){
    const requests=await rows(db,`SELECT r.*,s.people,s.vehicle_type,s.duration_minutes,s.expires_at FROM private_requests r
     JOIN standard_private_specs s ON s.request_id=r.id WHERE r.customer_id=? ORDER BY r.created_at DESC LIMIT 20`,[user.id]);
-   const offers=await rows(db,`SELECT f.*,o.display_name AS operatorName,v.model AS vehicle,v.capacity,v.type AS vehicleType FROM standard_private_offers f
+   const offers=await rows(db,`SELECT f.*,o.display_name AS operatorName,v.model AS vehicle,v.capacity,v.type AS vehicleType,(SELECT COUNT(*) FROM standard_reviews z WHERE z.operator_id=f.operator_id AND z.status='visible') AS ratingCount,(SELECT AVG(rating) FROM standard_reviews z WHERE z.operator_id=f.operator_id AND z.status='visible') AS ratingAverage FROM standard_private_offers f
     JOIN private_requests r ON r.id=f.request_id JOIN operators o ON o.id=f.operator_id JOIN vehicles v ON v.id=f.vehicle_id WHERE r.customer_id=? ORDER BY f.created_at,f.id`,[user.id]);
    const bookings=await rows(db,'SELECT c.*,t.id AS liveId FROM standard_custom_bookings c LEFT JOIN standard_tracking t ON t.custom_booking_id=c.id WHERE c.customer_id=?',[user.id]);
    return {requests:requests.map(r=>({...r,offers:offers.filter(o=>o.request_id===r.id),booking:bookings.find(b=>b.request_id===r.id)||null,

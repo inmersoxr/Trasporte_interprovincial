@@ -50,7 +50,7 @@ test('Private fixed and custom bookings become reviewable only after their own b
  for(const action of ['start','finish'])assert.equal((await f.op.call('/operations',{operatorId:f.operatorId,kind:'booking',id:fixedId,action})).status,200);
  assert.equal((await f.buyer.call('/reviews',{bookingKind:'standard',bookingId:fixedId,rating:4,comment:''})).status,200);
  const req=await f.buyer.call('/private-requests',{origin:'Cuenca',destination:'Quito',people:1,passengers:['Persona de prueba'],vehicleType:'any',durationMinutes:30,serviceAt:new Date(Date.now()+6600000).toISOString(),contactPhone:'+593981112233',pickupPoint:'Encuentro de prueba',dropoffPoint:'Llegada de prueba'});assert.equal(req.status,200);
- const offer=await f.op.call('/private-offers',{operatorId:f.operatorId,vehicleId:f.vehicleId,privateRequestId:req.data.id,priceCents:6000,durationMinutes:30});assert.equal(offer.status,200);
+ const offer=await f.op.call('/private-offers',{operatorId:f.operatorId,vehicleId:f.vehicleId,privateRequestId:req.data.id,priceCents:6000,durationMinutes:30});assert.equal(offer.status,200);const choices=await f.buyer.call('/private-requests');const shown=choices.data.requests.find(r=>r.id===req.data.id).offers[0];assert.equal(shown.ratingCount,1);assert.equal(shown.ratingAverage,4);
  const chosen=await f.buyer.call('/private-requests/'+req.data.id+'/select',{offerId:offer.data.id,quotedPriceCents:6000});assert.equal(chosen.status,200);const customId=chosen.data.bookingId;
  assert.equal((await f.buyer.call('/reviews',{bookingKind:'custom',bookingId:customId,rating:5})).status,403);
  assert.equal((await f.op.call('/operations',{operatorId:f.operatorId,action:'board',code:'RUTASEC-CUSTOM:'+customId+':0',serviceKind:'custom',serviceId:customId})).status,200);
