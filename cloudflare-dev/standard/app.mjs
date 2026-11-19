@@ -19,6 +19,7 @@ export async function api(path, body) {
  }catch(error){if(error.name==='TimeoutError')throw new Error('La conexión tardó demasiado. Actualiza el historial antes de reintentar.');if(error instanceof TypeError)throw new Error('Sin conexión con el servicio. Las reservas requieren conexión; revisa el historial al volver.');throw error;}
 }
 export function status(message) { $('status').textContent = message; }
+const ratingLabel=item=>item.ratingCount?'★ '+Number(item.ratingAverage).toLocaleString('es-EC',{maximumFractionDigits:1})+' · '+item.ratingCount+(item.ratingCount===1?' valoración':' valoraciones'):'Aún sin valoraciones';
 export const apiHeaders=()=>token?{Authorization:'Bearer '+token}:{};
 function options(items, label) { return items.map(item => `<option value="${esc(item.id)}">${esc(label(item))}</option>`).join(''); }
 const searchQuery=mountSearch($('catalog'),()=>guarded(catalog));
@@ -32,8 +33,8 @@ export async function catalog() {
   const revision=++catalogRevision;let data;
   try{data=await api('/catalog?'+query);}catch(error){if(revision===catalogRevision){$('catalogList').textContent='No se pudieron actualizar los viajes. Revisa tu conexión.';$('privateList').replaceChildren();}throw error;}
   if(revision!==catalogRevision)return;
-  $('catalogList').innerHTML = data.departures.map(d => `<article data-departure="${esc(d.id)}"><strong>${esc(d.origin)} → ${esc(d.destination)}</strong><p>${esc(d.operatorName)} · ${esc(d.vehicle)}</p><p>${esc(new Date(d.departAt).toLocaleString('es-EC',{timeZone:'America/Guayaquil'}))} (hora Ecuador continental) · ${d.capacity} plazas</p><p>$${(d.priceCents/100).toFixed(2)} por asiento</p>${d.pickupPoint?`<p>Encuentro: ${esc(d.pickupPoint)} · Llegada: ${esc(d.dropoffPoint)}</p>`:""}</article>`).join('') || '<p>No hay salidas publicadas.</p>';
-  $('privateList').innerHTML = data.routeOffers.filter(r => r.serviceType === 'private_fixed').map(r => `<article data-private-route="${r.id}"><strong>${esc(r.origin)} → ${esc(r.destination)}</strong><p>${esc(r.vehicle)} · $${(r.priceCents/100).toFixed(2)} por vehículo · ${r.durationMinutes} min</p></article>`).join('') || '<p>No hay rutas privadas publicadas.</p>';
+  $('catalogList').innerHTML = data.departures.map(d => `<article data-departure="${esc(d.id)}"><strong>${esc(d.origin)} → ${esc(d.destination)}</strong><p><a href="/miniapp/?operator=${esc(d.operatorId)}">${esc(d.operatorName)}</a> · ${esc(d.vehicle)}</p><p>${esc(ratingLabel(d))} · <a href="/miniapp/?operator=${esc(d.operatorId)}&tab=reviews">Opiniones</a></p><p>${esc(new Date(d.departAt).toLocaleString('es-EC',{timeZone:'America/Guayaquil'}))} (hora Ecuador continental) · ${d.capacity} plazas</p><p>$${(d.priceCents/100).toFixed(2)} por asiento</p>${d.pickupPoint?`<p>Encuentro: ${esc(d.pickupPoint)} · Llegada: ${esc(d.dropoffPoint)}</p>`:""}</article>`).join('') || '<p>No hay salidas publicadas.</p>';
+  $('privateList').innerHTML = data.routeOffers.filter(r => r.serviceType === 'private_fixed').map(r => `<article data-private-route="${r.id}"><strong>${esc(r.origin)} → ${esc(r.destination)}</strong><p><a href="/miniapp/?operator=${esc(r.operatorId)}">${esc(r.operatorName)}</a> · ${esc(ratingLabel(r))}</p><p>${esc(r.vehicle)} · $${(r.priceCents/100).toFixed(2)} por vehículo · ${r.durationMinutes} min</p></article>`).join('') || '<p>No hay rutas privadas publicadas.</p>';
   document.dispatchEvent(new CustomEvent('standard:catalog', { detail: data }));
 }
 export async function refresh() {
@@ -95,6 +96,7 @@ import('./reservations.mjs').catch(e => status(e.message));
 import('./market.mjs').catch(e => status(e.message));
 import('./operations.mjs').catch(e => status(e.message));
 import('./recurring.mjs').catch(e => status(e.message));
+import('./public-profile.mjs').catch(e => status(e.message));
 import('./onboarding.mjs').catch(e => status(e.message));
 import('./tracking.mjs').catch(e => status(e.message));
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>status('No se pudo habilitar el modo sin conexión'));

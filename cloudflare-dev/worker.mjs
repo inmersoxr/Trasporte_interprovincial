@@ -3,7 +3,7 @@ import {handleAuth} from './identity.mjs';
 import {verifiedIdentity,stmt,rows,hash,failure,integer,text,command} from './standard-api.mjs';
 import { handleStandard } from './standard-api.mjs';
 // Isolated development API. The original demo Worker/ledger are never imported.
-const REVISION = 'alpha-email-code-v1';
+const REVISION = 'public-profiles-reviews-v1';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -32,10 +32,10 @@ export default {
     try {
       const migration = await env.DB.prepare(
         'SELECT version FROM schema_migrations WHERE version = ?'
-      ).bind('0020_email_verification_code').first();
+      ).bind('0021_public_profiles_reviews').first();
       // List one object only; never publish object names or content.
       await env.BUCKET.list({ limit: 1 });
-      if (!migration || migration.version !== '0020_email_verification_code') throw new Error('Migration missing');
+      if (!migration || migration.version !== '0021_public_profiles_reviews') throw new Error('Migration missing');
       return json({ service: 'RutasEC development', environment: 'development',
         revision: REVISION, ok: true, d1: true, r2: true,
         schema: migration.version, payments: 'disabled' });

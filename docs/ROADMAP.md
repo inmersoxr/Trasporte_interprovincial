@@ -116,3 +116,6 @@ Este orden prevalece sobre estimaciones de calendario y propuestas anteriores qu
 
 ## UX1 — aplicación por contexto
 Instrucción actual del usuario autoriza navegación inferior de cinco destinos en consola Standard/Premium y pantallas contextuales, preservando funciones existentes. Pasajero y administración tienen espacios propios. Entregado y comprobado: PR4/f4fa4734,Actions44420942765 SUCCESS,54 tests y tres navegadores CI, smoke remoto PASS. Evidencia en snapshot2026-11-18-zzzzzzzzzzz-operator-app-navigation.md. Sin backend nuevo, demo ni ampliación Premium.
+
+## U2 — perfil público móvil y reputación
+Autorización expresa del usuario para implementar propuesta main0e893488. Se reutilizan perfiles/R2 existentes en Standard y plantilla con cuatro vistas, reputación verificada por reserva/embarque/fin, respuesta, reportes y moderación auditada. Implementación y pruebas locales en snapshot2026-11-19-public-profiles-reviews.md; verificar CI/migración/deploy antes de declarar publicado. Misma infraestructura, sin demo ni expansión Premium/cobros.

@@ -1,9 +1,11 @@
+import {handleReviews} from './standard-reviews.mjs';
 import {onboardingData,reviewOperator,readDocument} from './standard-onboarding.mjs';
 import {owner} from './standard-api.mjs';
 export function date(value,label,failure){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(value))||new Date(value).toISOString().slice(0,10)!==value)throw failure(label+' no válida');return value;}
 const uuid=value=>typeof value==='string'&&/^[0-9a-f-]{36}$/i.test(value);
 const balanceSQL=`SELECT i.*,COALESCE((SELECT SUM(p.amount_cents) FROM platform_payments p WHERE p.invoice_id=i.id AND p.status='recorded'),0) AS paid_cents FROM platform_invoices i`;
 export async function handlePlatform(request,env,c){const {identity,stmt,rows,failure,integer,text,command,hash}=c,db=env.DB,url=new URL(request.url),path=url.pathname,user=await identity(request,db);
+ if(path.startsWith('/api/platform/reviews'))return handleReviews(request,env,c);
  const admin=await stmt(db,'SELECT role FROM platform_admins WHERE user_id=?',[user.id]).first();if(!admin)throw failure('Acceso exclusivo para administración de RutasEC',403);
  const document=path.match(/^\/api\/platform\/documents\/([0-9a-f-]{36})$/i);
  if(document&&request.method==='GET')return readDocument(request,env,user,document[1],{...c,owner},true);
@@ -20,7 +22,7 @@ export async function handlePlatform(request,env,c){const {identity,stmt,rows,fa
    (SELECT COALESCE(SUM(amount_cents-paid_cents),0) FROM (${balanceSQL}) WHERE status='open' AND due_on<date('now')) AS overdueCents`).first();
   return{operators:operators.slice(0,50),nextCursor:operators.length>50?operators[49].id:null,totals,currency:'USD',referenceOnly:true};
  }
- if(path==='/api/platform/audit'&&request.method==='GET')return{events:await rows(db,"SELECT a.id,a.actor_user_id,a.entity_type,a.entity_id,a.action,a.created_at,COALESCE(o.display_name,oi.display_name,op.display_name) AS operator_name FROM audit_events a LEFT JOIN operators o ON o.id=a.entity_id LEFT JOIN platform_invoices i ON i.id=a.entity_id LEFT JOIN operators oi ON oi.id=i.operator_id LEFT JOIN platform_payments p ON p.id=a.entity_id LEFT JOIN platform_invoices pi ON pi.id=p.invoice_id LEFT JOIN operators op ON op.id=pi.operator_id WHERE a.entity_type LIKE 'platform_%' ORDER BY a.created_at DESC,a.id DESC LIMIT 100"),limit:100};
+ if(path==='/api/platform/audit'&&request.method==='GET')return{events:await rows(db,"SELECT a.id,a.actor_user_id,a.entity_type,a.entity_id,a.action,a.created_at,COALESCE(o.display_name,oi.display_name,op.display_name,ro.display_name) AS operator_name FROM audit_events a LEFT JOIN operators o ON o.id=a.entity_id LEFT JOIN platform_invoices i ON i.id=a.entity_id LEFT JOIN operators oi ON oi.id=i.operator_id LEFT JOIN platform_payments p ON p.id=a.entity_id LEFT JOIN platform_invoices pi ON pi.id=p.invoice_id LEFT JOIN operators op ON op.id=pi.operator_id LEFT JOIN standard_reviews rv ON rv.id=a.entity_id LEFT JOIN operators ro ON ro.id=rv.operator_id WHERE (a.entity_type LIKE 'platform_%' OR a.entity_type='operator_review') ORDER BY a.created_at DESC,a.id DESC LIMIT 100"),limit:100};
  const detail=path.match(/^\/api\/platform\/operators\/([0-9a-f-]{36})$/i);
  if(detail&&request.method==='GET'){
   const operator=await stmt(db,'SELECT id,display_name,legal_name,status,created_at FROM operators WHERE id=?',[detail[1]]).first();if(!operator)throw failure('Operadora no encontrada',404);
