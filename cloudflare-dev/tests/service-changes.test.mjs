@@ -1,0 +1,32 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {runtime} from './runtime.mjs';import {renewSchedules} from '../standard-recurring.mjs';
+test('Travel changes preserve prices, prevent schedule/seat conflicts, refund only selected passengers and keep QR positions stable',async()=>{const f=await runtime();try{
+ const owner=(await f.call('/sessions',{})).data,buyer=(await f.call('/sessions',{})).data;
+ const create=(p,b,t=owner.token)=>f.call(p,{...b,requestId:crypto.randomUUID()},t);
+ const op=(await create('/operators',{name:'Cambios de prueba'})).data.id;
+ const vehicles=[];for(const model of ['Van uno','Van dos'])vehicles.push((await create('/vehicles',{operatorId:op,type:'van',model,capacity:4})).data.id);
+ const route=(await create('/route-offers',{operatorId:op,vehicleId:vehicles[0],origin:'Cuenca',destination:'Guayaquil',serviceType:'shared',priceCents:1500})).data.id;
+ const at=new Date(Date.now()+86400000).toISOString(),d=(await create('/departures',{operatorId:op,offerId:route,departAt:at,durationMinutes:60})).data.id;
+ const booking=(await create('/bookings',{departureId:d,seatNumbers:[1,2],passengers:['Ana','Luis'],quotedPriceCents:1500},buyer.token)).data.booking;
+ const change={id:d,vehicleId:vehicles[1],departAt:new Date(Date.now()+90000000).toISOString(),durationMinutes:60,reason:'Nuevo horario solicitado',expectedRevision:1};
+ assert.equal((await create('/departure-change',change,buyer.token)).status,403);assert.equal((await create('/departure-change',change)).status,200);
+ let ticket=(await f.call('/bookings/'+booking.id,undefined,buyer.token)).data.booking;assert.equal(ticket.amount_cents,3000);assert.equal(ticket.vehicle,'Van dos');assert.equal(ticket.service_at,change.departAt);assert.ok((await f.call('/notifications',undefined,buyer.token)).data.items.some(n=>n.kind==='change'));
+ assert.equal((await create('/departure-change',change)).status,409);
+ const move={id:booking.id,action:'seats',seatNumbers:[3,4],reason:'Preferimos otros asientos',expectedRevision:ticket.revision};assert.equal((await create('/booking-change',move,buyer.token)).status,200);
+ ticket=(await f.call('/bookings/'+booking.id,undefined,buyer.token)).data.booking;assert.deepEqual(ticket.passengers.map(p=>p.seatNumber),[3,4]);
+ const other=(await create('/bookings',{departureId:d,seatNumbers:[1],passengers:['Otro'],quotedPriceCents:1500},buyer.token));assert.equal(other.status,200);
+ assert.equal((await create('/booking-change',{...move,seatNumbers:[1,4],expectedRevision:ticket.revision},buyer.token)).status,409);
+ assert.equal((await create('/booking-change',{id:booking.id,action:'cancel_seats',positions:[0],reason:'Ana no viajará',expectedRevision:ticket.revision},buyer.token)).status,200);
+ ticket=(await f.call('/bookings/'+booking.id,undefined,buyer.token)).data.booking;assert.equal(ticket.passenger_count,1);assert.equal(ticket.amount_cents,1500);assert.equal(ticket.passengers[0].position,1);assert.ok(ticket.qrCodes[0].endsWith(':1'));assert.equal((await f.db.prepare("SELECT COUNT(*) n FROM seat_claims WHERE departure_id=? AND status='confirmed'").bind(d).first()).n,2);
+ const oldQr=await create('/operations',{operatorId:op,action:'board',serviceKind:'departure',serviceId:d,code:booking.qrCodes[0]});assert.equal(oldQr.status,409);
+ const fixedRoute=(await create('/route-offers',{operatorId:op,vehicleId:vehicles[0],origin:'Cuenca',destination:'Guayaquil',serviceType:'private_fixed',priceCents:9000})).data.id;
+ const fixed=await create('/private-route-bookings',{offerId:fixedRoute,serviceAt:new Date(Date.now()+5*86400000).toISOString(),passengers:['Ana privada'],quotedPriceCents:9000},buyer.token);assert.equal(fixed.status,200);
+ assert.equal((await create('/private-service-change',{id:fixed.data.booking.id,kind:'fixed',expectedRevision:1,vehicleId:vehicles[1],departAt:new Date(Date.now()+6*86400000).toISOString(),durationMinutes:60,reason:'Sustitución de vehículo privado'})).status,200);const updated=(await f.call('/bookings/'+fixed.data.booking.id,undefined,buyer.token)).data.booking;assert.equal(updated.vehicle,'Van dos');assert.equal(updated.amount_cents,9000);
+ const routeChange={id:route,priceCents:1700,active:true,expectedRevision:1,reason:'Tarifa para nuevas reservas'};assert.equal((await create('/route-change',routeChange)).status,200);assert.equal((await f.call('/bookings/'+booking.id,undefined,buyer.token)).data.booking.amount_cents,1500);
+ }finally{await f.mf.dispose();}});
+test('Opt-in recurring schedules extend safely without duplicate departures and stopping blocks renewal',async()=>{const f=await runtime();try{
+ const owner=(await f.call('/sessions',{})).data;const create=(p,b)=>f.call(p,{...b,requestId:crypto.randomUUID()},owner.token);const op=(await create('/operators',{name:'Renovación de prueba'})).data.id,v=(await create('/vehicles',{operatorId:op,type:'van',model:'Van recurrente',capacity:3})).data.id,r=(await create('/route-offers',{operatorId:op,vehicleId:v,origin:'Cuenca',destination:'Guayaquil',serviceType:'shared',priceCents:1000})).data.id;
+ const today=new Date(Date.now()-5*3600000).toISOString().slice(0,10),tomorrow=new Date(Date.now()-5*3600000+86400000).toISOString().slice(0,10);
+ const s=await create('/recurring-schedules',{operatorId:op,offerId:r,startDate:today,endDate:tomorrow,weekdays:[0,1,2,3,4,5,6],times:['23:59'],durationMinutes:30,autoRenew:true});assert.equal(s.status,200);
+ assert.equal((await renewSchedules({DB:f.db})).renewed,1);const count=(await f.db.prepare('SELECT COUNT(*) n FROM departures WHERE schedule_id=?').bind(s.data.schedule.id).first()).n;assert.ok(count>=7);await renewSchedules({DB:f.db});assert.equal((await f.db.prepare('SELECT COUNT(*) n FROM departures WHERE schedule_id=?').bind(s.data.schedule.id).first()).n,count);
+ await create('/recurring-schedules/'+s.data.schedule.id,{operatorId:op,action:'stop'});assert.equal((await renewSchedules({DB:f.db},Date.now()+86400000)).renewed,0);
+ }finally{await f.mf.dispose();}});

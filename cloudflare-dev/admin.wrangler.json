@@ -1,0 +1,1 @@
+{"name":"rutasec-admin-dev","main":"admin-router.mjs","compatibility_date":"2026-11-01","workers_dev":true,"assets":{"directory":"out/admin-public","binding":"ASSETS","run_worker_first":true,"not_found_handling":"404-page"},"services":[{"binding":"PLATFORM_API","service":"rutasec-api-dev"}],"upload_source_maps":false}

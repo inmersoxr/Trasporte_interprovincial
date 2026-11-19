@@ -1,0 +1,33 @@
+// Shared email/password access, with mailbox proof before creating credentials.
+export function mountEmailAuth(container,{prefix,onSignedIn,config,onChallenge=()=>{}}){
+ container.innerHTML=`<div data-auth-status role="status" aria-live="polite"></div>
+ <form data-auth-login><h2>Iniciar sesión</h2><label>Correo electrónico<input name="email" type="email" autocomplete="username" required maxlength="254"></label><label>Contraseña<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label><button>Entrar</button><p><button type="button" data-mode="register">Crear cuenta</button> <button type="button" data-mode="forgot">Olvidé mi contraseña</button></p></form>
+ <form data-auth-register hidden><h2>Crear tu cuenta</h2><label>Tu nombre (opcional)<input name="name" autocomplete="name" maxlength="120"></label><label>Correo electrónico<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label>Contraseña<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><label>Repite la contraseña<input name="confirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><p>Usa al menos 12 caracteres. Te enviaremos un código para verificar tu correo.</p><button>Enviar código de verificación</button><p><button type="button" data-mode="login">Ya tengo una cuenta</button></p></form>
+ <form data-auth-code hidden><h2>Verifica tu correo</h2><p>Introduce los seis dígitos del correo. El código caduca en 10 minutos y permite hasta cinco intentos.</p><label>Código de verificación<input name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required></label><button>Verificar correo y entrar</button><p><button type="button" data-resend>Reenviar código</button> <button type="button" data-mode="register">Volver al registro</button></p></form>
+ <form data-auth-forgot hidden><h2>Recuperar contraseña</h2><label>Correo electrónico<input name="email" type="email" autocomplete="email" required maxlength="254"></label><button>Enviar enlace para recuperar</button><p><button type="button" data-mode="login">Volver a entrar</button></p></form>
+ <form data-auth-set hidden><h2 data-set-title>Elige tu contraseña</h2><label>Nueva contraseña<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><label>Repite la contraseña<input name="confirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><p>Usa al menos 12 caracteres. Puedes escribir una frase que recuerdes.</p><button>Guardar contraseña y entrar</button></form><p data-mail-status></p>`;
+ const $=s=>container.querySelector(s),status=message=>$('[data-auth-status]').textContent=message;
+ const storageKey='rutasec-email-pending:'+prefix;let busy=false,kind=null,token=null,pending=null;
+ try{const saved=sessionStorage.getItem(storageKey);if(/^[0-9a-f]{64}$/.test(saved||''))pending=saved;}catch{}
+ function savePending(value){pending=value;try{if(value)sessionStorage.setItem(storageKey,value);else sessionStorage.removeItem(storageKey);}catch{}}
+ function mode(name){for(const form of container.querySelectorAll('form'))form.hidden=!form.hasAttribute('data-auth-'+name);status('');}
+ for(const button of container.querySelectorAll('[data-mode]'))button.onclick=()=>{savePending(null);token=null;mode(button.dataset.mode);};
+ $('[data-mail-status]').textContent=config.email?'':'La confirmación y recuperación por correo todavía no están disponibles.';
+ async function action(form,path,body,success){
+  if(busy)return;busy=true;const controls=[...container.querySelectorAll('button')],disabled=controls.map(el=>el.disabled);controls.forEach(el=>el.disabled=true);
+  try{const response=await fetch(prefix+'/auth/email/'+path,{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});const result=await response.json();if(!response.ok)throw new Error(result.error||'No se pudo completar la solicitud');form.reset();if(success)await success(result);if(result.message)status(result.message);}
+  catch(error){status(error instanceof TypeError?'No se pudo conectar. Inténtalo de nuevo.':error.name==='TimeoutError'?'La conexión tardó demasiado. Inténtalo de nuevo.':error.message);}
+  finally{controls.forEach((el,i)=>el.disabled=disabled[i]);busy=false;}
+ }
+ async function signedIn(){savePending(null);token=null;await onSignedIn();}
+ function received(result){savePending(result.challenge);onChallenge();mode('code');$('[data-auth-code] [name="code"]').focus();}
+ $('[data-auth-login]').onsubmit=e=>{e.preventDefault();action(e.target,'login',Object.fromEntries(new FormData(e.target)),signedIn);};
+ $('[data-auth-register]').onsubmit=e=>{e.preventDefault();const form=e.target;if(form.elements.password.value!==form.elements.confirm.value){status('Las contraseñas no coinciden');return;}action(form,'register',{email:form.elements.email.value,name:form.elements.name.value,password:form.elements.password.value,returnTo:new URLSearchParams(location.search).get('returnTo')},received);};
+ $('[data-auth-code]').onsubmit=e=>{e.preventDefault();if(!pending){status('Inicia de nuevo el registro');return;}action(e.target,'verify',{challenge:pending,code:e.target.elements.code.value},signedIn);};
+ $('[data-resend]').onclick=()=>{if(pending)action($('[data-auth-code]'),'resend',{challenge:pending},received);};
+ $('[data-auth-forgot]').onsubmit=e=>{e.preventDefault();action(e.target,'forgot',Object.fromEntries(new FormData(e.target)));};
+ function readLink(){const params=new URLSearchParams(location.hash.slice(1)),next=params.has('verify')?'verify':params.has('reset')?'reset':null;if(!next)return;savePending(null);kind=next;token=params.get(kind);history.replaceState(null,'',location.pathname+location.search);onChallenge();mode('set');$('[data-set-title]').textContent=kind==='verify'?'Confirma tu correo y elige tu contraseña':'Elige una contraseña nueva';}
+ readLink();if(pending&&!token){onChallenge();mode('code');}window.addEventListener('hashchange',readLink);
+ $('[data-auth-set]').onsubmit=e=>{e.preventDefault();const form=e.target;if(form.elements.password.value!==form.elements.confirm.value){status('Las contraseñas no coinciden');return;}if(!token){status('Abre el enlace que recibiste por correo');return;}action(form,kind,{token,password:form.elements.password.value},signedIn);};
+ return{status,hasChallenge:()=>!!token||!!pending,showLogin:()=>{savePending(null);token=null;mode('login');}};
+}

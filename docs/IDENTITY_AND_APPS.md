@@ -1,0 +1,46 @@
+# Acceso vigente: correo y contraseña
+
+## Actualización Alpha 2026-11-18 — implementada localmente
+El usuario pide cuenta verificada al reservar y Google como primer proveedor; Apple posterior. Consultar el catálogo sigue siendo público. Reutilizamos A1/A2: correo verificado por enlace o Google con email_verified=true, retorno a la salida elegida y mismo historial por identidad entre sesiones. Si ya existe cuenta con contraseña, entrar primero y pulsar «Vincular Google a esta cuenta»; no se fusionan usuarios solo por email coincidente. Google acredita la identidad, no la documentación o autorización de la operadora.
+
+GET remoto sigue google=false/email=false. Faltan GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET del cliente OAuth web. Configurarlo en [Google Cloud → Clientes OAuth](https://console.cloud.google.com/auth/clients) para el origen y callback exactos indicados abajo; después variables/secretos del Worker existente. keep_vars=true conserva las variables externas en próximos deploys; secretos siempre separados del frontend. El token API Cloudflare no sustituye las credenciales de Google. No se creó proyecto Google, otro Worker ni una base de datos.
+
+Migración0015 preparada; Google real no probado ni estas correcciones desplegadas. Pruebas locales verifican firma/state/nonce/PKCE, callback y cookies, continuidad de boleto e imposibilidad de comprar con acceso no verificado. Navegador usa Google explícitamente SIMULADO. QA legacy requiere ALLOW_DEVELOPMENT_AUTH=true en un entorno aislado y ?dev=1 para controles de interfaz; false en la configuración normal. Lo que sigue documenta también estados históricos A1/A2, no una activación actual.
+
+El propietario pide acceso normal, sin IDs ni claves de desarrollo. A2 implementa registro de correo, enlace de confirmación para elegir contraseña, inicio de sesión, cambio y recuperación. Cuenta pública y entrada administrativa comparten identidad, manteniendo cookies por host y autorización separada. Google es opcional; las instrucciones históricas siguientes no sustituyen el flujo A2 ni obligan al usuario a configurar OAuth para entrar. Ver [EMAIL_PASSWORD_ACCESS.md](EMAIL_PASSWORD_ACCESS.md).
+
+# Una cuenta RutasEC, múltiples espacios de operadora
+
+La persona inicia sesión una vez. Su user_id sirve para reservar como pasajero y para acceder a operadoras donde memberships autorice un rol. Google/Apple acreditan una identidad, nunca un rol empresarial, una aprobación comercial o un plan Premium. No confiar en operatorId/role enviados por cliente. El servidor comprueba pertenencia y entitlement en cada operación.
+
+Cada operadora comparte backend Workers/D1/R2 y código, con datos por operator_id. Perfil público/miniapp /miniapp/?operator=UUID, consola privada /premium/?operator=UUID y manifest propio; se puede instalar como PWA. Instalar la app no otorga acceso. Pasajeros reservan con el inventario común. No hay un despliegue por empresa ni cuentas duplicadas.
+
+## Google — configuración externa necesaria
+Crear un cliente OAuth de tipo **Aplicación web** en https://console.cloud.google.com/apis/credentials (proyecto propio; Google puede pedir configurar marca, audiencia y pantalla de consentimiento). Scopes mínimos openid, email, profile; no acceso a Drive/Gmail. Si el proyecto está en pruebas, agregar los usuarios de prueba en la configuración de audiencia.
+
+Origen JavaScript: https://rutasec-web-dev.drbrownlabs.workers.dev
+Redirect URI exacto: https://rutasec-web-dev.drbrownlabs.workers.dev/standard-api/auth/google/callback
+
+Configurar en Worker **rutasec-api-dev**, Settings → Variables and Secrets:
+- GOOGLE_CLIENT_ID: ID del cliente web.
+- GOOGLE_CLIENT_SECRET: secreto de ese cliente (tipo Secret).
+
+Panel directo del Worker: https://dash.cloudflare.com/05c3eb3b0c05413d604a3f0fb6522940/workers/services/view/rutasec-api-dev/production/settings
+No es el token API de Cloudflare. No se necesita volver a entregar CLOUDFLARE_API_TOKEN ni cambiar los secretos Actions para login. Nunca guardar el secreto Google en HTML, Git o chat. Nuevos dominios/producción requieren redirect y configuración separados.
+
+## Alcance de identidad previsto
+Authorization Code + PKCE, state y nonce, transacción temporal de un uso, validación criptográfica JWT con JWKS Google y comprobación iss/aud/exp/nonce. Sesión aleatoria revocable en cookie Secure/HttpOnly/SameSite, token solo hash en D1, expiración y control Origin para escrituras con cookie. Vinculación del acceso dev actual solo por acción explícita autenticada; no fusionar cuentas por coincidencia de email. Conservar accesos dev existentes para no perder datos.
+
+Un Google ya vinculado a otra cuenta no se fusiona automáticamente con el acceso dev. Recuperación desde el proveedor no acredita pertenencia a una operadora. No certificar login real hasta completar el callback con un usuario autorizado y credenciales reales.
+
+## Apple
+La opción es **Iniciar sesión con Apple**. Comparte el mismo modelo de identidad/memberships, pero necesita su propia configuración Apple Developer (Services ID, dominio/return URL y clave privada de firma). No mostrar un botón funcional ni afirmar integración hasta configurarlo y probarlo. Google es el primer proveedor solicitado; Apple queda posterior.
+
+## Límites
+PWA es instalación web; no se publica en App Store/Play Store. Instalación nativa/cámara en hardware físico y operación comercial siguen pendientes. Identidad real no activa pagos ni suscripciones comerciales. La autoaprobación de operadoras continúa limitada al entorno de desarrollo.
+
+## Estado comprobado de esta entrega
+2026-11-17: /standard-api/auth/config devuelve google=false, missingGoogleConfiguration=[GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET], apple=false. Implementación A1 desplegada y controles locales/cookie dev verificados; callback con cuenta real Google pendiente. Después de configurar ambas variables, comprobar google=true y realizar login real/vinculación con cuenta autorizada antes de declararlo disponible. No configurar Apple sin su integración/configuración separada.
+
+## Entrada administrativa de plataforma (G1)
+Se añade rutasec-admin-dev.drbrownlabs.workers.dev como fachada independiente sobre la misma identidad. En el mismo cliente Google web agregar origen https://rutasec-admin-dev.drbrownlabs.workers.dev y redirect exacto https://rutasec-admin-dev.drbrownlabs.workers.dev/platform-api/auth/google/callback, conservando ambos valores de la aplicación pública. Las cookies quedan separadas por host; Google identifica al mismo user_id. Platform ACL separado y sin concesión automática por OAuth/roles de operadora. Ver PLATFORM_ADMIN.md.
