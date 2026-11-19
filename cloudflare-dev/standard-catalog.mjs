@@ -37,5 +37,9 @@ export async function catalog(request,env,{rows,failure}) {
     r.price_cents AS priceCents,o.display_name AS operatorName,r.pickup_point AS pickupPoint,r.dropoff_point AS dropoffPoint,v.id AS vehicleId,v.model AS vehicle,v.type AS vehicleType,v.capacity,rv.duration_minutes AS durationMinutes
     FROM route_offers r JOIN operators o ON o.id=r.operator_id JOIN standard_route_vehicles rv ON rv.offer_id=r.id JOIN vehicles v ON v.id=rv.vehicle_id
     WHERE ${common} AND v.capacity>=? ORDER BY r.id LIMIT 200`,[...args,people]);
-  return {departures:departures.map(({reservedSeatsJson,...d})=>({...d,reservedSeats:JSON.parse(reservedSeatsJson||'[]')})),routeOffers,environment:'development',payments:'simulated',timeZone:'America/Guayaquil'};
+  const ids=[...new Set([...departures,...routeOffers].map(x=>x.operatorId))];
+  const summaries=ids.length?await rows(env.DB,"SELECT operator_id,COUNT(*) AS count,AVG(rating) AS average FROM standard_reviews WHERE status='visible' AND operator_id IN(SELECT value FROM json_each(?)) GROUP BY operator_id",[JSON.stringify(ids)]):[];
+  const reputations=new Map(summaries.map(r=>[r.operator_id,r]));
+  const decorate=item=>({...item,profileUrl:'/miniapp/?operator='+item.operatorId,ratingCount:reputations.get(item.operatorId)?.count||0,ratingAverage:reputations.get(item.operatorId)?.average??null});
+  return {departures:departures.map(({reservedSeatsJson,...d})=>decorate({...d,reservedSeats:JSON.parse(reservedSeatsJson||'[]')})),routeOffers:routeOffers.map(decorate),environment:'development',payments:'simulated',timeZone:'America/Guayaquil'};
 }

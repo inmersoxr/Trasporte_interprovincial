@@ -1,3 +1,5 @@
+import {handleReviews} from './standard-reviews.mjs';
+import {handlePublicProfile} from './standard-public-profile.mjs';
 import {cookie,COOKIE,requireOrigin} from './identity.mjs';
 import {publicMiniapp} from './premium-profiles.mjs';
 // Development identities use random bearer capabilities, stored hashed in D1.
@@ -75,8 +77,9 @@ export async function command(db, user, body, kind, operations, entityId) {
 export async function handleStandard(request, env) {
   const path = new URL(request.url).pathname, method = request.method;
   const authenticate = request => verifiedIdentity(request, env);
+  if(path.startsWith('/api/reviews')||path.startsWith('/api/operator-reviews/'))return handleReviews(request,env,{identity:authenticate,stmt,rows,failure,command,integer,text,hash});
   if(path==='/api/me'&&method==='GET'){const user=await authenticate(request);return stmt(env.DB,'SELECT id,display_name FROM users WHERE id=?',[user.id]).first();}
-  if(path.startsWith('/api/miniapps/'))return publicMiniapp(request,env,{stmt,failure});
+  if(path.startsWith('/api/miniapps/'))return publicMiniapp(request,env,{stmt,rows,failure});
   if (path === '/api/catalog' && method === 'GET') {
     return catalog(request,env,{rows,failure});
   }
@@ -88,6 +91,7 @@ export async function handleStandard(request, env) {
     return { token, userId: id, authentication: 'development-capability' };
   }
   if(['/api/operator-onboarding','/api/operator-profile','/api/operator-drivers','/api/vehicle-details','/api/operator-documents','/api/operator-submit'].includes(path)||path.startsWith('/api/operator-documents/'))return handleOnboarding(request,env,{identity:authenticate,owner,stmt,rows,failure,command,integer,text,hash});
+  if(['/api/operator-public-profile','/api/operator-public-media'].includes(path)||path.startsWith('/api/operator-public-media/'))return handlePublicProfile(request,env,{identity:authenticate,stmt,rows,failure,text,integer,hash});
   if(path==='/api/premium'||path.startsWith('/api/premium/'))return handlePremium(request,env,{identity:authenticate,owner,stmt,rows,failure,command,integer,text,hash});
   if(path==='/api/recurring-schedules'||path.startsWith('/api/recurring-schedules/'))return handleRecurring(request,env,{identity:authenticate,owner,stmt,rows,failure,command,hash});
   if(path.startsWith('/api/bookings')||path==='/api/private-route-bookings')return handleReservations(request,env,{identity:authenticate,stmt,rows,failure,command,integer,text});

@@ -12,3 +12,5 @@
 .standard-shell button:focus-visible,.standard-shell a:focus-visible{outline:3px solid #f2ce45;outline-offset:3px}
 .standard-shell .operator-context{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px}.standard-shell .operator-context select{grid-column:1;margin:0}.standard-shell .operator-context button{grid-column:2;grid-row:2;margin:0;min-width:44px;font-size:22px;border:1px solid #47505e;background:#29313b;color:#f2ce45}.standard-shell #operatorSection-account>button,.standard-shell #operatorSection-account>a{display:block;margin:14px 0}
 .standard-shell .passenger-navigation button[aria-current=page]{color:#f2ce45;background:#f2ce4515;font-weight:700}
+
+.standard-shell .profile-preview{display:block;width:100%;max-width:240px;max-height:160px;object-fit:contain;background:#202730;border-radius:12px;margin:10px 0}

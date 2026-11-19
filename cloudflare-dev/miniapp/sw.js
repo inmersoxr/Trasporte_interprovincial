@@ -1,5 +1,5 @@
 const CACHE='rutasec-miniapp-dev-__BUILD_REVISION__';
-const CORE=["./", "./index.html", "./app.mjs", "../premium/premium.css", "../assets/icon-192.png", "../assets/icon-512.png"];
+const CORE=["./", "./index.html", "./app.mjs", "./profile.css", "../account/session.mjs", "../assets/icon-192.png", "../assets/icon-512.png"];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('rutasec-miniapp-dev-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{
