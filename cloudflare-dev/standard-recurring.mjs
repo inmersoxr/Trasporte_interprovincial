@@ -102,8 +102,8 @@ export async function handleRecurring(request, env, core) {
   if (item === 'preview') return {preview:{...plan,count:plan.departures.length,origin:offer.origin,destination:offer.destination,vehicle:offer.model,capacity:offer.capacity,priceCents:offer.price_cents}};
 
   const id = crypto.randomUUID();
-  const operations = [stmt(db,`INSERT INTO standard_recurring_schedules(id,operator_id,offer_id,vehicle_id,timezone,start_date,end_date,weekdays_json,times_json,duration_minutes)
-    VALUES(?,?,?,?,?,?,?,?,?,?)`,[id,body.operatorId,offer.id,offer.vehicle_id,plan.timezone,plan.startDate,plan.endDate,JSON.stringify(plan.weekdays),JSON.stringify(plan.times),plan.durationMinutes])];
+  const operations = [stmt(db,`INSERT INTO standard_recurring_schedules(id,operator_id,offer_id,vehicle_id,timezone,start_date,end_date,weekdays_json,times_json,duration_minutes,auto_renew)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?)`,[id,body.operatorId,offer.id,offer.vehicle_id,plan.timezone,plan.startDate,plan.endDate,JSON.stringify(plan.weekdays),JSON.stringify(plan.times),plan.durationMinutes,body.autoRenew===true?1:0])];
   // Bounded chunks stay below D1's parameter limit and use a single atomic batch.
   for (let offset=0; offset<plan.departures.length; offset+=12) {
     const chunk = plan.departures.slice(offset,offset+12).map(d=>({...d,id:crypto.randomUUID(),slotId:crypto.randomUUID()}));
@@ -115,4 +115,23 @@ export async function handleRecurring(request, env, core) {
     if (/schedule_unavailable|idx_standard_recurring_occurrence/.test(error.message)) throw failure('La programación cambió; actualiza y vuelve a intentarlo',409);
     throw error;
   }
+}
+
+// Rolling schedules are opt-in. Keep seven future days, never remove reservations.
+export async function renewSchedules(env,now=Date.now()){
+ const db=env.DB,today=new Date(now-5*3600000).toISOString().slice(0,10),end=new Date(now-5*3600000+7*86400000).toISOString().slice(0,10);
+ const schedules=(await db.prepare("SELECT * FROM standard_recurring_schedules WHERE auto_renew=1 AND status='active' AND end_date<? ORDER BY end_date,id LIMIT 1").bind(end).all()).results;let renewed=0,failed=0;
+ for(const s of schedules){try{
+  const tomorrow=new Date(now-5*3600000+86400000).toISOString().slice(0,10),plan=planSchedule({startDate:s.start_date>tomorrow?s.start_date:tomorrow,endDate:end,weekdays:JSON.parse(s.weekdays_json),times:JSON.parse(s.times_json),durationMinutes:s.duration_minutes},now),ops=[db.prepare("UPDATE standard_recurring_schedules SET end_date=?,renewal_error='' WHERE id=? AND status='active' AND auto_renew=1").bind(end,s.id)];
+  for(let offset=0;offset<plan.departures.length;offset+=12){
+   const chunk=plan.departures.slice(offset,offset+12).map(d=>({...d,id:crypto.randomUUID(),slotId:crypto.randomUUID()}));
+   ops.push(db.prepare('INSERT OR IGNORE INTO departures(id,offer_id,vehicle_id,depart_at,schedule_id) VALUES '+chunk.map(()=>'(?,?,?,?,?)').join(',')).bind(...chunk.flatMap(d=>[d.id,s.offer_id,s.vehicle_id,d.departAt,s.id])));
+   const slots=JSON.stringify(chunk.map(d=>({id:d.slotId,vehicleId:s.vehicle_id,startsAt:d.startsAt,endsAt:d.endsAt,departureId:d.id})));
+   ops.push(db.prepare("INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,departure_id) SELECT json_extract(x.value,'$.id'),json_extract(x.value,'$.vehicleId'),json_extract(x.value,'$.startsAt'),json_extract(x.value,'$.endsAt'),json_extract(x.value,'$.departureId') FROM json_each(?) x JOIN departures d ON d.id=json_extract(x.value,'$.departureId')").bind(slots));
+
+  }
+
+  await db.batch(ops);renewed++;
+ }catch{failed++;await db.prepare("UPDATE standard_recurring_schedules SET renewal_error='No se pudo renovar. Revisa la habilitación y los cruces del calendario.' WHERE id=? AND status='active'").bind(s.id).run();}}
+ return{renewed,failed};
 }

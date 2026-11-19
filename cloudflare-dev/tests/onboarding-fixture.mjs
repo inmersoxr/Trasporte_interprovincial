@@ -4,7 +4,7 @@ export async function seedReviewedOperator(db,operatorId,vehicleId){
  const owner=await db.prepare("SELECT user_id FROM memberships WHERE operator_id=? AND role='owner'").bind(operatorId).first();
  const driver=crypto.randomUUID(),token=crypto.randomUUID(),plate='TST'+crypto.randomUUID().replaceAll('-','').slice(0,8).toUpperCase();
  await db.batch([
-  db.prepare(`INSERT INTO standard_operator_profiles(operator_id,kind,responsible_name,phone,contact_email,base_city,address,last_request,fingerprint,last_nonce) VALUES(?,'individual','Persona de prueba','+593990000000','fixture@example.com','Cuenca','Dirección de prueba',?,'fixture',?)`).bind(operatorId,token,token),
+  db.prepare(`INSERT OR IGNORE INTO standard_operator_profiles(operator_id,kind,responsible_name,phone,contact_email,base_city,address,last_request,fingerprint,last_nonce) VALUES(?,'individual','Persona de prueba','+593990000000','fixture@example.com','Cuenca','Dirección de prueba',?,'fixture',?)`).bind(operatorId,token,token),
   db.prepare(`INSERT INTO standard_drivers(id,operator_id,full_name,phone,identity_number,license_number,license_category,license_expires_on,last_request,fingerprint,last_nonce) VALUES(?,?,'Conductor de prueba','+593990000000','fixture',?,'AB','2099-12-31',?,'fixture',?)`).bind(driver,operatorId,driver,token,token),
   db.prepare(`INSERT INTO standard_vehicle_details(vehicle_id,driver_id,brand,year,color,last_request,fingerprint,last_nonce) VALUES(?,?,'Marca de prueba',2024,'Blanco',?,'fixture',?)`).bind(vehicleId,driver,token,token),
   db.prepare("UPDATE vehicles SET plate=?,status='active' WHERE id=?").bind(plate,vehicleId)

@@ -31,6 +31,6 @@ test('Alpha boarding binds ticket to its service/time and records once; ordinary
   assert.equal(ownView.data.permissions.control,true);assert.equal(passengerView.data.permissions.passenger,true);
   const anonymous=await r.mf.dispatchFetch(APP_ORIGIN+'/api'+path);assert.equal((await anonymous.json()).permissions.control,false);
   const stale=await r.mf.dispatchFetch(APP_ORIGIN+'/api'+path,{headers:{Cookie:COOKIE+'='+'a'.repeat(64)}});assert.equal(stale.status,200);assert.equal((await stale.json()).permissions.control,false);
-  const sos=await passenger.call(path+'/commands',{action:'sos',expectedRevision:passengerView.data.trip.revision});assert.equal(sos.status,200);assert.equal(sos.data.trip.alerts[0].simulated,true);
+  const sos=await passenger.call(path+'/commands',{action:'sos',expectedRevision:passengerView.data.trip.revision});assert.equal(passengerView.data.source,'operations');assert.equal(passengerView.data.snapshot,null);assert.equal(sos.status,409);
  }finally{await r.mf.dispose();}
 });

@@ -19,7 +19,7 @@ export async function refresh(){
  const operatorId=$('operator').value;if(!operatorId){status('Crea primero una operadora y vehículos en Standard.');return;}
  const data=await api('/premium?operatorId='+encodeURIComponent(operatorId));
  $('activation').hidden=data.enabled;$('workspace').hidden=!data.enabled;
- if(!data.enabled){status('Premium aún no está habilitado para esta operadora.');return;}
+ if(!data.enabled){$('activate').hidden=!data.canActivate;status(data.notice||'Premium aún no está habilitado para esta operadora.');return;}
  renderTeam(data);await renderBusiness(data);await renderFinance(data);await renderBranding(data);
  const canManage=['owner','admin'].includes(data.role);$('maintenance').hidden=!canManage;
  $('fleet').replaceChildren();$('jobs').replaceChildren();const select=$('maintenance').elements.vehicleId;select.replaceChildren();
@@ -32,7 +32,7 @@ export async function refresh(){
  }
  for(const job of data.maintenance){const card=node('div','');card.className='card';card.append(node('h3',job.summary),node('p',(data.vehicles.find(v=>v.id===job.vehicle_id)?.model||'Vehículo')+' · '+new Date(job.starts_at).toLocaleString()+' — '+new Date(job.ends_at).toLocaleString()),node('p',({open:'Programado',completed:'Completado',cancelled:'Cancelado'})[job.status]+' · Costo estimado USD '+(job.estimated_cost_cents/100).toFixed(2)));
   if(canManage&&job.status==='open')for(const [state,label] of [['completed','Completar y liberar horario'],['cancelled','Cancelar mantenimiento']]){const button=node('button',label);button.onclick=()=>run(async()=>{await post('/premium/maintenance/'+job.id,{status:state});await refresh();status('Mantenimiento actualizado.');});card.append(button);}$('jobs').append(card);}
- status('Datos persistidos en D1 · Premium de desarrollo.');
+ status('Gestión actualizada · pagos reales deshabilitados.');
 }
 $('activate').onclick=()=>run(async()=>{await post('/premium/activate',{});await refresh();});
 $('refresh').onclick=()=>run(refresh);$('operator').onchange=()=>run(async()=>{history.replaceState(null,'','?operator='+encodeURIComponent($('operator').value));$('workspace').hidden=true;$('activation').hidden=true;await refresh();});

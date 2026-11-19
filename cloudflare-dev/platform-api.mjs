@@ -9,6 +9,7 @@ export async function handlePlatform(request,env,c){const {identity,stmt,rows,fa
  const admin=await stmt(db,'SELECT role FROM platform_admins WHERE user_id=?',[user.id]).first();if(!admin)throw failure('Acceso exclusivo para administración de RutasEC',403);
  const document=path.match(/^\/api\/platform\/documents\/([0-9a-f-]{36})$/i);
  if(document&&request.method==='GET')return readDocument(request,env,user,document[1],{...c,owner},true);
+ if(path==='/api/platform/system-health'&&request.method==='GET')return{jobs:await rows(db,'SELECT * FROM standard_background_jobs ORDER BY job'),pendingNotifications:(await stmt(db,'SELECT COUNT(*) n FROM standard_notifications WHERE push_sent_at IS NULL AND read_at IS NULL').first()).n,failedNotifications:(await stmt(db,'SELECT COUNT(*) n FROM standard_notifications WHERE push_sent_at IS NULL AND read_at IS NULL AND attempts>=4').first()).n,pushConfigured:!!(env.VAPID_PUBLIC_KEY&&env.VAPID_PRIVATE_KEY),payments:'simulated'};
  if(path==='/api/platform/me'&&request.method==='GET')return{userId:user.id,role:admin.role,environment:'development',payments:'manual-records-only'};
  if(path==='/api/platform/operators'&&request.method==='GET'){
   const q=url.searchParams.get('q')||'',cursor=url.searchParams.get('cursor')||'';if(q.length>120||cursor&&!uuid(cursor))throw failure('Filtro no válido');
@@ -40,7 +41,7 @@ export async function handlePlatform(request,env,c){const {identity,stmt,rows,fa
   const result=await db.batch([stmt(db,`INSERT INTO platform_subscriptions(operator_id,plan,status,fee_cents,next_due_on,cycle_months,notes,revision,last_request,fingerprint)
    SELECT ?,?,?,?,?,?,?,1,?,? WHERE (?=0 OR EXISTS(SELECT 1 FROM platform_subscriptions WHERE operator_id=?))
    ON CONFLICT(operator_id) DO UPDATE SET plan=excluded.plan,status=excluded.status,fee_cents=excluded.fee_cents,next_due_on=excluded.next_due_on,cycle_months=excluded.cycle_months,notes=excluded.notes,revision=platform_subscriptions.revision+1,last_request=excluded.last_request,fingerprint=excluded.fingerprint,updated_at=CURRENT_TIMESTAMP WHERE platform_subscriptions.revision=?`,[operatorId,body.plan,body.status,fee,due,cycle,body.notes.trim(),body.requestId,fingerprint,revision,operatorId,revision]),stmt(db,"INSERT OR IGNORE INTO audit_events(id,actor_user_id,entity_type,entity_id,action) SELECT ?,?,'platform_subscription',operator_id,'configured' FROM platform_subscriptions WHERE operator_id=? AND last_request=?",[operatorId+':'+body.requestId,user.id,operatorId,body.requestId])]);
-  if(result[0].meta.changes!==1)throw failure('La suscripción cambió; actualiza antes de guardar',409);return{revision:revision+1,referenceOnly:true};
+  if(result[0].meta.changes<1)throw failure('La suscripción cambió; actualiza antes de guardar',409);return{revision:revision+1,referenceOnly:false};
  }
  if(path==='/api/platform/invoices'){
   const start=date(body.periodStart,'Inicio',failure),end=date(body.periodEnd,'Fin',failure),due=date(body.dueOn,'Vencimiento',failure);if(end<start)throw failure('Período no válido');

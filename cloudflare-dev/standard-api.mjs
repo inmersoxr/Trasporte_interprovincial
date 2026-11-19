@@ -1,3 +1,7 @@
+import {serviceChanges} from './standard-changes.mjs';
+import {manage,role} from './standard-permissions.mjs';
+import {notifications} from './standard-notifications.mjs';
+import {customSettings} from './standard-custom-settings.mjs';
 import {handleReviews} from './standard-reviews.mjs';
 import {handlePublicProfile} from './standard-public-profile.mjs';
 import {cookie,COOKIE,requireOrigin} from './identity.mjs';
@@ -77,6 +81,9 @@ export async function command(db, user, body, kind, operations, entityId) {
 export async function handleStandard(request, env) {
   const path = new URL(request.url).pathname, method = request.method;
   const authenticate = request => verifiedIdentity(request, env);
+  if(['/api/route-change','/api/departure-change','/api/booking-change','/api/private-service-change'].includes(path))return serviceChanges(request,env,{identity:authenticate,stmt,rows,failure,integer,text,command});
+  if(path.startsWith('/api/notifications'))return notifications(request,env,{identity:authenticate,stmt,rows,failure});
+  if(path==='/api/custom-settings')return customSettings(request,env,{identity:authenticate,stmt,rows,failure,command});
   if(path.startsWith('/api/reviews')||path.startsWith('/api/operator-reviews/'))return handleReviews(request,env,{identity:authenticate,stmt,rows,failure,command,integer,text,hash});
   if(path==='/api/me'&&method==='GET'){const user=await authenticate(request);return stmt(env.DB,'SELECT id,display_name FROM users WHERE id=?',[user.id]).first();}
   if(path.startsWith('/api/miniapps/'))return publicMiniapp(request,env,{stmt,rows,failure});
@@ -90,23 +97,25 @@ export async function handleStandard(request, env) {
       stmt(env.DB, 'INSERT INTO standard_sessions(token_hash,user_id) VALUES(?,?)', [await hash(token), id])]);
     return { token, userId: id, authentication: 'development-capability' };
   }
-  if(['/api/operator-onboarding','/api/operator-profile','/api/operator-drivers','/api/vehicle-details','/api/operator-documents','/api/operator-submit'].includes(path)||path.startsWith('/api/operator-documents/'))return handleOnboarding(request,env,{identity:authenticate,owner,stmt,rows,failure,command,integer,text,hash});
+  if(['/api/operator-onboarding','/api/operator-profile','/api/operator-drivers','/api/vehicle-details','/api/operator-documents','/api/operator-submit'].includes(path)||path.startsWith('/api/operator-documents/'))return handleOnboarding(request,env,{identity:authenticate,owner:(db,u,o)=>manage(db,u,o,failure),stmt,rows,failure,command,integer,text,hash});
   if(['/api/operator-public-profile','/api/operator-public-media'].includes(path)||path.startsWith('/api/operator-public-media/'))return handlePublicProfile(request,env,{identity:authenticate,stmt,rows,failure,text,integer,hash});
   if(path==='/api/premium'||path.startsWith('/api/premium/'))return handlePremium(request,env,{identity:authenticate,owner,stmt,rows,failure,command,integer,text,hash});
-  if(path==='/api/recurring-schedules'||path.startsWith('/api/recurring-schedules/'))return handleRecurring(request,env,{identity:authenticate,owner,stmt,rows,failure,command,hash});
+  if(path==='/api/recurring-schedules'||path.startsWith('/api/recurring-schedules/'))return handleRecurring(request,env,{identity:authenticate,owner:(db,u,o)=>role(db,u,o,failure).then(r=>{if(!['owner','admin','dispatcher'].includes(r))throw failure('Sin permiso para programar viajes',403);}),stmt,rows,failure,command,hash});
   if(path.startsWith('/api/bookings')||path==='/api/private-route-bookings')return handleReservations(request,env,{identity:authenticate,stmt,rows,failure,command,integer,text});
-  if(path.startsWith('/api/private-requests')||path.startsWith('/api/private-offers')||path==='/api/private-market')return handleMarket(request,env,{identity:authenticate,stmt,rows,failure,owner,command,integer,text});
+  if(path.startsWith('/api/private-requests')||path.startsWith('/api/private-offers')||path==='/api/private-market')return handleMarket(request,env,{identity:authenticate,stmt,rows,failure,owner:(db,u,o)=>{return role(db,u,o,failure).then(r=>{if(!['owner','admin','dispatcher'].includes(r))throw failure('Sin permiso para cotizar',403);});},command,integer,text});
   if(path==='/api/operations'||path.startsWith('/api/operations/')||path.startsWith('/api/trips/'))return handleOperations(request,env,{identity:authenticate,stmt,rows,owner,failure,integer,
    cancelBooking:id=>handleReservations(new Request(new URL('/api/bookings/'+id,request.url),{method:'POST',headers:request.headers,body:JSON.stringify({action:'cancel'})}),env,{identity:authenticate,stmt,rows,failure,command,integer,text}),
-   cancelCustom:id=>handleMarket(new Request(new URL('/api/private-requests/'+id,request.url),{method:'POST',headers:request.headers,body:JSON.stringify({action:'cancel'})}),env,{identity:authenticate,stmt,rows,failure,owner,command,integer,text})});
+   cancelCustom:id=>handleMarket(new Request(new URL('/api/private-requests/'+id,request.url),{method:'POST',headers:request.headers,body:JSON.stringify({action:'cancel'})}),env,{identity:authenticate,stmt,rows,failure,owner:(db,u,o)=>{return role(db,u,o,failure).then(r=>{if(!['owner','admin','dispatcher'].includes(r))throw failure('Sin permiso para cotizar',403);});},command,integer,text})});
   if (!['/api/operator', '/api/operators', '/api/vehicles', '/api/route-offers', '/api/departures'].includes(path)) return null;
   const user = await authenticate(request);
   if (path === '/api/operator' && method === 'GET') {
-    const operators = await rows(env.DB, "SELECT o.* FROM operators o JOIN memberships m ON m.operator_id=o.id WHERE m.user_id=? AND m.role='owner'", [user.id]);
-    const owned = `SELECT operator_id FROM memberships WHERE user_id=? AND role='owner'`;
-    return { operators, vehicles: await rows(env.DB, `SELECT * FROM vehicles WHERE operator_id IN (${owned})`, [user.id]),
+    const operators = await rows(env.DB, "SELECT o.*,m.role AS memberRole FROM operators o JOIN memberships m ON m.operator_id=o.id WHERE m.user_id=?", [user.id]);
+    const owned = `SELECT operator_id FROM memberships WHERE user_id=?`;
+    const vehicleScope=` AND (EXISTS(SELECT 1 FROM memberships m WHERE m.operator_id=vehicles.operator_id AND m.user_id=? AND m.role<>'driver') OR id IN(SELECT vehicle_id FROM premium_assignments WHERE driver_user_id=?))`;
+    const dashboard={ operators, vehicles: await rows(env.DB, `SELECT * FROM vehicles WHERE operator_id IN (${owned})${vehicleScope}`, [user.id,user.id,user.id]),
       routeOffers: await rows(env.DB, `SELECT r.*,rv.vehicle_id FROM route_offers r JOIN standard_route_vehicles rv ON rv.offer_id=r.id WHERE r.operator_id IN (${owned})`, [user.id]),
       departures: await rows(env.DB, `SELECT d.* FROM departures d JOIN route_offers r ON r.id=d.offer_id WHERE r.operator_id IN (${owned}) ORDER BY depart_at`, [user.id]) };
+    const vehicleIds=new Set(dashboard.vehicles.map(v=>v.id));dashboard.routeOffers=dashboard.routeOffers.filter(r=>vehicleIds.has(r.vehicle_id));dashboard.departures=dashboard.departures.filter(d=>vehicleIds.has(d.vehicle_id));return dashboard;
   }
   if (method !== 'POST') throw failure('Método no permitido', 405);
   if (Number(request.headers.get('Content-Length') || 0) > 16384) throw failure('Solicitud demasiado grande', 413);
@@ -120,7 +129,7 @@ export async function handleStandard(request, env) {
       stmt(env.DB, "INSERT INTO operators(id,legal_name,display_name,status,data_scope) VALUES(?,?,?,?,?)", [id, name, name,env.ALLOW_DEVELOPMENT_AUTH==='true'?'approved':'pending',env.ALLOW_DEVELOPMENT_AUTH==='true'?'qa':'alpha']),
       stmt(env.DB, "INSERT INTO memberships(user_id,operator_id,role) VALUES(?,?,'owner')", [user.id, id])], id);
   } else {
-    await owner(env.DB, user.id, body.operatorId);
+    if(path==='/api/departures'){if(!['owner','admin','dispatcher'].includes(await role(env.DB,user.id,body.operatorId,failure)))throw failure('Sin permiso para publicar salidas',403);}else await manage(env.DB, user.id, body.operatorId,failure);
     if (path === '/api/vehicles') {
       if (!['auto','suv','van','minivan'].includes(body.type)) throw failure('Tipo de vehículo no válido');
       saved = await command(env.DB, user, body, 'vehicle', [stmt(env.DB, 'INSERT INTO vehicles(id,operator_id,type,model,capacity,status) VALUES(?,?,?,?,?,?)',

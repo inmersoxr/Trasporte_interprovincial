@@ -1,3 +1,4 @@
+import {commercialPremium} from './standard-permissions.mjs';
 import {handlePassword,mailReady} from './password-auth.mjs';
 import {returnPath} from './account/return-path.mjs';
 import {contactPhone} from './standard-contact.mjs';
@@ -35,7 +36,7 @@ export async function handleAuth(request,env,c,network=fetch){const {identity,st
  }
  const origin=url.origin===ADMIN_ORIGIN?ADMIN_ORIGIN:APP_ORIGIN,adminOrigin=origin===ADMIN_ORIGIN;
  const configured=!!(env.GOOGLE_CLIENT_ID&&env.GOOGLE_CLIENT_SECRET),callback=origin+(adminOrigin?'/platform-api':'/standard-api')+'/auth/google/callback';
- if(path==='/auth/config'&&request.method==='GET')return response({google:configured,email:mailReady(env),emailMissing:[...(!env.AUTH_EMAIL_FROM?['AUTH_EMAIL_FROM']:[]),...(!env.AUTH_EMAIL?.send&&!env.RESEND_API_KEY?['AUTH_EMAIL binding or RESEND_API_KEY']:[])],missingGoogleConfiguration:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET'].filter(name=>!env[name]),apple:false,environment:'development'});
+ if(path==='/auth/config'&&request.method==='GET')return response({google:configured,email:mailReady(env),emailMissing:[...(!env.AUTH_EMAIL_FROM?['AUTH_EMAIL_FROM']:[]),...(!env.AUTH_EMAIL?.send&&!env.RESEND_API_KEY?['AUTH_EMAIL binding or RESEND_API_KEY']:[])],missingGoogleConfiguration:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET'].filter(name=>!env[name]),push:!!(env.VAPID_PUBLIC_KEY&&env.VAPID_PRIVATE_KEY),apple:false,environment:'development'});
  if(path==='/auth/session'&&request.method==='GET'){
   const developmentAuth=env.ALLOW_DEVELOPMENT_AUTH==='true';
   if(!cookie(request,COOKIE))return response({authenticated:false,developmentAuth});
@@ -44,7 +45,7 @@ export async function handleAuth(request,env,c,network=fetch){const {identity,st
    (SELECT phone FROM standard_passenger_profiles WHERE user_id=u.id) AS phone,
    a.user_id IS NOT NULL AS hasPassword FROM users u LEFT JOIN auth_email_accounts a ON a.user_id=u.id WHERE u.id=?`,[user.id]).first();
    profile.providers=(await rows(db,'SELECT provider FROM auth_identities WHERE user_id=?',[user.id])).map(row=>row.provider);
-   return response({authenticated:true,developmentAuth,user:profile,platformRole:(await stmt(db,'SELECT role FROM platform_admins WHERE user_id=?',[user.id]).first())?.role||null,operators:await rows(db,'SELECT o.id,o.display_name,m.role,COALESCE(t.active,0) AS premiumActive FROM memberships m JOIN operators o ON o.id=m.operator_id LEFT JOIN premium_tenants t ON t.operator_id=o.id WHERE m.user_id=?',[user.id])});}catch{return response({authenticated:false,developmentAuth});}
+   return response({authenticated:true,developmentAuth,user:profile,platformRole:(await stmt(db,'SELECT role FROM platform_admins WHERE user_id=?',[user.id]).first())?.role||null,operators:await rows(db,`SELECT o.id,o.display_name,m.role,(COALESCE(t.active,0)=1 AND (o.data_scope='qa' OR ${commercialPremium})) AS premiumActive FROM memberships m JOIN operators o ON o.id=m.operator_id LEFT JOIN premium_tenants t ON t.operator_id=o.id WHERE m.user_id=?`,[user.id])});}catch{return response({authenticated:false,developmentAuth});}
  }
  if(path==='/auth/logout'&&request.method==='POST'){requireOrigin(request,failure);const token=cookie(request,COOKIE);if(token)await stmt(db,'DELETE FROM standard_sessions WHERE token_hash=?',[await hash(token)]).run();const r=response({signedOut:true});r.headers.append('Set-Cookie',setCookie(COOKIE,'',0));return r;}
  if(path==='/auth/google/start'&&['GET','POST'].includes(request.method)){

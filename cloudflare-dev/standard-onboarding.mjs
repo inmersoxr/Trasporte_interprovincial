@@ -31,7 +31,7 @@ export async function onboardingData(db,operatorId,c){
  const {stmt,rows}=c,operator=await stmt(db,'SELECT id,display_name,legal_name,tax_id,status,data_scope FROM operators WHERE id=?',[operatorId]).first();
  if(!operator)throw c.failure('Operadora no encontrada',404);
  const profile=await stmt(db,'SELECT * FROM standard_operator_profiles WHERE operator_id=?',[operatorId]).first();
- const result={operator,profile,drivers:await rows(db,'SELECT * FROM standard_drivers WHERE operator_id=? ORDER BY full_name',[operatorId]),
+ const result={operator,profile,driverAccounts:await rows(db,"SELECT u.id,u.display_name FROM users u JOIN memberships m ON m.user_id=u.id WHERE m.operator_id=? AND m.role='driver'",[operatorId]),drivers:await rows(db,'SELECT * FROM standard_drivers WHERE operator_id=? ORDER BY full_name',[operatorId]),
   vehicles:await rows(db,'SELECT v.*,x.driver_id,x.brand,x.year,x.color,x.revision FROM vehicles v LEFT JOIN standard_vehicle_details x ON x.vehicle_id=v.id WHERE v.operator_id=? ORDER BY v.created_at',[operatorId]),
   documents:await rows(db,'SELECT id,kind,subject_type,subject_id,filename,content_type,size,expires_on,created_at FROM standard_operator_documents WHERE operator_id=? ORDER BY created_at DESC,id',[operatorId]),
   requiredDocuments:documentKinds,documented:!!await stmt(db,'SELECT 1 FROM standard_documented_operators WHERE operator_id=?',[operatorId]).first(),policy:'pilot-manual-review'};
@@ -145,10 +145,11 @@ export async function handleOnboarding(request,env,c){
  if(path==='/api/operator-drivers'){
   const id=body.id||crypto.randomUUID(),revision=integer(body.expectedRevision??0,0,10000000,'Revisión');if(!uuid(id))throw failure('Conductor no válido');
   if(body.id&&!await stmt(db,'SELECT 1 FROM standard_drivers WHERE id=? AND operator_id=?',[id,op]).first())throw failure('Conductor de otra operadora',403);
-  const values=[id,op,text(body.fullName,'Nombre del conductor'),phone(body.phone,failure),text(body.identityNumber,'Identificación',30),text(body.licenseNumber,'Licencia',30),text(body.licenseCategory,'Categoría de licencia',10),validDate(body.licenseExpiresOn,failure),body.requestId,fingerprint,nonce];
-  return saveVersioned(db,user,body,kind,id,'standard_drivers','id',stmt(db,`INSERT INTO standard_drivers(id,operator_id,full_name,phone,identity_number,license_number,license_category,license_expires_on,last_request,fingerprint,last_nonce)
-   SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE ?=0 OR EXISTS(SELECT 1 FROM standard_drivers WHERE id=?)
-   ON CONFLICT(id) DO UPDATE SET full_name=excluded.full_name,phone=excluded.phone,identity_number=excluded.identity_number,license_number=excluded.license_number,license_category=excluded.license_category,license_expires_on=excluded.license_expires_on,
+  if(body.userId&&!await stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role='driver'",[body.userId,op]).first())throw failure('Cuenta de conductor ajena o sin permiso',403);
+  const values=[id,op,text(body.fullName,'Nombre del conductor'),phone(body.phone,failure),text(body.identityNumber,'Identificación',30),text(body.licenseNumber,'Licencia',30),text(body.licenseCategory,'Categoría de licencia',10),validDate(body.licenseExpiresOn,failure),body.userId||null,body.requestId,fingerprint,nonce];
+  return saveVersioned(db,user,body,kind,id,'standard_drivers','id',stmt(db,`INSERT INTO standard_drivers(id,operator_id,full_name,phone,identity_number,license_number,license_category,license_expires_on,user_id,last_request,fingerprint,last_nonce)
+   SELECT ?,?,?,?,?,?,?,?,?,?,?,? WHERE ?=0 OR EXISTS(SELECT 1 FROM standard_drivers WHERE id=?)
+   ON CONFLICT(id) DO UPDATE SET full_name=excluded.full_name,phone=excluded.phone,identity_number=excluded.identity_number,license_number=excluded.license_number,license_category=excluded.license_category,license_expires_on=excluded.license_expires_on,user_id=excluded.user_id,
    revision=revision+1,last_request=excluded.last_request,fingerprint=excluded.fingerprint,last_nonce=excluded.last_nonce WHERE revision=?`,[...values,revision,id,revision]),nonce,(condition,args)=>invalidate(db,op,c,condition,args),c);
  }
  if(path==='/api/vehicle-details'){

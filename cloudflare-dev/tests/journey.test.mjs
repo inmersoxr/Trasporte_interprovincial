@@ -4,7 +4,7 @@ test('Alpha journey: contact and meeting snapshots, saved profile, private recei
  const r=await runtime({developmentAuth:false});try{
   const owner=await verifiedActor(r,'journey-owner'),buyer=await verifiedActor(r,'journey-buyer'),stranger=await verifiedActor(r,'journey-stranger');
   const op=(await owner.call('/operators',{name:'Operadora de prueba'})).data.id,vehicle=(await owner.call('/vehicles',{operatorId:op,type:'van',model:'Modelo original',capacity:30})).data.id;
-  await seedReviewedOperator(r.db,op,vehicle);
+  await seedReviewedOperator(r.db,op,vehicle);await owner.call('/custom-settings',{operatorId:op,enabled:true,available:true,origins:['Cuenca'],vehicleIds:[vehicle],expectedRevision:0});
   const offer=(await owner.call('/route-offers',{operatorId:op,vehicleId:vehicle,origin:'Cuenca',destination:'Guayaquil',serviceType:'shared',priceCents:1500,pickupPoint:'Encuentro original',dropoffPoint:'Llegada original'})).data.id;
   const departure=(await owner.call('/departures',{operatorId:op,offerId:offer,departAt:new Date(Date.now()+86400000).toISOString()})).data.id;
   const body={departureId:departure,seatNumbers:[1],passengers:['Pasajero real de prueba'],quotedPriceCents:1500};

@@ -6,7 +6,7 @@ const section = document.createElement('section'); section.id='recurringSchedule
 section.innerHTML=`<h2>Viajes recurrentes</h2><p>Publica tus horarios habituales para un periodo. Cada salida tiene sus propios asientos y reservas. Hora de Ecuador continental (UTC−5).</p>
 <form id="recurringForm"><label>Ruta compartida<select name="offerId" required></select></label>
 <label>Desde<input name="startDate" type="date" required></label><label>Hasta<input name="endDate" type="date" required></label>
-<fieldset><legend>Días de salida</legend>${[1,2,3,4,5,6,0].map(day=>`<label><input name="weekdays" type="checkbox" value="${day}" checked> ${dayNames[day]}</label>`).join('')}</fieldset>
+<label><input name="autoRenew" type="checkbox"> Mantener horarios activos: renovar automáticamente los próximos siete días hasta que los detenga</label><fieldset><legend>Días de salida</legend>${[1,2,3,4,5,6,0].map(day=>`<label><input name="weekdays" type="checkbox" value="${day}" checked> ${dayNames[day]}</label>`).join('')}</fieldset>
 <fieldset><legend>Horarios del mismo vehículo</legend><div id="recurringTimes"></div><button id="addRecurringTime" type="button">Añadir horario</button></fieldset>
 <label>Duración del recorrido (minutos)<input name="durationMinutes" type="number" min="1" max="2880" value="240" required></label>
 <p>El vehículo, precio y capacidad son los de la ruta. Hasta 90 días y 90 salidas por programación. Los horarios deben permitir que el vehículo complete cada recorrido.</p>
@@ -29,7 +29,7 @@ $('addRecurringTime').onclick=()=>{if($('recurringTimes').children.length<12)add
 form.addEventListener('input',clearPreview);
 function body(){
  const data=new FormData(form);
- return {operatorId:$('operatorSelect').value,offerId:data.get('offerId'),timezone:'America/Guayaquil',startDate:data.get('startDate'),endDate:data.get('endDate'),weekdays:data.getAll('weekdays').map(Number),times:data.getAll('times'),durationMinutes:Number(data.get('durationMinutes'))};
+ return {autoRenew:form.elements.autoRenew.checked,operatorId:$('operatorSelect').value,offerId:data.get('offerId'),timezone:'America/Guayaquil',startDate:data.get('startDate'),endDate:data.get('endDate'),weekdays:data.getAll('weekdays').map(Number),times:data.getAll('times'),durationMinutes:Number(data.get('durationMinutes'))};
 }
 function syncForm(){
  const old=form.elements.offerId.value;
@@ -66,7 +66,7 @@ async function load(){
  try{
   const {schedules}=await api('/recurring-schedules?operatorId='+encodeURIComponent(operatorId));
   if(revision!==loadRevision||operatorId!==$('operatorSelect').value)return;
-  $('recurringList').innerHTML=schedules.map(s=>`<article><strong>${esc(s.origin)} → ${esc(s.destination)}</strong><p>${esc(s.vehicle)} · ${esc(s.start_date)} al ${esc(s.end_date)}</p><p>${s.weekdays.map(d=>dayNames[d]).join(', ')} · ${s.times.map(esc).join(', ')} · hora Ecuador continental</p><p>${s.departureCount} salidas · ${s.upcomingCount} próximas publicadas · ${s.status==='active'?'Programación publicada':'Programación detenida'}</p>${s.status==='active'?`<button data-stop-recurring="${s.id}">Detener próximas sin reservas</button>`:`<p>${s.retainedCount} próximas con reservas conservadas.</p>`}</article>`).join('')||'<p>No has creado programaciones recurrentes.</p>';
+  $('recurringList').innerHTML=schedules.map(s=>`<article><strong>${esc(s.origin)} → ${esc(s.destination)}</strong><p>${esc(s.vehicle)} · ${esc(s.start_date)} al ${esc(s.end_date)}</p><p>${s.weekdays.map(d=>dayNames[d]).join(', ')} · ${s.times.map(esc).join(', ')} · hora Ecuador continental</p><p>${s.auto_renew?'Renovación automática activa · ':''}${s.renewal_error?esc(s.renewal_error)+' · ':''}${s.departureCount} salidas · ${s.upcomingCount} próximas publicadas · ${s.status==='active'?'Programación publicada':'Programación detenida'}</p>${s.status==='active'?`<button data-stop-recurring="${s.id}">Detener próximas sin reservas</button>`:`<p>${s.retainedCount} próximas con reservas conservadas.</p>`}</article>`).join('')||'<p>No has creado programaciones recurrentes.</p>';
   for(const button of $('recurringList').querySelectorAll('[data-stop-recurring]'))button.onclick=async()=>{
    button.disabled=true;const id=button.dataset.stopRecurring;
    try{const result=await api('/recurring-schedules/'+id,{operatorId,action:'stop',requestId:button.dataset.requestId||=crypto.randomUUID()});await refresh();await catalog();await load();status(result.notice);}

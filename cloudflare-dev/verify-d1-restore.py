@@ -3,6 +3,8 @@
 No dump, records, signed URLs or session hashes are logged or uploaded. Temporary
 files are private and removed on completion/failure. Not a durable backup service.
 """
+import gzip
+import subprocess
 import hashlib
 import json
 import os
@@ -35,8 +37,8 @@ def restore_and_verify(sql):
             raise ValueError('Integrity check failed')
         if db.execute('PRAGMA foreign_key_check').fetchall():
             raise ValueError('Foreign key check failed')
-        if not db.execute("SELECT version FROM schema_migrations WHERE version='0006_operations'").fetchone():
-            raise ValueError('Expected Standard schema missing')
+        if not db.execute("SELECT version FROM schema_migrations WHERE version='0024_service_changes'").fetchone():
+            raise ValueError('Expected integrated schema missing')
         if db.execute("SELECT 1 FROM seat_claims WHERE status IN('held','confirmed') GROUP BY departure_id,seat_number HAVING COUNT(*)>1 LIMIT 1").fetchone():
             raise ValueError('Duplicate active seat')
         if db.execute('''SELECT 1 FROM standard_vehicle_slots a JOIN standard_vehicle_slots b
@@ -72,6 +74,21 @@ def main():
                 raise RuntimeError('D1 export rejected')
             return data['result']
 
+        save_backup=os.environ.get('RUTASEC_PRIVATE_BACKUP')=='true'
+        backup_key=None
+        if save_backup:
+            phase='R2 privacy verification'
+            base=f'https://api.cloudflare.com/client/v4/accounts/{account}/r2/buckets/rutasec-dev-files/domains/'
+            def private_metadata(path):
+                request=urllib.request.Request(base+path,headers={'Authorization':'Bearer '+token})
+                with urllib.request.urlopen(request,timeout=30) as r: data=json.load(r)
+                if not data.get('success'):raise RuntimeError('Bucket privacy not verified')
+                return data['result']
+            if private_metadata('managed').get('enabled') is not False:raise RuntimeError('Public bucket is not a backup destination')
+            custom=private_metadata('custom')
+            domains=custom.get('domains') if isinstance(custom,dict) else custom
+            if not isinstance(domains,list):raise RuntimeError('Custom domain privacy not verified')
+            if any(d.get('enabled',True) for d in domains):raise RuntimeError('Bucket has a public domain')
         phase = 'D1 export'
         state = export({'output_format': 'polling'})
         for _ in range(15):
@@ -105,9 +122,21 @@ def main():
             sql = dump.read_bytes()
             result = restore_and_verify(sql)
             result.update({'restore': 'PASS', 'sha256': hashlib.sha256(sql).hexdigest()})
+            if save_backup:
+                phase='private R2 backup and round-trip verification'
+                packed=gzip.compress(sql,mtime=0);archive=Path(directory)/'backup.sql.gz';archive.write_bytes(packed);os.chmod(archive,0o600)
+                backup_key='rutasec-dev-files/backups/d1/'+time.strftime('%Y-%m-%d',time.gmtime())+'/'+hashlib.sha256(sql).hexdigest()+'.sql.gz'
+                restored=Path(directory)/'readback.sql.gz'
+                for args in [['put',backup_key,'--file',str(archive)],['get',backup_key,'--file',str(restored)]]:
+                    command=['npx','wrangler','r2','object',*args,'--remote','--config','wrangler.json']
+                    process=subprocess.run(command,cwd=Path(__file__).parent,capture_output=True,timeout=90)
+                    if process.returncode:raise RuntimeError('Private R2 backup operation failed')
+                if restored.read_bytes()!=packed:raise ValueError('Backup read-back mismatch')
+                restore_and_verify(gzip.decompress(restored.read_bytes()))
+                result['backupReadBackVerified']=True
         # Emit safe metadata only AFTER the temporary directory was removed.
         result.update({'temporaryDumpRemoved': not Path(directory).exists(),
-                       'artifactsPublished': False, 'durableBackupCreated': False})
+                       'artifactsPublished': False, 'durableBackupCreated': bool(backup_key)})
         print(json.dumps(result))
     except Exception as error:
         # No traceback/URLs/SQL/error payloads: these may contain sensitive data.

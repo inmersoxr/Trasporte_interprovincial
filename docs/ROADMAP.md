@@ -123,3 +123,7 @@ Autorización expresa del usuario para implementar propuesta main0e893488. Se re
 
 ## UX2 — recuperación de paridad del demo
 Corregir experiencia Cloudflare con portada/buscador/navegación contextual del demo, identidad gráfica solicitada y tarjetas/detalle conectados a catálogo/reservas/operación persistentes. Entregado y comprobado: código128d5c62, Actions44456841493 SUCCESS,57 tests y tres flujos de navegador; API/web/admin e identidad desplegados, comprobaciones remotas HTTP/Chromium PASS. Evidencia y límites en snapshot2026-11-19-app-parity-menu.md. No modificar Pages ni sustituir backend/cuentas, ni insertar ejemplos en Alpha.
+
+
+## I1–I4 — entrega integrada autorizada 2026-11-19
+El usuario autoriza resolver el conjunto de hallazgos de la revisión y los personalizados espontáneos; posteriormente descarta WhatsApp. Prioridad: inscripción voluntaria y capacidad/calendario, avisos internos/push, personal y permisos, planes efectivos, operación sin simulador, cambios/renovación/paginación y supervisión. Mantener pagos simulados, sin aplicaciones/backend duplicados ni modificaciones a Pages. Desarrollo por bloques comprobables, una entrega común tras regresión; evidencia y cierre en snapshot2026-11-19-zz4-integrated-delivery.md y guía INTEGRATED_OPERATIONS.md. Google/correo y recepción física real no se dan por habilitados por tener código.

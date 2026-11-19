@@ -1,5 +1,7 @@
+import {pageCursor,nextPage,cursorClause} from './standard-pagination.mjs';
 // Competitive private market: offers never reserve a vehicle. Selection does.
-import {operatorScope} from './standard-catalog.mjs';
+import {enrolled,pickupAvailable} from './standard-custom-settings.mjs';
+import {operatorScope,operatorReady,vehicleReady} from './standard-catalog.mjs';
 import {contactPhone,accountEmail} from './standard-contact.mjs';
 export async function handleMarket(request,env,core){
  const {identity,stmt,rows,failure,owner,command,integer,text}=core,db=env.DB;
@@ -10,25 +12,27 @@ export async function handleMarket(request,env,core){
  const now=new Date().toISOString();
  if(request.method==='GET'){
   if(path==='/api/private-requests'){
-   const requests=await rows(db,`SELECT r.*,s.people,s.vehicle_type,s.duration_minutes,s.expires_at FROM private_requests r
-    JOIN standard_private_specs s ON s.request_id=r.id WHERE r.customer_id=? ORDER BY r.created_at DESC LIMIT 20`,[user.id]);
+   const query=new URL(request.url).searchParams,paging=pageCursor(query.get('cursor'),failure),clause=cursorClause(paging.request,'r.created_at','r.id'),specific=query.get('request');if(specific&&!/^[0-9a-f-]{36}$/i.test(specific))throw failure('Solicitud no válida');
+   let requests=await rows(db,`SELECT r.*,s.people,s.vehicle_type,s.duration_minutes,s.expires_at,s.immediate FROM private_requests r
+    JOIN standard_private_specs s ON s.request_id=r.id WHERE r.customer_id=?${clause.sql}${specific?' AND r.id=?':''} ORDER BY r.created_at DESC,r.id DESC LIMIT 21`,[user.id,...clause.args,...(specific?[specific]:[])]);
+   const cursor=nextPage({request:requests.length>20?{time:requests[19].created_at,id:requests[19].id}:false});requests=requests.slice(0,20);const requestIds=JSON.stringify(requests.map(r=>r.id));
    const offers=await rows(db,`SELECT f.*,o.display_name AS operatorName,v.model AS vehicle,v.capacity,v.type AS vehicleType,(SELECT COUNT(*) FROM standard_reviews z WHERE z.operator_id=f.operator_id AND z.status='visible') AS ratingCount,(SELECT AVG(rating) FROM standard_reviews z WHERE z.operator_id=f.operator_id AND z.status='visible') AS ratingAverage FROM standard_private_offers f
-    JOIN private_requests r ON r.id=f.request_id JOIN operators o ON o.id=f.operator_id JOIN vehicles v ON v.id=f.vehicle_id WHERE r.customer_id=? ORDER BY f.created_at,f.id`,[user.id]);
-   const bookings=await rows(db,'SELECT c.*,t.id AS liveId FROM standard_custom_bookings c LEFT JOIN standard_tracking t ON t.custom_booking_id=c.id WHERE c.customer_id=?',[user.id]);
-   return {requests:requests.map(r=>({...r,offers:offers.filter(o=>o.request_id===r.id),booking:bookings.find(b=>b.request_id===r.id)||null,
+    JOIN private_requests r ON r.id=f.request_id JOIN operators o ON o.id=f.operator_id JOIN vehicles v ON v.id=f.vehicle_id WHERE r.customer_id=? AND r.id IN(SELECT value FROM json_each(?)) ORDER BY f.created_at,f.id`,[user.id,requestIds]);
+   const bookings=await rows(db,'SELECT c.*,t.id AS liveId FROM standard_custom_bookings c LEFT JOIN standard_tracking t ON t.custom_booking_id=c.id WHERE c.customer_id=? AND c.request_id IN(SELECT value FROM json_each(?))',[user.id,requestIds]);
+   return {nextCursor:cursor,requests:requests.map(r=>({...r,offers:offers.filter(o=>o.request_id===r.id),booking:bookings.find(b=>b.request_id===r.id)||null,
     expired:r.expires_at<=now,simulated:true})),notifications:'in-app demo',selection:'customer-choice'};
   }
   if(path==='/api/private-market'){
+   const op=new URL(request.url).searchParams.get('operatorId');if(op){if(!/^[0-9a-f-]{36}$/i.test(op))throw failure('Operadora no válida');await owner(db,user.id,op);}
    const requests=await rows(db,`SELECT DISTINCT r.id,r.origin,r.destination,r.requested_at,s.people,s.vehicle_type,s.duration_minutes,s.expires_at
     FROM private_requests r JOIN standard_private_specs s ON s.request_id=r.id JOIN vehicles v ON v.capacity>=s.people AND v.status='active'
-    JOIN memberships m ON m.operator_id=v.operator_id AND m.user_id=? AND m.role='owner'
+    JOIN memberships m ON m.operator_id=v.operator_id AND m.user_id=? AND m.role IN('owner','admin','dispatcher')
     JOIN operators o ON o.id=v.operator_id AND o.status='approved'
-    WHERE ${operatorScope(env)} AND r.status IN('requested','receiving_offers') AND s.expires_at>? AND (s.vehicle_type='any' OR s.vehicle_type=v.type)
-    AND EXISTS(SELECT 1 FROM route_offers ro WHERE ro.operator_id=v.operator_id AND ro.origin=r.origin AND ro.active=1)
-    AND NOT EXISTS(SELECT 1 FROM standard_vehicle_slots x WHERE x.vehicle_id=v.id AND x.active=1
-     AND x.starts_at<unixepoch(r.requested_at)*1000+s.duration_minutes*60000 AND x.ends_at>unixepoch(r.requested_at)*1000)
-    ORDER BY r.requested_at LIMIT 100`,[user.id,now]);
-   const offers=await rows(db,`SELECT f.* FROM standard_private_offers f JOIN memberships m ON m.operator_id=f.operator_id WHERE m.user_id=? AND m.role='owner' ORDER BY f.created_at DESC LIMIT 100`,[user.id]);
+    WHERE ${operatorScope(env)}${op?' AND o.id=?':''} AND r.status IN('requested','receiving_offers') AND s.expires_at>? AND (s.vehicle_type='any' OR s.vehicle_type=v.type)
+    AND ${enrolled()} AND ${operatorReady()} AND ${vehicleReady()}
+    AND ${pickupAvailable()}
+    ORDER BY r.requested_at LIMIT 100`,[user.id,...(op?[op]:[]),now]);
+   const offers=await rows(db,`SELECT f.* FROM standard_private_offers f JOIN memberships m ON m.operator_id=f.operator_id WHERE m.user_id=? AND m.role IN('owner','admin','dispatcher')${op?' AND f.operator_id=?':''} ORDER BY f.created_at DESC LIMIT 100`,[user.id,...(op?[op]:[])]);
    return {requests,offers,notifications:'Alertas DEMO dentro de la app; sin envío externo'};
   }
   throw failure('Recurso no encontrado',404);
@@ -40,7 +44,7 @@ export async function handleMarket(request,env,core){
   const origin=text(b.origin,'Origen'),destination=text(b.destination,'Destino');if(origin.toLowerCase()===destination.toLowerCase())throw failure('Origen y destino deben ser distintos');
   const people=integer(b.people,1,30,'Pasajeros'),duration=integer(b.durationMinutes,1,2880,'Duración');
   if(!['any','auto','suv','van','minivan'].includes(b.vehicleType))throw failure('Tipo no válido');
-  const at=b.immediate===true?Date.now()+300000:Date.parse(b.serviceAt);
+  const at=b.immediate===true?Date.now()+7200000:Date.parse(b.serviceAt);
   if(!Number.isFinite(at)||at<=Date.now()||at>Date.now()+366*86400000)throw failure('Horario futuro no válido');
   const notes=String(b.notes||'').trim();if(notes.length>500)throw failure('Notas demasiado largas');
   const id=crypto.randomUUID(),phone=contactPhone(b,env,failure),email=await accountEmail(db,user.id,stmt);
@@ -49,24 +53,24 @@ export async function handleMarket(request,env,core){
   const pickupPoint=env.ALLOW_DEVELOPMENT_AUTH==='true'&&!b.pickupPoint?'':text(b.pickupPoint,'Punto de encuentro',250),dropoffPoint=env.ALLOW_DEVELOPMENT_AUTH==='true'&&!b.dropoffPoint?'':text(b.dropoffPoint,'Punto de llegada',250);
   const saved=await command(db,user,b,'private_request',[
    stmt(db,'INSERT INTO private_requests(id,customer_id,origin,destination,requested_at,details) VALUES(?,?,?,?,?,?)',[id,user.id,origin,destination,new Date(at).toISOString(),JSON.stringify({notes,passengers,contactPhone:phone,contactEmail:email,pickupPoint,dropoffPoint})]),
-   stmt(db,'INSERT INTO standard_private_specs(request_id,people,vehicle_type,duration_minutes,expires_at) VALUES(?,?,?,?,?)',[id,people,b.vehicleType,duration,new Date(Math.min(at,Date.now()+86400000)).toISOString()])],id);
+   stmt(db,'INSERT INTO standard_private_specs(request_id,people,vehicle_type,duration_minutes,expires_at,immediate) VALUES(?,?,?,?,?,?)',[id,people,b.vehicleType,duration,new Date(Math.min(at,Date.now()+(b.immediate?1800000:86400000))).toISOString(),b.immediate?1:0])],id);
   return {id:saved,status:'requested',assignment:'none'};
  }
  if(path==='/api/private-offers'){
   await owner(db,user.id,b.operatorId);
-  const req=await stmt(db,`SELECT r.*,s.people,s.vehicle_type,s.duration_minutes FROM private_requests r JOIN standard_private_specs s ON s.request_id=r.id WHERE r.id=?`,[b.privateRequestId]).first();
+  const req=await stmt(db,`SELECT r.*,s.people,s.vehicle_type,s.duration_minutes,s.immediate FROM private_requests r JOIN standard_private_specs s ON s.request_id=r.id WHERE r.id=?`,[b.privateRequestId]).first();
   if(!req)throw failure('Solicitud no encontrada',404);
   const duration=integer(b.durationMinutes,req.duration_minutes,2880,'Duración propuesta'),price=integer(b.priceCents,1,1000000,'Precio');
   const vehicle=await stmt(db,`SELECT v.* FROM vehicles v WHERE v.id=? AND v.operator_id=? AND v.status='active' AND v.capacity>=?
    AND (?='any' OR v.type=?) AND EXISTS(SELECT 1 FROM operators o WHERE o.id=v.operator_id AND status='approved' AND ${operatorScope(env)})
-   AND EXISTS(SELECT 1 FROM route_offers WHERE operator_id=v.operator_id AND origin=? AND active=1)`,[b.vehicleId,b.operatorId,req.people,req.vehicle_type,req.vehicle_type,req.origin]).first();
+   AND EXISTS(SELECT 1 FROM operators o JOIN private_requests r ON r.id=? WHERE o.id=v.operator_id AND ${enrolled()} AND ${operatorReady()} AND ${vehicleReady()})`,[b.vehicleId,b.operatorId,req.people,req.vehicle_type,req.vehicle_type,req.id]).first();
   if(!vehicle)throw failure('Operadora/vehículo no elegible para esta solicitud',403);
-  const at=Date.parse(req.requested_at);
+  const pickup=req.immediate?new Date(Date.now()+integer(b.pickupMinutes??15,5,120,'Minutos hasta recogida')*60000).toISOString():req.requested_at,at=Date.parse(pickup);if(at>Date.parse(req.requested_at)||at<=Date.now())throw failure('La hora de recogida ya no es válida');
   if(await stmt(db,'SELECT 1 FROM standard_vehicle_slots WHERE vehicle_id=? AND active=1 AND starts_at<? AND ends_at>?',[vehicle.id,at+duration*60000,at]).first())throw failure('Vehículo no disponible',409);
   const id=crypto.randomUUID();
   try{
    const saved=await command(db,user,b,'private_offer',[
-    stmt(db,'INSERT INTO standard_private_offers(id,request_id,operator_id,vehicle_id,price_cents,duration_minutes,created_at) VALUES(?,?,?,?,?,?,?)',[id,req.id,b.operatorId,vehicle.id,price,duration,new Date().toISOString()]),
+    stmt(db,'INSERT INTO standard_private_offers(id,request_id,operator_id,vehicle_id,price_cents,duration_minutes,created_at,pickup_at) VALUES(?,?,?,?,?,?,?,?)',[id,req.id,b.operatorId,vehicle.id,price,duration,new Date().toISOString(),pickup]),
     stmt(db,"UPDATE private_requests SET status='receiving_offers' WHERE id=? AND status='requested'",[req.id])],id);
    return {id:saved,status:'available',assignment:'none'};
   }catch(error){if(/offer_unavailable|UNIQUE constraint failed: standard_private_offers/.test(String(error.message)))throw failure('Oferta duplicada o solicitud ya no disponible',409);throw error;}
@@ -102,10 +106,10 @@ export async function handleMarket(request,env,core){
   const offer=await stmt(db,'SELECT * FROM standard_private_offers WHERE id=? AND request_id=?',[b.offerId,req.id]).first();
   if(!offer)throw failure('Oferta no encontrada',404);if(b.quotedPriceCents!==offer.price_cents)throw failure('Precio no vigente',409);
   if(!await stmt(db,`SELECT 1 FROM operators o JOIN vehicles v ON v.operator_id=o.id WHERE o.id=? AND v.id=? AND o.status='approved' AND v.status='active' AND ${operatorScope(env)}`,[offer.operator_id,offer.vehicle_id]).first())throw failure('La operadora o el vehículo ya no están habilitados',409);
-  const id=crypto.randomUUID(),at=Date.parse(req.requested_at);
+  const id=crypto.randomUUID(),serviceAt=offer.pickup_at||req.requested_at,at=Date.parse(serviceAt);
   try{
    const saved=await command(db,user,b,'custom_booking',[
-    stmt(db,'INSERT INTO standard_custom_bookings(id,request_id,offer_id,customer_id,operator_id,vehicle_id,service_at,duration_minutes,amount_cents,passengers_json,contact_phone,contact_email,pickup_point,dropoff_point) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',[id,req.id,offer.id,user.id,offer.operator_id,offer.vehicle_id,req.requested_at,offer.duration_minutes,offer.price_cents,JSON.stringify(JSON.parse(req.details).passengers),JSON.parse(req.details).contactPhone||'',JSON.parse(req.details).contactEmail||null,JSON.parse(req.details).pickupPoint||'',JSON.parse(req.details).dropoffPoint||'']),
+    stmt(db,'INSERT INTO standard_custom_bookings(id,request_id,offer_id,customer_id,operator_id,vehicle_id,service_at,duration_minutes,amount_cents,passengers_json,contact_phone,contact_email,pickup_point,dropoff_point) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',[id,req.id,offer.id,user.id,offer.operator_id,offer.vehicle_id,serviceAt,offer.duration_minutes,offer.price_cents,JSON.stringify(JSON.parse(req.details).passengers),JSON.parse(req.details).contactPhone||'',JSON.parse(req.details).contactEmail||null,JSON.parse(req.details).pickupPoint||'',JSON.parse(req.details).dropoffPoint||'']),
     stmt(db,'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,custom_booking_id) VALUES(?,?,?,?,?)',[crypto.randomUUID(),offer.vehicle_id,at,at+offer.duration_minutes*60000,id]),
     stmt(db,"UPDATE private_requests SET status='booked' WHERE id=?",[req.id]),
     stmt(db,"UPDATE standard_private_offers SET status='selected' WHERE id=?",[offer.id]),

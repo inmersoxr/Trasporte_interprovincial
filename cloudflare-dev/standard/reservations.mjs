@@ -1,3 +1,4 @@
+import {ticketChanges} from './ticket-changes.mjs';
 import {hasAccess,signInToReserve,signInFor,session} from '../account/session.mjs';
 import {api,status} from './app.mjs';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -72,13 +73,13 @@ export async function loadBookings({background=false,cursor=null,ticket=null}={}
    b.qrCodes.forEach((qr,i)=>{if(!b.passengers[i].boardedAt)new window.QRCode($(`qr-${b.id}-${i}`),{text:qr,width:180,height:180});});
   }
   for(const b of bookings){
-   const article=document.querySelector(`[data-booking="${b.id}"]`);
+   const article=document.querySelector(`[data-booking="${b.id}"]`);ticketChanges(article,b);
    const details=document.createElement('p');details.textContent=(b.pickupPoint?'Encuentro: '+b.pickupPoint+' · ':'')+(b.dropoffPoint?'Llegada: '+b.dropoffPoint+' · ':'')+(b.vehiclePlate?'Placa: '+b.vehiclePlate:'');article.append(details);
    if(b.contactPhone){const contact=document.createElement('p');contact.textContent='Contacto de reserva: '+b.contactPhone;article.append(contact);}
    if(b.serviceStatus==='completed'){const rating=document.createElement('a');rating.href='/miniapp/?'+new URLSearchParams({operator:b.operatorId,tab:'reviews'});rating.textContent='Valorar este viaje completado';rating.className='rating-invitation';article.append(rating);}
   if(b.operatorPhone){const contact=document.createElement('a');contact.href='tel:'+b.operatorPhone.replace(/[^\d+]/g,'');contact.textContent='Contactar a la operadora';article.append(contact);}
    const copy=document.createElement('button');copy.textContent='Copiar enlace de este boleto';copy.onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+'/standard/?ticket='+encodeURIComponent(b.id));status('Enlace copiado. Para abrirlo se necesita entrar a la cuenta que reservó.');}catch{status('No se pudo copiar. Puedes recuperar el boleto en Mis boletos desde tu cuenta.');}};article.append(copy);
-   if(b.liveId){const a=document.createElement('a');a.href='#track/'+b.liveId;a.textContent='Abrir seguimiento DEMO';article.append(a);}
+   if(b.liveId){const a=document.createElement('a');a.href='#track/'+b.liveId;a.textContent='Ver estado del viaje';article.append(a);}
    if(['running','completed'].includes(b.serviceStatus))article.querySelector('[data-cancel]')?.remove();
   }
   for(const button of document.querySelectorAll('[data-cancel]'))button.onclick=async()=>{
@@ -90,19 +91,19 @@ export async function loadBookings({background=false,cursor=null,ticket=null}={}
 $('openBookings').onclick=()=>loadBookings();$('refreshBookings').onclick=()=>loadBookings({cursor:historyCursor,ticket:viewedTicket});older.onclick=()=>loadBookings({cursor:nextCursor});recent.onclick=()=>{const url=new URL(location.href);url.searchParams.delete('ticket');url.searchParams.delete('history');history.replaceState(null,'',url.pathname+url.search);loadBookings();};
 $('openBookings').disabled=false;
 document.addEventListener('standard:catalog',e=>enhance(e.detail));
-function resumeCheckout(){
+async function resumeCheckout(){
  const url=new URL(location.href),intent=url.searchParams.get('reserve');
  if(!intent||!latestCatalog||!hasAccess())return;
  const match=intent.match(/^(shared|private):([0-9a-f-]{36})$/i);
  url.searchParams.delete('reserve');history.replaceState(null,'',url.pathname+url.search+url.hash);
  if(!match){status('No se pudo recuperar el viaje. Vuelve a elegir una salida.');return;}
  if(match[1]==='shared'){
-  const departure=latestCatalog.departures.find(d=>d.id===match[2]);
+  let departure=latestCatalog.departures.find(d=>d.id===match[2]);if(!departure){try{departure=(await api('/catalog?departureId='+match[2])).departures.find(d=>d.id===match[2]);}catch{}}
   if(!departure||departure.available<=0){status('La salida ya no está disponible. Elige otra salida.');return;}
   checkout(departure);
  }else{
   const button=document.querySelector(`[data-private-route="${match[2]}"] [data-reserve]`);
-  if(button)button.click();else status('La ruta ya no está disponible. Elige otra ruta.');
+  if(button)button.click();else {try{const r=(await api('/catalog?offerId='+match[2])).routeOffers.find(r=>r.id===match[2]);if(r){fixedOffer=r;fixedRequestId=crypto.randomUUID();$('privateSummary').textContent=r.origin+' → '+r.destination+' · $'+(r.priceCents/100).toFixed(2);$('privateCheckout').showModal();fillContact($('privateReserveForm'));return;}}catch{}}if(!button)status('La ruta ya no está disponible. Elige otra ruta.');
  }
 }
 function resumeTicket(){

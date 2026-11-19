@@ -12,7 +12,8 @@ async function refresh(){
  if(!id||loading)return;loading=true;const requested=id;
  try{
   const started=Date.now(),data=await api('/trips/'+id);if(requested!==id)return;
-  state=data.trip;clockOffset=data.serverNow-(started+Date.now())/2;
+  state=data.trip;if(data.source==='operations'){$('tracking').querySelector('h2').textContent='Estado de tu viaje';$('tracking').querySelector('h2+p').textContent=data.notice;$('copyTracking').textContent='Compartir estado del viaje';road=null;$('standardMap').hidden=true;$('trackingConnection').textContent=data.notice;$('trackingProgress').textContent=({running:'Viaje en curso',arrived:'Viaje finalizado'}[state.status]||state.status);$('trackingControls').replaceChildren();$('trackingAlerts').replaceChildren();return;}
+  $('tracking').querySelector('h2').textContent='Seguimiento de demostración';$('tracking').querySelector('h2+p').textContent=data.notice;$('standardMap').hidden=false;clockOffset=data.serverNow-(started+Date.now())/2;
   $('trackingConnection').textContent='Conectado · posición SIMULADA · enlace persistente';
   $('trackingControls').replaceChildren();
   const add=(label,action,extra)=>{const b=document.createElement('button');b.textContent=label;b.onclick=()=>command(action,extra);$('trackingControls').append(b);};
@@ -31,6 +32,7 @@ async function open(){
  const match=location.hash.match(/^#track\/([0-9a-f-]{36})$/i);if(!match){id=null;return;}id=match[1];state=null;
  for(const section of ['catalog','operator','myBookings','privateRequests'])$(section).hidden=true;$('tracking').hidden=false;
  try{
+  await refresh();if(state?.source==='operations')return;
   if(!road){const response=await fetch('../shared/route.json');if(!response.ok)throw new Error('No se pudo cargar geometría');road=prepareRoad(await response.json());}
   if(!map){map=L.map('standardMap');L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap · OSM France HOT',maxZoom:19}).addTo(map);
    const points=road.coordinates.map(([lng,lat])=>[lat,lng]);L.polyline(points,{color:'#e9bc44',weight:4}).addTo(map);map.fitBounds(points);marker=L.circleMarker(points[0],{radius:9,color:'#ffe12a',fillOpacity:1}).addTo(map);}

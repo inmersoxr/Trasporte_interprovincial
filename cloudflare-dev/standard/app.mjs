@@ -30,12 +30,14 @@ for(const name of ['origin','destination']){
  const previous=$('offerForm').elements[name],select=document.createElement('select');select.name=name;select.required=true;
  for(const city of cities)select.add(new Option(city,city));select.value=previous.value;previous.replaceWith(select);
 }
-let catalogRevision=0;
+let catalogRevision=0,catalogCursor=null,nextCatalogCursor=null,lastCatalogQuery='';
+const moreCatalog=document.createElement('button'),firstCatalog=document.createElement('button');moreCatalog.id='moreCatalog';moreCatalog.textContent='Ver más viajes';moreCatalog.hidden=true;firstCatalog.textContent='Volver a primeros viajes';firstCatalog.hidden=true;$('catalog').append(moreCatalog,firstCatalog);moreCatalog.onclick=()=>{catalogCursor=nextCatalogCursor;guarded(catalog);};firstCatalog.onclick=()=>{catalogCursor=null;guarded(catalog);};
 export async function catalog() {
   const query=searchQuery(),operator=new URLSearchParams(location.search).get('operator');if(operator)query.set('operatorId',operator);
+  const signature=query.toString();if(signature!==lastCatalogQuery){catalogCursor=null;lastCatalogQuery=signature;}if(catalogCursor)query.set('cursor',catalogCursor);
   const revision=++catalogRevision;let data;
   try{data=await api('/catalog?'+query);}catch(error){if(revision===catalogRevision){$('catalogList').textContent='No se pudieron actualizar los viajes. Revisa tu conexión.';$('privateList').replaceChildren();}throw error;}
-  if(revision!==catalogRevision)return;
+  if(revision!==catalogRevision)return;nextCatalogCursor=data.nextCursor;moreCatalog.hidden=!nextCatalogCursor;firstCatalog.hidden=!catalogCursor;
   $('catalogList').innerHTML = data.departures.map(d => `<article data-departure="${esc(d.id)}">${vehicleImage(d)}<strong>${esc(d.origin)} → ${esc(d.destination)}</strong><p><a href="/miniapp/?operator=${esc(d.operatorId)}">${esc(d.operatorName)}</a> · ${esc(d.vehicle)}</p><p>${esc(ratingLabel(d))} · <a href="/miniapp/?operator=${esc(d.operatorId)}&tab=reviews">Opiniones</a></p><p>${esc(new Date(d.departAt).toLocaleString('es-EC',{timeZone:'America/Guayaquil'}))} · ${d.available} plazas disponibles</p><p>$${(d.priceCents/100).toFixed(2)} por asiento</p><button type="button" class="trip-details" data-detail="${esc(d.id)}">Ver viaje y vehículo →</button>${d.pickupPoint?`<p>Encuentro: ${esc(d.pickupPoint)} · Llegada: ${esc(d.dropoffPoint)}</p>`:""}</article>`).join('') || '<p>No hay salidas publicadas.</p>';
   $('privateList').innerHTML = data.routeOffers.filter(r => r.serviceType === 'private_fixed').map(r => `<article data-private-route="${r.id}">${vehicleImage(r)}<strong>${esc(r.origin)} → ${esc(r.destination)}</strong><p><a href="/miniapp/?operator=${esc(r.operatorId)}">${esc(r.operatorName)}</a> · ${esc(ratingLabel(r))}</p><p>${esc(r.vehicle)} · $${(r.priceCents/100).toFixed(2)} por vehículo · ${r.durationMinutes} min</p><button type="button" class="trip-details" data-detail="${esc(r.id)}">Ver viaje y vehículo →</button></article>`).join('') || '<p>No hay rutas privadas publicadas.</p>';
   for(const button of document.querySelectorAll('[data-detail]'))button.onclick=()=>openTrip(data.departures.find(d=>d.id===button.dataset.detail)||data.routeOffers.find(r=>r.id===button.dataset.detail),button.closest('article'));
@@ -49,10 +51,10 @@ export async function refresh() {
   $('operatorSelect').innerHTML = options(dashboard.operators, o => o.display_name);
   if (dashboard.operators.some(o => o.id === selected)) $('operatorSelect').value = selected;
   else if(dashboard.operators.some(o=>o.id===new URLSearchParams(location.search).get('operator')))$('operatorSelect').value=new URLSearchParams(location.search).get('operator');
-  const operatorId = $('operatorSelect').value;
+  const operatorId = $('operatorSelect').value,memberRole=dashboard.operators.find(o=>o.id===operatorId)?.memberRole||'owner';document.querySelector('.standard-shell').dataset.memberRole=memberRole;
   const vehicles = dashboard.vehicles.filter(v => v.operator_id === operatorId);
   const offers = dashboard.routeOffers.filter(r => r.operator_id === operatorId);
-  $('vehicleForm').hidden = $('offerForm').hidden = $('departureForm').hidden = !operatorId;
+  $('vehicleForm').hidden = $('offerForm').hidden = !operatorId||!['owner','admin'].includes(memberRole);$('departureForm').hidden=!operatorId||!['owner','admin','dispatcher'].includes(memberRole);
   $('offerForm').elements.vehicleId.innerHTML = options(vehicles.filter(v=>v.status==='active'), v => `${v.model} · ${v.capacity} plazas`);
   $('departureForm').elements.offerId.innerHTML = options(offers.filter(o => o.service_type === 'shared'), r => `${r.origin} → ${r.destination}`);
   const approved=dashboard.operators.find(o=>o.id===operatorId)?.status==='approved';
@@ -97,6 +99,9 @@ $('access').hidden = !!token||!developmentTools;
 guarded(catalog); if (token) guarded(refresh);
 setInterval(() => { if (!document.hidden && !$('catalog').hidden) guarded(catalog); }, 10000);
 import('./reservations.mjs').catch(e => status(e.message));
+import('./notifications.mjs').catch(e=>status(e.message));
+import('./changes.mjs').catch(e=>status(e.message));
+import('./custom-settings.mjs').catch(e=>status(e.message));
 import('./market.mjs').catch(e => status(e.message));
 import('./operations.mjs').catch(e => status(e.message));
 import('./recurring.mjs').catch(e => status(e.message));

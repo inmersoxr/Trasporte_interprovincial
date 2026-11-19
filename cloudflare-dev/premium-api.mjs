@@ -1,3 +1,4 @@
+import {commercialPremium} from './standard-permissions.mjs';
 import {uploadMedia,profile} from './premium-profiles.mjs';
 import {finance,expense,document} from './premium-finance.mjs';
 import {analytics} from './premium-business.mjs';
@@ -23,9 +24,9 @@ export async function handlePremium(request,env,c) {
  const teamPaths=['/api/premium/branches','/api/premium/invites','/api/premium/revoke','/api/premium/assignments'];
  if(path==='/api/premium/activate'||teamPaths.includes(path))await owner(db,user.id,operatorId);
  else if(request.method==='POST'&&!['owner','admin'].includes(role))throw failure('El rol no permite esta operación',403);
- const entitlement=await stmt(db,'SELECT plan,active,activated_at FROM premium_tenants WHERE operator_id=?',[operatorId]).first();
+ const entitlement=await stmt(db,`SELECT t.plan,t.active,t.activated_at FROM premium_tenants t JOIN operators o ON o.id=t.operator_id WHERE t.operator_id=? AND (o.data_scope='qa' OR ${commercialPremium})`,[operatorId]).first();
  if(path==='/api/premium'&&request.method==='GET') {
-  if(!entitlement?.active)return {enabled:false,environment:'development',payments:'disabled'};
+  if(!entitlement?.active)return {enabled:false,canActivate:env.ALLOW_DEVELOPMENT_AUTH==='true',notice:'Solicita la habilitación del plan a la administración de RutasEC.',environment:'development',payments:'disabled'};
   return {enabled:true,role,entitlement,environment:'development',payments:'disabled',
    vehicles:await rows(db,`SELECT v.*,p.odometer_km,p.next_service_km,p.updated_at FROM vehicles v
     LEFT JOIN premium_vehicle_profiles p ON p.vehicle_id=v.id WHERE v.operator_id=? AND (?<>'driver' OR EXISTS(SELECT 1 FROM premium_assignments a WHERE a.vehicle_id=v.id AND a.driver_user_id=?)) ORDER BY v.model`,[operatorId,role,user.id]),
@@ -44,6 +45,7 @@ export async function handlePremium(request,env,c) {
  if(path==='/api/premium/profile'){if(!entitlement?.active||!['owner','admin'].includes(role))throw failure('Sin permiso para personalización',403);return profile(url,request.method==='POST'?body:null,user,operatorId,db,c);}
  if(request.method!=='POST')throw failure('Ruta no encontrada',404);
  if(path==='/api/premium/activate') {
+  if(env.ALLOW_DEVELOPMENT_AUTH!=='true'&&!await stmt(db,`SELECT 1 FROM operators o WHERE o.id=? AND ${commercialPremium}`,[operatorId]).first())throw failure('La administración de RutasEC debe habilitar tu plan Premium',403);
   await command(db,user,body,'premium_activation',[stmt(db,'INSERT OR IGNORE INTO premium_tenants(operator_id) VALUES(?)',[operatorId])],operatorId);
   return {id:operatorId,enabled:true,plan:'premium_dev',payments:'disabled'};
  }

@@ -9,7 +9,7 @@ export async function handleReservations(request, env, core) {
   if (!match) throw failure('Recurso no encontrado', 404);
   const db = env.DB;
   async function view(id) {
-    const b = await stmt(db, `SELECT b.*,r.origin,r.destination,COALESCE(c.operator_name,o.display_name) AS operatorName,COALESCE(c.vehicle_model,v.model) AS vehicle,
+    const b = await stmt(db, `SELECT b.*,r.origin,r.destination,COALESCE(c.operator_name,o.display_name) AS operatorName,COALESCE(c.vehicle_model,v.model) AS vehicle,v.capacity,
       c.passenger_phone AS contactPhone,c.passenger_email AS contactEmail,COALESCE(c.pickup_point,r.pickup_point) AS pickupPoint,COALESCE(c.dropoff_point,r.dropoff_point) AS dropoffPoint,COALESCE(c.vehicle_plate,v.plate) AS vehiclePlate,pf.phone AS operatorPhone,
       m.operator_id AS operatorId,m.vehicle_id AS vehicleId,p.status AS paymentStatus,t.id AS liveId,t.service_status AS serviceStatus
       FROM bookings b JOIN route_offers r ON r.id=b.offer_id JOIN standard_booking_details m ON m.booking_id=b.id
@@ -17,8 +17,8 @@ export async function handleReservations(request, env, core) {
       LEFT JOIN standard_booking_contacts c ON c.booking_id=b.id LEFT JOIN standard_operator_profiles pf ON pf.operator_id=o.id
       LEFT JOIN standard_tracking t ON t.booking_id=b.id OR t.departure_id=b.departure_id WHERE b.id=?`, [id]).first();
     if (!b) throw failure('Boleto no encontrado',404);
-    if (b.customer_id!==user.id && !await stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role='owner'",[user.id,b.operatorId]).first()) throw failure('Boleto privado',403);
-    b.passengers=await rows(db,'SELECT position,name,seat_number AS seatNumber,boarded_at AS boardedAt FROM standard_passengers WHERE booking_id=? ORDER BY position',[id]);
+    if (b.customer_id!==user.id && !await stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role IN('owner','admin','dispatcher')",[user.id,b.operatorId]).first()) throw failure('Boleto privado',403);
+    b.passengers=await rows(db,'SELECT position,name,seat_number AS seatNumber,boarded_at AS boardedAt FROM standard_passengers WHERE booking_id=? AND cancelled_at IS NULL ORDER BY position',[id]);
     return {...b,simulated:true,paymentLabel:b.paymentStatus==='refunded'?'Reembolso SIMULADO':'Pago SIMULADO confirmado',
       qrCodes:b.passengers.map(p=>`RUTASEC-STANDARD:${b.id}:${p.position}`)};
   }
@@ -38,7 +38,7 @@ export async function handleReservations(request, env, core) {
     if(body.action!=='cancel')throw failure('Acción no válida');
     if(b.status==='cancelled')return {booking:b};
     const departure=await stmt(db,'SELECT status FROM departures WHERE id=?',[b.departure_id]).first();
-    const isOwner=!!await stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role='owner'",[user.id,b.operatorId]).first();
+    const isOwner=!!await stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role IN('owner','admin','dispatcher')",[user.id,b.operatorId]).first();
     if((departure&&departure.status!=='published'||b.serviceStatus==='running')&&!isOwner)throw failure('La operadora debe gestionar la cancelación del viaje iniciado',409);
     if(b.serviceStatus==='completed'||departure?.status==='completed')throw failure('Servicio ya finalizado',409);
     if(b.passengers.some(p=>p.boardedAt))throw failure('No se puede cancelar un pasajero embarcado',409);
@@ -47,7 +47,7 @@ export async function handleReservations(request, env, core) {
         stmt(db,`UPDATE bookings SET status='cancelled' WHERE id=? AND status='confirmed'
          AND NOT EXISTS(SELECT 1 FROM standard_tracking t WHERE (t.booking_id=bookings.id OR t.departure_id=bookings.departure_id) AND t.service_status='completed')
          AND (NOT EXISTS(SELECT 1 FROM standard_tracking t WHERE (t.booking_id=bookings.id OR t.departure_id=bookings.departure_id) AND t.service_status='running')
-          OR EXISTS(SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role='owner'))`,[b.id,user.id,b.operatorId]),
+          OR EXISTS(SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role IN('owner','admin','dispatcher')))`,[b.id,user.id,b.operatorId]),
         stmt(db,"UPDATE seat_claims SET status='released' WHERE booking_id=? AND EXISTS(SELECT 1 FROM bookings WHERE id=? AND status='cancelled')",[b.id,b.id]),
         stmt(db,"UPDATE standard_vehicle_slots SET active=0 WHERE booking_id=? AND EXISTS(SELECT 1 FROM bookings WHERE id=? AND status='cancelled')",[b.id,b.id]),
         stmt(db,"UPDATE payments SET status='refunded' WHERE booking_id=? AND status='paid' AND EXISTS(SELECT 1 FROM bookings WHERE id=? AND status='cancelled')",[b.id,b.id]),
