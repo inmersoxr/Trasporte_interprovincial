@@ -16,3 +16,41 @@
 .standard-shell .profile-preview{display:block;width:100%;max-width:240px;max-height:160px;object-fit:contain;background:#202730;border-radius:12px;margin:10px 0}
 
 .standard-shell .rating-invitation{display:block;min-height:44px;padding:12px 0;margin:8px 0}
+
+/* Passenger presentation follows the approved demo; API and operator console stay shared. */
+.standard-shell:not(.is-operator){max-width:620px;padding:0 0 calc(92px + env(safe-area-inset-bottom));background:#141920}
+.standard-shell:not(.is-operator)>header{padding:12px 20px;border:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.standard-shell:not(.is-operator)>header h1{font-size:22px;margin:0;flex:1}
+.standard-shell:not(.is-operator)>header>p{flex-basis:100%;margin:0;color:#aeb5bf}
+.standard-shell:not(.is-operator)>header button{margin:0}
+.alpha-hero{height:300px;position:relative;overflow:hidden;background:#171d26}
+.alpha-hero>img{width:100%;height:100%;object-fit:cover;filter:brightness(.62)}
+.alpha-hero-copy{position:absolute;inset:24px;display:flex;flex-direction:column;justify-content:flex-end}
+.alpha-brand{font-size:24px;font-weight:800}.alpha-brand b{color:#f6cc28}
+.alpha-hero-copy h1{font-size:44px;line-height:1.05;letter-spacing:-2px;margin:12px 0!important}.alpha-hero-copy h1 span{color:#f6cc28}.alpha-hero-copy p{margin:8px 0;color:#fff}
+.standard-shell #searchTrips{background:transparent;margin:0;padding:20px;border-radius:0}
+.standard-shell #searchTrips .search-panel{border:1px solid #424a55;background:#202630;border-radius:20px;padding:12px 16px}
+.standard-shell #searchTrips .places{display:grid;grid-template-columns:1fr 44px 1fr;align-items:center;gap:4px}
+.standard-shell #searchTrips .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;border-top:1px solid #424a55}
+.standard-shell #searchTrips label{font-size:12px;color:#b6bfcb;min-width:0}
+.standard-shell #searchTrips input,.standard-shell #searchTrips select{border:0;padding:10px 0;background:transparent;font-size:16px;font-weight:600;min-width:0}
+.standard-shell #swapSearchCities{padding:0;background:transparent;color:#f6cc28;border:0;font-size:26px}
+.standard-shell #searchTrips .search-button{width:100%;font-size:17px;font-weight:700;margin-top:16px;border-radius:14px;background:#f6cc28;color:#141920;min-height:54px}
+.search-filters{margin-top:14px}.search-filters summary{padding:10px;cursor:pointer}
+.standard-shell:not(.is-operator) #catalog>h2,.standard-shell:not(.is-operator) #catalogList,.standard-shell:not(.is-operator) #privateList{margin-left:20px;margin-right:20px}
+.standard-shell:not(.is-operator) #myBookings,.standard-shell:not(.is-operator) #privateRequests,.standard-shell:not(.is-operator) #tracking{padding:0 20px}
+.standard-shell .passenger-navigation{max-width:620px}.standard-shell .passenger-navigation button{font-size:11px;overflow-wrap:normal}
+@media(max-width:380px){.alpha-hero-copy h1{font-size:38px}.standard-shell #searchTrips{padding:16px 12px}.standard-shell #searchTrips .search-panel{padding:8px 10px}}
+
+/* Original demo photography, type and app navigation, backed by the Alpha API. */
+.standard-shell:not(.is-operator){max-width:470px}.standard-shell:not(.is-operator)>header{padding:10px 18px;background:#141920}.standard-shell:not(.is-operator)>header h1{display:none}.standard-shell:not(.is-operator)>header p{font-size:11px}.standard-shell:not(.is-operator)>header>a{margin-left:auto}.standard-shell:not(.is-operator)>header #installStandard{font-size:12px}
+.alpha-hero{height:390px}.alpha-hero .home-top{height:100%;min-height:0;position:relative}.alpha-hero .hero-gallery{position:absolute;inset:0}.alpha-hero .hero-slides{height:100%}.alpha-hero .hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s}.alpha-hero .hero-photo.is-active{opacity:1}.alpha-hero .hero-gallery:after{content:"";position:absolute;inset:0;background:linear-gradient(#10151b40,#10151b15 30%,#141920ed);pointer-events:none}.alpha-hero .head{border:0;padding:18px 22px;background:transparent}.alpha-hero .brand-mark{width:36px;height:36px}.alpha-hero .brand{display:flex;gap:8px;align-items:center;font-size:26px;font-weight:800}.alpha-hero .brand b{color:var(--yellow)}.alpha-home-actions a{font-size:13px;color:white;padding:10px;border:1px solid #ffffff55;border-radius:10px}.alpha-hero .hero-copy{position:absolute;left:22px;bottom:26px;z-index:2}.alpha-hero .hero-copy h1{font-size:48px;line-height:1.02;letter-spacing:-2px;margin:0 0 12px}.alpha-hero .hero-copy h1 span{color:var(--yellow)}.alpha-hero .hero-copy p{font-size:14px;color:#e0e5eb;margin:0}.alpha-hero .hero-place{position:absolute;right:20px;bottom:26px;z-index:2;text-align:right;max-width:120px}.alpha-hero .hero-place span,.alpha-hero .hero-place small{display:block}.alpha-hero .hero-place small{font-size:10px}.alpha-hero .hero-controls{position:absolute;right:18px;top:82px;z-index:3;display:flex;align-items:center;gap:5px}.alpha-hero .hero-dots{display:flex;gap:0}.alpha-hero .hero-dot{width:24px;min-height:32px;padding:4px;background:none;border:0}.alpha-hero .hero-dot span{display:block;width:6px;height:6px;border-radius:50%;background:#fff7}.alpha-hero .hero-dot.is-active span{background:var(--yellow)}.alpha-hero .carousel-pause{width:32px;min-height:32px;padding:8px;background:#0004;color:#fff;border:0}.alpha-hero .carousel-pause svg{width:16px;height:16px}
+.alpha-private-cta{padding:18px 20px;margin:0 20px 24px;border:1px solid #ffffff20;border-radius:16px;background:#222a34}.alpha-private-cta p{font-size:14px}.alpha-private-cta button{width:100%;border:1px solid var(--yellow);color:var(--yellow);background:transparent;font-size:13px}
+.standard-shell .passenger-navigation{max-width:470px;background:#151b23f5}.standard-shell .passenger-navigation button{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10px;font-weight:500}.standard-shell .passenger-navigation svg{width:22px;height:22px}.standard-shell #passengerSafety{padding:0 20px}.standard-shell:not(.is-operator) article{border:1px solid #ffffff15;background:linear-gradient(135deg,#2b333f,#202730);box-shadow:0 8px 25px #0002;border-radius:17px}.standard-shell:not(.is-operator) #catalogList article>strong{font-size:21px;letter-spacing:-.5px}.standard-shell:not(.is-operator) #catalogList article .yellow{margin-top:12px}
+@media(prefers-reduced-motion:reduce){.alpha-hero .hero-photo{transition:none}}
+
+.standard-shell .trip-vehicle-photo{display:block;width:100%;height:190px;object-fit:cover;border-radius:12px;margin-bottom:16px}.standard-shell .trip-photo-empty{display:flex;align-items:center;justify-content:center;min-height:100px;color:#aeb7c1;background:#171e28;border-radius:12px;font-size:12px;margin-bottom:14px}.standard-shell .trip-details{border:0;background:transparent;color:var(--yellow);padding-left:0}.standard-shell .trip-detail-dialog{max-height:92dvh;overflow-y:auto;max-width:440px;border-color:#ffffff25}.standard-shell .trip-detail-dialog .detail-close{float:right;background:#171d25;color:white;border:0;margin-bottom:10px}.standard-shell .trip-detail-dialog h2{font-size:26px}.standard-shell .trip-detail-dialog h2 small{font-size:13px;font-weight:400}.standard-shell #status{margin:12px 18px}.standard-shell dialog .yellow{margin-top:10px}
+
+.alpha-hero .brand img{width:112px;height:90px;object-fit:contain}.standard-shell header .app-brand{width:85px;height:64px;object-fit:contain}.standard-shell:not(.is-operator)>header .app-brand{display:none}
+
+.standard-shell #searchTrips .field{display:block!important}.standard-shell #searchTrips .row2{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}.standard-shell #searchTrips .field input,.standard-shell #searchTrips .field select{display:block;width:100%;min-width:0}.standard-shell:not(.is-operator)>header{padding:0;min-height:0}.standard-shell:not(.is-operator)>header>p{display:none}.alpha-home-actions{display:flex;align-items:center;gap:6px}.alpha-home-actions a{display:block;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.alpha-home-actions button{font-size:11px;padding:8px;min-height:40px;width:auto}.alpha-hero .head{align-items:flex-start}.alpha-hero .hero-controls{top:115px}

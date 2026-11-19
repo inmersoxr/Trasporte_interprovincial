@@ -9,13 +9,13 @@ const bookingStates={confirmed:'Confirmada',cancelled:'Cancelada',refunded:'Reem
 function enhance(data){
  latestCatalog=data;
  for(const d of data.departures){
-  const article=document.querySelector(`[data-departure="${d.id}"]`);if(!article||article.querySelector('button'))continue;
-  const button=document.createElement('button');button.className='yellow';button.textContent=`Reservar · ${d.available} disponibles`;
+  const article=document.querySelector(`[data-departure="${d.id}"]`);if(!article||article.querySelector('[data-reserve]'))continue;
+  const button=document.createElement('button');button.className='yellow';button.dataset.reserve='1';button.textContent=`Reservar · ${d.available} disponibles`;
   button.disabled=d.available<=0;button.onclick=()=>checkout(d);article.append(button);
  }
  for(const r of data.routeOffers.filter(r=>r.serviceType==='private_fixed')){
-  const article=document.querySelector(`[data-private-route="${r.id}"]`);if(!article||article.querySelector('button'))continue;
-  const button=document.createElement('button');button.className='yellow';button.textContent='Reservar vehículo completo';
+  const article=document.querySelector(`[data-private-route="${r.id}"]`);if(!article||article.querySelector('[data-reserve]'))continue;
+  const button=document.createElement('button');button.className='yellow';button.dataset.reserve='1';button.textContent='Reservar vehículo completo';
   button.onclick=()=>{
    if(!hasAccess()){signInToReserve('private',r.id);return;}
    fixedOffer=r;fixedRequestId=crypto.randomUUID();$('privateError').textContent='';
@@ -31,7 +31,7 @@ $('privateReserveForm').onsubmit=async e=>{
  try{
   await api('/private-route-bookings',{offerId:fixedOffer.id,serviceAt:new Date(form.elements.serviceAt.value+'-05:00').toISOString(),
    passengers:form.elements.passengers.value.split('\n').map(n=>n.trim()).filter(Boolean),contactPhone:form.elements.contactPhone.value,saveContact:form.elements.saveContact.checked,quotedPriceCents:fixedOffer.priceCents,requestId:fixedRequestId});
-  $('privateCheckout').close();status('Privado confirmado en D1 · pago SIMULADO');await loadBookings();
+  $('privateCheckout').close();status('Privado confirmado · pago SIMULADO');await loadBookings();
  }catch(error){$('privateError').textContent=error.message;}finally{button.disabled=false;}
 };
 function checkout(d){
@@ -53,7 +53,7 @@ $('reserveForm').onsubmit=async e=>{
  try{
   const inputs=[...$('passengerNames').querySelectorAll('input')];if(!inputs.length)throw new Error('Selecciona un asiento');
   await api('/bookings',{departureId:selected.id,seatNumbers:inputs.map(i=>Number(i.dataset.seat)),passengers:inputs.map(i=>i.value),contactPhone:e.target.elements.contactPhone.value,saveContact:e.target.elements.saveContact.checked,quotedPriceCents:selected.priceCents,requestId});
-  $('checkout').close();status('Pago SIMULADO confirmado en D1; boleto emitido');await loadBookings();
+  $('checkout').close();status('Pago SIMULADO confirmado; boleto emitido');await loadBookings();
  }catch(error){status(error.message);$('checkoutSummary').textContent=error.message;}
  finally{button.disabled=false;}
 };
@@ -101,7 +101,7 @@ function resumeCheckout(){
   if(!departure||departure.available<=0){status('La salida ya no está disponible. Elige otra salida.');return;}
   checkout(departure);
  }else{
-  const button=document.querySelector(`[data-private-route="${match[2]}"] button`);
+  const button=document.querySelector(`[data-private-route="${match[2]}"] [data-reserve]`);
   if(button)button.click();else status('La ruta ya no está disponible. Elige otra ruta.');
  }
 }

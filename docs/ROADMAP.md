@@ -119,3 +119,7 @@ Instrucción actual del usuario autoriza navegación inferior de cinco destinos 
 
 ## U2 — perfil público móvil y reputación
 Autorización expresa del usuario para implementar propuesta main0e893488. Se reutilizan perfiles/R2 existentes en Standard y plantilla con cuatro vistas, reputación verificada por reserva/embarque/fin, respuesta, reportes y moderación auditada. Entregado en Cloudflare: código00b9565b, Actions44432091289 SUCCESS,57/57 tests y tres flujos de navegador; migración0021/API/web/admin comprobados remotamente, sin datos ficticios ni cambios a Pages. Incluye perfiles/puntuaciones en las tres modalidades e invitación a valorar al completar. Evidencia y límites en snapshot2026-11-19-public-profiles-reviews.md. Acceso real pendiente de configuración externa Google/correo; no equivale a aceptación comercial ni prueba en teléfonos físicos. Misma infraestructura, sin demo ni expansión Premium/cobros.
+
+
+## UX2 — recuperación de paridad del demo
+Corregir experiencia Cloudflare con portada/buscador/navegación contextual del demo, identidad gráfica solicitada y tarjetas/detalle conectados a catálogo/reservas/operación persistentes. Implementación y prueba Alpha local verificadas; CI y despliegue se registran en snapshot2026-11-19-app-parity-menu.md. No modificar Pages ni sustituir backend/cuentas, ni insertar ejemplos en Alpha.

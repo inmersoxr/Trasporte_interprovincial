@@ -40,6 +40,9 @@ export async function catalog(request,env,{rows,failure}) {
   const ids=[...new Set([...departures,...routeOffers].map(x=>x.operatorId))];
   const summaries=ids.length?await rows(env.DB,"SELECT operator_id,COUNT(*) AS count,AVG(rating) AS average FROM standard_reviews WHERE status='visible' AND operator_id IN(SELECT value FROM json_each(?)) GROUP BY operator_id",[JSON.stringify(ids)]):[];
   const reputations=new Map(summaries.map(r=>[r.operator_id,r]));
-  const decorate=item=>({...item,profileUrl:'/miniapp/?operator='+item.operatorId,ratingCount:reputations.get(item.operatorId)?.count||0,ratingAverage:reputations.get(item.operatorId)?.average??null});
+  // Branding is optional; only explicitly published media may appear publicly.
+  const profiles=ids.length?await rows(env.DB,"SELECT operator_id,vehicle_photos_json FROM premium_profiles WHERE published=1 AND operator_id IN(SELECT value FROM json_each(?))",[JSON.stringify(ids)]):[];
+  const photos=new Map(profiles.map(p=>[p.operator_id,JSON.parse(p.vehicle_photos_json||'{}')]));
+  const decorate=item=>({...item,vehiclePhotoUrl:photos.get(item.operatorId)?.[item.vehicleId]?'/standard-api/api/miniapps/'+item.operatorId+'/media/'+photos.get(item.operatorId)[item.vehicleId]:null,profileUrl:'/miniapp/?operator='+item.operatorId,ratingCount:reputations.get(item.operatorId)?.count||0,ratingAverage:reputations.get(item.operatorId)?.average??null});
   return {departures:departures.map(({reservedSeatsJson,...d})=>decorate({...d,reservedSeats:JSON.parse(reservedSeatsJson||'[]')})),routeOffers:routeOffers.map(decorate),environment:'development',payments:'simulated',timeZone:'America/Guayaquil'};
 }

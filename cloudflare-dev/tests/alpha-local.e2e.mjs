@@ -53,7 +53,7 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
         const path=url.pathname.endsWith('/')?url.pathname+'index.html':url.pathname;
         const root=new URL(url.origin===ADMIN_ORIGIN?'../out/admin-public/':'../out/public/',import.meta.url),file=new URL('.'+path,root);
         if(!file.pathname.startsWith(root.pathname)){await route.fulfill({status:404,body:''});return;}
-        try{const type=path.endsWith('.mjs')||path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':path.endsWith('.json')||path.endsWith('.webmanifest')?'application/json':path.endsWith('.png')?'image/png':path.endsWith('.svg')?'image/svg+xml':'text/html';await route.fulfill({status:200,contentType:type,body:await readFile(file)});}
+        try{const type=path.endsWith('.mjs')||path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':path.endsWith('.json')||path.endsWith('.webmanifest')?'application/json':path.endsWith('.webp')?'image/webp':path.endsWith('.png')?'image/png':path.endsWith('.svg')?'image/svg+xml':'text/html';await route.fulfill({status:200,contentType:type,body:await readFile(file)});}
         catch{await route.fulfill({status:404,body:''});}
       });
       const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000);
@@ -67,7 +67,13 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     const a=await actor('operator-alpha');
     await a.page.goto(APP_ORIGIN+'/account/');await a.google();await a.page.locator('#account').waitFor();
     assert.equal(await a.page.locator('#passwordSettings').isVisible(),false);
-    await a.page.goto(APP_ORIGIN+'/standard/');await a.page.getByRole('button',{name:'Gestionar mi operadora',exact:true}).click();
+    await a.page.goto(APP_ORIGIN+'/standard/');
+    await mkdir(new URL('../qa-output/',import.meta.url),{recursive:true});
+    assert.deepEqual(await a.page.locator('.passenger-navigation button').allTextContents(),['Inicio','Explorar','Mis viajes','Seguridad','Operadores']);
+    for(const width of [360,390,1280]){await a.page.setViewportSize({width,height:844});await a.page.locator('.hero-photo.is-active').waitFor();await a.page.locator('.hero-photo.is-active').evaluate(img=>img.decode());assert.equal(await a.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await a.page.screenshot({path:new URL('../qa-output/demo-parity-home-'+width+'.png',import.meta.url).pathname});}
+    await a.page.setViewportSize({width:390,height:844});
+    await a.page.getByRole('button',{name:'Seguridad',exact:true}).click();await a.page.locator('#passengerSafety').waitFor();await a.page.getByRole('button',{name:'Inicio',exact:true}).click();
+    await a.page.getByRole('button',{name:'Operadores',exact:true}).click();assert.equal(await a.page.locator('.passenger-navigation').isVisible(),false);assert.equal(await a.page.locator('.operator-navigation').isVisible(),true);
     const operatorTab=async(tab,section)=>{await a.page.locator('[data-operator-tab="'+tab+'"]').click();if(section)await a.page.locator('[data-operator-section="'+section+'"]').click();};
     assert.equal(await a.page.locator('.operator-navigation button').count(),5);
     await operatorTab('more','company');
@@ -111,13 +117,13 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
 
     const b=await actor('passenger-alpha','Europe/Madrid');
     await b.page.goto(APP_ORIGIN+'/standard/');
-    await b.page.getByRole('button',{name:'Gestionar mi operadora',exact:true}).click();await b.page.locator('[data-operator-tab="fleet"]').click();assert.equal(await b.page.locator('#vehicleDetailsForm').isVisible(),false);assert.equal(await b.page.locator('#operatorDriverForm').isVisible(),false);await b.page.locator('[data-operator-tab="more"]').click();await b.page.locator('[data-operator-section="account"]').click();await b.page.getByRole('button',{name:'Vista de pasajero',exact:true}).click();
+    await b.page.getByRole('button',{name:'Operadores',exact:true}).click();await b.page.locator('[data-operator-tab="fleet"]').click();assert.equal(await b.page.locator('#vehicleDetailsForm').isVisible(),false);assert.equal(await b.page.locator('#operatorDriverForm').isVisible(),false);await b.page.locator('[data-operator-tab="more"]').click();await b.page.locator('[data-operator-section="account"]').click();await b.page.getByRole('button',{name:'Vista de pasajero',exact:true}).click();
     await b.page.locator('#searchTrips [name="origin"]').selectOption('Quito');await b.page.locator('#searchTrips button[type="submit"],#searchTrips button.yellow').click();
     await b.page.getByText('No hay salidas publicadas.',{exact:true}).waitFor();
     await b.page.locator('#searchTrips [name="origin"]').selectOption('Cuenca');await b.page.locator('#searchTrips [name="destination"]').selectOption('Guayaquil');
     await b.page.locator('#searchTrips [name="date"]').fill(publishedDate);await b.page.locator('#searchTrips button.yellow').click();
     const first=b.page.locator('[data-departure]').first();
-    await first.getByRole('button',{name:/Reservar/}).click();await b.page.waitForURL('**/account/**');await b.google();
+    await first.getByRole('button',{name:'Ver viaje y vehículo →'}).click();await b.page.locator('#tripDetails').waitFor();await b.page.locator('#tripDetails [data-detail-reserve]').click();await b.page.waitForURL('**/account/**');await b.google();
     await b.page.locator('#checkout').waitFor();
     assert.equal(await b.page.locator('#access').isVisible(),false);
     await b.page.locator('#seatGrid input[value="1"]').check();await b.page.locator('#passengerNames input').fill('Pasajero Alpha de prueba');
@@ -126,7 +132,7 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     assert.equal(await b.page.locator('.qr canvas,.qr img').count()>0,true);
     assert.equal((await db.prepare("SELECT COUNT(*) n FROM seat_claims WHERE status='confirmed'").first()).n,1);
     assert.equal((await db.prepare('SELECT COUNT(*) n FROM bookings').first()).n,1);
-    await b.page.reload();await b.page.getByRole('button',{name:'Mis boletos'}).click();await b.page.locator(`[data-booking="${booking.id}"]`).waitFor();
+    await b.page.reload();await b.page.getByRole('button',{name:'Mis viajes'}).click();await b.page.locator(`[data-booking="${booking.id}"]`).waitFor();
     const qrImage=await b.page.locator('.qr canvas').first().evaluate(canvas=>canvas.toDataURL('image/png'));
 
     await operatorTab('reservations','manifest');await a.page.locator('#refreshOperations').click();await a.page.locator(`[data-manifest="${booking.id}"]`).getByText(/Pasajero Alpha de prueba/).waitFor();
@@ -151,12 +157,12 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     assert.equal((await db.prepare('SELECT boarded_at FROM standard_passengers WHERE booking_id=?').bind(booking.id).first()).boarded_at,boarded);
     assert.equal((await db.prepare("SELECT COUNT(*) n FROM standard_operational_events WHERE event='boarded'").first()).n,1);
     assert.equal(await a.page.evaluate(()=>globalThis.testCameraStreams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))),true);
-    await b.page.reload();await b.page.getByRole('button',{name:'Mis boletos'}).click();await b.page.getByText('EMBARCADO',{exact:true}).waitFor();
+    await b.page.reload();await b.page.getByRole('button',{name:'Mis viajes'}).click();await b.page.getByText('EMBARCADO',{exact:true}).waitFor();
     await operatorTab('reservations','manifest');await a.page.locator(`[data-service="${departures[1].id}"]`).getByRole('button',{name:'Cancelar salida y simular reembolsos'}).click();
     await operatorTab('reservations','manifest');await a.page.locator(`[data-service="${departures[1].id}"]`).getByText(/cancelled/).waitFor();
     assert.equal((await db.prepare("SELECT COUNT(*) n FROM departures WHERE status='published'").first()).n,2);
     // A second customer takes the last seat while the first customer's checkout is open.
-    await b.page.getByRole('button',{name:'Explorar',exact:true}).click();await b.page.locator(`[data-departure="${departures[0].id}"] button`).click();await b.page.locator('#seatGrid input[value="2"]').check();
+    await b.page.getByRole('button',{name:'Explorar',exact:true}).click();await b.page.locator(`[data-departure="${departures[0].id}"] [data-reserve]`).click();await b.page.locator('#seatGrid input[value="2"]').check();
     const lastSeat=await actor('last-seat-alpha');await lastSeat.page.goto(APP_ORIGIN+'/account/');await lastSeat.google();await lastSeat.page.locator('#account').waitFor();
     const purchased=await lastSeat.page.evaluate(async departureId=>{const response=await fetch('/standard-api/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({departureId,seatNumbers:[2],passengers:['Otro pasajero de prueba'],contactPhone:'+593986665555',quotedPriceCents:1500,requestId:crypto.randomUUID()})});return response.status;},departures[0].id);assert.equal(purchased,200);
     await b.page.bringToFront();await b.page.locator('#checkoutSummary').getByText(/La salida ya no tiene disponibilidad/).waitFor();assert.equal(await b.page.locator('#reserveForm button.yellow').isDisabled(),true);await b.page.locator('#closeCheckout').click();
