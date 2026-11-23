@@ -1,3 +1,4 @@
+import {startGps,stopGps} from './gps.mjs';
 import {api,status} from './app.mjs';
 import {cameraScanner} from './scanner.mjs';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -44,7 +45,7 @@ async function load(){
   await loadHistory(historyOperator===op?historyCursor:null);
   for(const b of data.bookings)if(b.departure_id&&data.departures.some(d=>d.id===b.departure_id&&['completed','cancelled'].includes(d.status)))section.querySelector(`[data-manifest="${b.id}"] [data-action="cancel"]`)?.remove();
   for(const button of section.querySelectorAll('[data-action]'))button.onclick=async()=>{
-   button.disabled=true;try{const result=await api('/operations',{operatorId:op,kind:button.dataset.kind,id:button.dataset.id,action:button.dataset.action});status(result.notice||'Operación guardada en D1');loading=false;await load();}catch(e){status(e.message);button.disabled=false;}
+   button.disabled=true;try{const result=await api('/operations',{operatorId:op,kind:button.dataset.kind,id:button.dataset.id,action:button.dataset.action});if(button.dataset.action==='start'&&result.liveId&&confirm('¿Este dispositivo viaja en el vehículo? Activar su ubicación GPS para este viaje.'))await startGps(result.liveId);if(button.dataset.action==='finish')stopGps();status(result.notice||'Operación guardada en D1');loading=false;await load();}catch(e){status(e.message);button.disabled=false;}
   };
   for(const button of section.querySelectorAll('[data-attend]'))button.onclick=async()=>{
    button.disabled=true;try{const t=await api('/trips/'+button.dataset.trip);await api('/trips/'+button.dataset.trip+'/commands',{action:'attend',alertId:button.dataset.attend,requestId:crypto.randomUUID(),expectedRevision:t.trip.revision});status('SOS DEMO atendido');loading=false;await load();}catch(e){status(e.message);button.disabled=false;}

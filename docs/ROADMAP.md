@@ -130,3 +130,11 @@ El usuario autoriza resolver el conjunto de hallazgos de la revisión y los pers
 
 
 Cierre I1–I4: entregado en entorno Cloudflare existente, a69c5bd4/Actions44622073845 SUCCESS,65 pruebas + tres recorridos Chromium. Migraciones0022–0024, push configurado y smoke remoto PASS; Pages/main intactos. Límites: autenticación externa Google/correo pendiente, recepción física push no comprobada. Recuperación nativa inspeccionada y restaurador probado localmente; exportación/copia privada remota pendiente de workflow_dispatch manual, sin mecanismo alternativo por mensajes de commit. No declarar Alpha comercial ni piloto físico completos.
+
+
+## Seguridad integral autorizada2026-11-21
+Plan y matriz en SECURITY_IMPLEMENTATION.md. S1 retenciones implementadas localmente, no desplegadas; S2 QR, S3 pagos de prueba/webhooks, S4 APIs/passkeys, S5 manifiestos/acceso excepcional desactivado y S6 regresión/entrega pendientes. No activar pagos reales ni restricciones avanzadas durante desarrollo.
+
+
+## GPS real autorizado2026-11-23
+Reutilizar mapa Leaflet/OSM, integrar GPS con servicio/asignación vigente, historial y cola offline, enlaces temporales revocables y contrato Capacitor. Implementación0026 en verificación, entrega aislada de S1/0025 pospuesto. No modificar reservas/pagos/manifiestos ni Pages. Cierre con evidencia y límites en snapshot2026-11-23-zz-gps-implementation.md; no certificar GPS físico mediante emulación.

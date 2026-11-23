@@ -1,3 +1,4 @@
+import {renderGps,hideGps} from './gps.mjs';
 import {api,status} from './app.mjs';
 import {prepareRoad,tripSnapshot} from '../shared/trip-core.mjs';
 const $=id=>document.getElementById(id);
@@ -12,7 +13,8 @@ async function refresh(){
  if(!id||loading)return;loading=true;const requested=id;
  try{
   const started=Date.now(),data=await api('/trips/'+id);if(requested!==id)return;
-  state=data.trip;if(data.source==='operations'){$('tracking').querySelector('h2').textContent='Estado de tu viaje';$('tracking').querySelector('h2+p').textContent=data.notice;$('copyTracking').textContent='Compartir estado del viaje';road=null;$('standardMap').hidden=true;$('trackingConnection').textContent=data.notice;$('trackingProgress').textContent=({running:'Viaje en curso',arrived:'Viaje finalizado'}[state.status]||state.status);$('trackingControls').replaceChildren();$('trackingAlerts').replaceChildren();return;}
+  state=data.trip;if(data.source==='operations'){road=null;await renderGps(id);return;}
+  hideGps();$('copyTracking').hidden=false;
   $('tracking').querySelector('h2').textContent='Seguimiento de demostración';$('tracking').querySelector('h2+p').textContent=data.notice;$('standardMap').hidden=false;clockOffset=data.serverNow-(started+Date.now())/2;
   $('trackingConnection').textContent='Conectado · posición SIMULADA · enlace persistente';
   $('trackingControls').replaceChildren();
@@ -39,7 +41,7 @@ async function open(){
   setTimeout(()=>map.invalidateSize(),0);await refresh();
  }catch(e){status(e.message);}
 }
-setInterval(()=>{if(id&&!document.hidden&&!$('tracking').hidden)refresh();},3000);
+setInterval(()=>{if(id&&!document.hidden&&!$('tracking').hidden)refresh();},7000);
 setInterval(()=>{if(state&&road&&id&&!document.hidden&&!$('tracking').hidden){const snapshot=tripSnapshot(state,road,Date.now()+clockOffset);marker?.setLatLng([snapshot.position.lat,snapshot.position.lng]);$('trackingProgress').textContent=`SIMULADO · ${(snapshot.progress*100).toFixed(1)}% · ${snapshot.status} · referencia Cuenca–Guayaquil`; }},150);
 $('copyTracking').onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+location.pathname+'#track/'+id);status('Enlace público copiado; no incluye acceso privado');}catch{status('Copia la dirección del navegador para compartir este seguimiento DEMO');}};
 $('closeTracking').onclick=()=>{location.hash='';$('tracking').hidden=true;$('catalog').hidden=false;};
