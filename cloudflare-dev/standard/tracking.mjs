@@ -31,10 +31,10 @@ async function refresh(){
  }catch(e){$('trackingConnection').textContent='Sin conexión · posición no actualizada';status(e.message);}finally{loading=false;}
 }
 async function open(){
- const match=location.hash.match(/^#track\/([0-9a-f-]{36})$/i);if(!match){id=null;return;}id=match[1];state=null;
+ const match=location.hash.match(/^#track\/([0-9a-f-]{36})$/i);if(!match){id=null;return;}id=match[1];state=null;hideGps();$('standardMap').hidden=true;
  for(const section of ['catalog','operator','myBookings','privateRequests'])$(section).hidden=true;$('tracking').hidden=false;
  try{
-  await refresh();if(state?.source==='operations')return;
+  await refresh();if(!state||state.source==='operations')return;
   if(!road){const response=await fetch('../shared/route.json');if(!response.ok)throw new Error('No se pudo cargar geometría');road=prepareRoad(await response.json());}
   if(!map){map=L.map('standardMap');L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap · OSM France HOT',maxZoom:19}).addTo(map);
    const points=road.coordinates.map(([lng,lat])=>[lat,lng]);L.polyline(points,{color:'#e9bc44',weight:4}).addTo(map);map.fitBounds(points);marker=L.circleMarker(points[0],{radius:9,color:'#ffe12a',fillOpacity:1}).addTo(map);}
