@@ -13,6 +13,11 @@ test('GPS real protocol: authorization, history retries, late samples, public ex
  assert.equal((await owner.call(url)).data.position,null);assert.equal((await outsider.call(url)).status,404);
  const foreignId=(await r.db.prepare("SELECT user_id FROM auth_identities WHERE provider='google' AND subject=?").bind('gps-outsider').first())?.user_id;
  assert.ok(foreignId);{await r.db.prepare("INSERT INTO memberships(user_id,operator_id,role) VALUES(?,?,'driver')").bind(foreignId,op).run();assert.equal((await outsider.call(url+'/positions',{positions:[point]})).status,404);}
+ const branch=crypto.randomUUID();await r.db.prepare('INSERT INTO premium_branches(id,operator_id,name,city) VALUES(?,?,?,?)').bind(branch,op,'Prueba GPS','Cuenca').run();
+ await r.db.prepare('INSERT INTO premium_assignments(vehicle_id,operator_id,branch_id,driver_user_id) VALUES(?,?,?,?)').bind(vehicle,op,branch,foreignId).run();
+ assert.equal((await outsider.call(url)).data.canSend,true);assert.equal((await outsider.call(url+'/positions',{positions:[point]})).status,200);
+ assert.equal((await r.db.prepare('SELECT actor_id FROM standard_gps_positions WHERE trip_id=?').bind(id).first()).actor_id,foreignId);
+ await r.db.prepare('DELETE FROM premium_assignments WHERE vehicle_id=?').bind(vehicle).run();assert.equal((await outsider.call(url+'/positions',{positions:[{...point,id:crypto.randomUUID()}]})).status,404);
  assert.equal((await buyer.call(url+'/positions',{positions:[point]})).status,403);
  assert.equal((await owner.call(url+'/positions',{positions:[point]})).status,200);
  assert.equal((await owner.call(url+'/positions',{positions:[point]})).status,200);
