@@ -138,3 +138,5 @@ Plan y matriz en SECURITY_IMPLEMENTATION.md. S1 retenciones implementadas localm
 
 ## GPS real autorizado2026-11-23
 Reutilizar mapa Leaflet/OSM, integrar GPS con servicio/asignación vigente, historial y cola offline, enlaces temporales revocables y contrato Capacitor. Implementación0026 en verificación, entrega aislada de S1/0025 pospuesto. No modificar reservas/pagos/manifiestos ni Pages. Cierre con evidencia y límites en snapshot2026-11-23-zz-gps-implementation.md; no certificar GPS físico mediante emulación.
+
+Cierre GPS:75d0dee9, Actions45248557135 SUCCESS,66 tests y cuatro navegadores;0026/API/web/admin activados y smoke remotoHTTP/Chromium PASS. Tokens/cola/roles probados con ubicaciones emuladas; GPS físico/alta de cuentas externa/background nativo pendientes. Pages/main y reservas/pagos/manifiestos preservados,0025 no publicado.
