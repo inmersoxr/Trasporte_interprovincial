@@ -6,3 +6,17 @@ Las listas de vehículos y empleados se generan con registros propios persistent
 
 
 Referencia previa8aa822a29a5f80a77472ce08e7e374b55a162e0d; Workers/D1/R2 existentes; sin borrar registros ni duplicar aplicaciones. Implementación y pruebas locales en curso; completar con commit/Actions/versions antes de cerrar. Guía OPERATOR_WORKSPACE.md.
+
+## R1 publicado — 2026-11-24T12:33Z
+
+Fuentea72479aab0c35ea657bae9d27ea359c9d26fa9e0; Actions45393517383 verify/deploy SUCCESS,75 pruebas y9recorridos navegador. Incluye creación de cuatro vehículos y cuatro fichas laborales desde UI, vínculo persona/unidad/salida persistente y aislado, cuatro sesiones GPS emuladas independientes, próxima salida sin punto falso, selección/mapa global, boleto/QR/embarque, tres métodos de pago ficticios, WhatsApp/nativo con activación de usuario y enlace que sobrevive al polling. Cerrar uno de cuatro viajes deja3 y revoca su seguimiento público.
+
+Interfaz publicada: Standard/Premium con menú inferior adaptado. Standard: Viajes, Crear viaje, Vehículos, Reservas, Empresa. Premium: En vivo, Vehículos, Empleados, Gestión, Empresa. Vista de pasajero y Mi cuenta se reubicaron en Empresa; en pasajero cuenta/notificaciones están dentro de Mis viajes y en consola Standard de gestión, Más→Cuenta. Se eliminó el destino principal Avisos, no el servicio de notificaciones. Se conserva la interfaz actual y se reutilizan los campos de pago ficticios y las funciones del demo, sin sus listas/personas/ubicaciones de muestra.
+
+Migración0032 aditiva: standard_departure_staff liga empleado y salida, guarda nombre al asignar, valida empresa/persona activa y rechaza solapamientos en SQL. Alta de salida, bloqueo horario del vehículo y vínculo se confirma atómicamente en el comando existente; persona no necesita una cuenta y no obtiene permisos por figurar en el viaje. Los campos bancarios ficticios nunca entran en el payload; solo enum de método queda en payment_events. La prueba de reembolso verifica un único evento simulated_refund, separado de metadata.
+
+Health remoto operator-workspace-v1/schema0032_trip_responsible, D1/R2true, paymentsdisabled. WorkerAPIa8e6f008-bbc6-4a50-8a2a-419d5911a0af, web6980630f-2345-4263-ba5e-80d335d57e1c, admin50b1c75e-d0a9-4360-9d56-ccf8f4cc4dc7. Activos index/app/CSS/share/payment/notifications/navigation/GPS coinciden con fuente final. Chromium anónimo390/1280 PASS, dashboard401 sin sesión; ninguna cuenta o viaje ficticio creado en público. Recuperación D1 nativa verificada por metadata, sin exportar/restaurar ni borrar datos. Main0e8934886b30ec9eec8db5a26886ba4bafcd6b4a y PagesHTTP200/hashc8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f intactos.
+
+R1-UI/DATOS/COMPRA/GPS-software/DEPLOY VALIDADA en desarrollo. R1-FISICO PENDIENTE: cámara/GPS real, cuatro vehículos y teléfonos participantes. No se certifican conducción, producción ni contabilidad fiscal. SRI real permanece bloqueado por certificado/configuración/adaptador externo; sus datos/comprobantes de prueba sí funcionan. Pagos bancarios reales continúan desactivados. S1/0025 pospuesta.
+
+Guía e inventario: docs/OPERATOR_WORKSPACE.md. Evidencias: docs/evidence/2026-11-24/workspace/. URL https://rutasec-web-dev.drbrownlabs.workers.dev/pilot/ ; pasajero https://rutasec-web-dev.drbrownlabs.workers.dev/standard/ . Mantener plan171tareas, sin reiniciar ni marcar todas las fases como terminadas por esta entrega.

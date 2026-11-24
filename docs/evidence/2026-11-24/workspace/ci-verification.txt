@@ -1,0 +1,52 @@
+Source a72479aab0c35ea657bae9d27ea359c9d26fa9e0
+Actions45393517383 verify SUCCESS:75 tests and9 browser flows.
+Real-camera/GPS physical validation remains pending; browser samples are emulated only in local/CI fixtures.
+
+2026-11-24T12:27:45.5632433Z ℹ tests 75
+2026-11-24T12:27:45.5633316Z ℹ pass 75
+2026-11-24T12:27:45.5633690Z ℹ fail 0
+2026-11-24T12:27:45.5635547Z ℹ duration_ms 68708.178178
+2026-11-24T12:28:39.8738713Z ✔ Alpha local browser: recurring operator schedule, Google at checkout and persistent tickets across independent sessions (53114.946885ms)
+2026-11-24T12:28:39.8745848Z ℹ tests 1
+2026-11-24T12:28:39.8749361Z ℹ pass 1
+2026-11-24T12:28:39.8749795Z ℹ fail 0
+2026-11-24T12:28:39.8751600Z ℹ duration_ms 53120.18741
+2026-11-24T12:28:48.0951479Z ✔ A2 local browser: email signup, mailbox code, password, admin entry, change and recovery without IDs (7342.40202ms)
+2026-11-24T12:28:48.0958809Z ℹ tests 1
+2026-11-24T12:28:48.0959585Z ℹ pass 1
+2026-11-24T12:28:48.0960031Z ℹ fail 0
+2026-11-24T12:28:48.0962703Z ℹ duration_ms 7347.467417
+2026-11-24T12:28:55.8783100Z ✔ G1 local browser: separate login, plan dates, manual ledger, auditor, denial and mobile (6944.362852ms)
+2026-11-24T12:28:55.8790250Z ℹ tests 1
+2026-11-24T12:28:55.8793008Z ℹ pass 1
+2026-11-24T12:28:55.8793500Z ℹ fail 0
+2026-11-24T12:28:55.8796493Z ℹ duration_ms 6949.218308
+2026-11-24T12:29:22.9047147Z ✔ GPS browser with emulated device: map movement, durable offline queue and independent public view (26190.95852ms)
+2026-11-24T12:29:22.9052791Z ℹ tests 1
+2026-11-24T12:29:22.9053783Z ℹ pass 1
+2026-11-24T12:29:22.9054237Z ℹ fail 0
+2026-11-24T12:29:22.9062022Z ℹ duration_ms 26195.81846
+2026-11-24T12:29:28.0445891Z ℹ tests 1
+2026-11-24T12:29:28.0447450Z ℹ pass 1
+2026-11-24T12:29:28.0447848Z ℹ fail 0
+2026-11-24T12:29:28.0449661Z ℹ duration_ms 4309.416306
+2026-11-24T12:29:34.0808777Z ✔ Enterprise UX: contacts, receivables, partial payments, payroll and maintenance on mobile/desktop (5182.02008ms)
+2026-11-24T12:29:34.0815088Z ℹ tests 1
+2026-11-24T12:29:34.0817170Z ℹ pass 1
+2026-11-24T12:29:34.0817918Z ℹ fail 0
+2026-11-24T12:29:34.0819552Z ℹ duration_ms 5187.528999
+2026-11-24T12:29:42.0611922Z ✔ H1 browser: phone-first signup without code, own Premium operator, independent session and password revocation (7157.384264ms)
+2026-11-24T12:29:42.0619111Z ℹ tests 1
+2026-11-24T12:29:42.0621794Z ℹ pass 1
+2026-11-24T12:29:42.0622455Z ℹ fail 0
+2026-11-24T12:29:42.0625171Z ℹ duration_ms 7163.419412
+2026-11-24T12:29:59.8313008Z ✔ Presentation pilot: simple demo form, no drivers, publication, independent sale, operator camera QR and real-GPS protocol (16945.032146ms)
+2026-11-24T12:29:59.8318466Z ℹ tests 1
+2026-11-24T12:29:59.8319367Z ℹ pass 1
+2026-11-24T12:29:59.8319839Z ℹ fail 0
+2026-11-24T12:29:59.8323384Z ℹ duration_ms 16951.021417
+2026-11-24T12:30:55.6235963Z ✔ Operator workspace: four created employees/vehicles/trips, two tiers, shared trip and four live GPS sessions (54994.552092ms)
+2026-11-24T12:30:55.6245465Z ℹ tests 1
+2026-11-24T12:30:55.6246362Z ℹ pass 1
+2026-11-24T12:30:55.6246733Z ℹ fail 0
+2026-11-24T12:30:55.6250601Z ℹ duration_ms 55000.967844

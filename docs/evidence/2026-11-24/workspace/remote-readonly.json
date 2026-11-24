@@ -1,0 +1,73 @@
+{
+  "date": "2026-11-24T12:31:57.443Z",
+  "changes": "none",
+  "requests": [
+    {
+      "path": "/standard-api/health",
+      "status": 200,
+      "data": {
+        "service": "RutasEC development",
+        "environment": "development",
+        "revision": "operator-workspace-v1",
+        "ok": true,
+        "d1": true,
+        "r2": true,
+        "schema": "0032_trip_responsible",
+        "payments": "disabled"
+      }
+    },
+    {
+      "path": "/pilot/",
+      "status": 200,
+      "data": {
+        "html": true
+      }
+    },
+    {
+      "path": "/join/",
+      "status": 200,
+      "data": {
+        "html": true
+      }
+    },
+    {
+      "path": "/standard-api/api/pilot/dashboard?operatorId=00000000-0000-4000-8000-000000000000",
+      "status": 401,
+      "data": {
+        "error": "Acceso requerido"
+      }
+    },
+    {
+      "path": "/standard-api/auth/config",
+      "status": 200,
+      "data": {
+        "google": false,
+        "email": false,
+        "pilotRegistration": true,
+        "emailMissing": [
+          "AUTH_EMAIL_FROM",
+          "AUTH_EMAIL binding or RESEND_API_KEY"
+        ],
+        "missingGoogleConfiguration": [
+          "GOOGLE_CLIENT_ID",
+          "GOOGLE_CLIENT_SECRET"
+        ],
+        "push": true,
+        "apple": false,
+        "environment": "development"
+      }
+    }
+  ],
+  "browser390": {
+    "anonymousPilotRedirect": true,
+    "pilotRegistrationVisible": true,
+    "noPageErrors": true,
+    "noHorizontalOverflow": true
+  },
+  "browser1280": {
+    "anonymousPilotRedirect": true,
+    "pilotRegistrationVisible": true,
+    "noPageErrors": true,
+    "noHorizontalOverflow": true
+  }
+}

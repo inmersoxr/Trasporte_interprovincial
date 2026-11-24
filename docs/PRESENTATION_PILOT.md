@@ -1,3 +1,7 @@
+# Guía vigente
+
+La organización actual de Standard/Premium y el circuito están en [OPERATOR_WORKSPACE.md](OPERATOR_WORKSPACE.md). La guía siguiente conserva la entrega simplificada anterior para trazabilidad; ya no describe todo el menú.
+
 # Piloto simple: mismo formulario del demo, datos persistentes
 
 ## Cómo probarlo

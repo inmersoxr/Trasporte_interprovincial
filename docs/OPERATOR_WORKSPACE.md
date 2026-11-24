@@ -35,3 +35,7 @@ Usar la misma aplicación en /pilot/. La interfaz actual conserva menú inferior
 | Perfil/marca/fotos/opiniones | Empresa | company-identity, R2, miniapps, reviews | Editor existente y perfiles públicos; no reconstruidos |
 
 No se copiaron listas ficticias, personas ni ubicaciones del demo al entorno público. La nueva tabla no reemplaza usuarios ni empleados: relaciona una salida con su ficha laboral. Los accesos de conductor existentes siguen siendo independientes y opcionales. Migración0032 es aditiva. S1/0025 permanece pospuesta.
+
+## Publicación comprobada
+
+Códigoa72479aa; Actions45393517383 SUCCESS:75pruebas+9recorridos navegador. schema0032, health operator-workspace-v1, D1/R2true y activos exactos comprobados. GPS/cámara físicos pendientes; no se han sembrado registros en público. Resultados completos en TESTS.md/PROGRESS.md y evidencia fechada.
