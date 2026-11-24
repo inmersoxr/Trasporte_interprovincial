@@ -44,3 +44,5 @@ Actions45333404724 SUCCESS:72/72 y siete flujos Chromium. H1 automatizado prueba
 - 01.04 VALIDADA: scrypt reutilizado, cookies Secure/HttpOnly, sesiones hash7d, origen, rate limiting y revocación. Probe negativo en Cloudflare devuelve401 ejecutando comparación; sin cuenta creada ni secretos expuestos.
 
 - 01.05 VALIDADA: Worker y Chromium: login en segundo contexto, recarga, cambio de contraseña revoca sesión anterior, logout revoca cookie; vía teléfono y correo preservada.
+
+- 01.06 VALIDADA: Sin empresa, Operadores abre Empresa automáticamente; crear nombre persiste misma entidad vista desde segunda sesión. Reintento idempotente; ninguna empresa ficticia creada en remoto.
