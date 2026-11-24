@@ -22,7 +22,7 @@ export async function handleGps(request,env,c){
  }
  if(request.method==='GET'){
   const latest=await stmt(db,'SELECT lat,lng,accuracy,speed,heading,captured_at,received_at FROM standard_gps_positions WHERE trip_id=? ORDER BY captured_at DESC,sample_id DESC LIMIT 1',[t.id]).first();
-  const vehicle=await stmt(db,'SELECT model,plate FROM vehicles WHERE id=?',[t.vehicle_id]).first();const responsible=canSend?await stmt(db,'SELECT responsible_name FROM standard_departure_staff WHERE departure_id=?',[t.departure_id]).first():null;return{vehicle:vehicle?.model||null,responsibleName:responsible?.responsible_name||null,tripId:t.id,status:t.service_status,origin:t.origin,destination:t.destination,position:latest,serverNow:now,canSend:!!canSend,canShare:!publicToken,source:'gps',simulated:false};
+  const vehicle=await stmt(db,'SELECT model,plate FROM vehicles WHERE id=?',[t.vehicle_id]).first();const responsible=canSend?await stmt(db,'SELECT driver_name AS responsible_name FROM standard_departure_drivers WHERE departure_id=? UNION ALL SELECT responsible_name FROM standard_departure_staff WHERE departure_id=?',[t.departure_id,t.departure_id]).first():null;return{vehicle:vehicle?.model||null,responsibleName:responsible?.responsible_name||null,tripId:t.id,status:t.service_status,origin:t.origin,destination:t.destination,position:latest,serverNow:now,canSend:!!canSend,canShare:!publicToken,source:'gps',simulated:false};
  }
  if(publicToken||request.method!=='POST')throw failure('Método no permitido',405);
  const raw=await request.text();if(raw.length>32768)throw failure('Solicitud demasiado grande',413);let b;try{b=JSON.parse(raw);}catch{throw failure('Solicitud no válida');}if(!b||typeof b!=='object')throw failure('Solicitud no válida');

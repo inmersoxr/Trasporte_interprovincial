@@ -3,6 +3,7 @@ import {ticketChanges} from './ticket-changes.mjs';
 import {hasAccess,signInToReserve,signInFor,session} from '../account/session.mjs';
 import {api,status} from './app.mjs';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let paymentSubmitting=false;
 let selected,requestId,fixedOffer,fixedRequestId,latestCatalog,loadingBookings=false,bookingsRevision=0,lastBookingsSnapshot='';
 let historyCursor=null,nextCursor=null,viewedTicket=null,intentHandled=false;
 const older=document.createElement('button'),recent=document.createElement('button');older.id='olderBookings';older.textContent='Más antiguos';older.hidden=true;recent.textContent='Volver a recientes';recent.hidden=true;$('myBookings').append(older,recent);
@@ -30,12 +31,12 @@ function enhance(data){
 }
 $('closePrivate').onclick=()=>$('privateCheckout').close();
 $('privateReserveForm').onsubmit=async e=>{
- e.preventDefault();const form=e.target,button=form.querySelector('button');button.disabled=true;
+ e.preventDefault();if(paymentSubmitting)return;paymentSubmitting=true;const form=e.target,button=form.querySelector('button');button.disabled=true;const originalLabel=button.textContent;button.textContent='Generando tu boleto…';
  try{
-  await api('/private-route-bookings',{offerId:fixedOffer.id,serviceAt:new Date(form.elements.serviceAt.value+'-05:00').toISOString(),
+  const result=await api('/private-route-bookings',{offerId:fixedOffer.id,serviceAt:new Date(form.elements.serviceAt.value+'-05:00').toISOString(),
    passengers:form.elements.passengers.value.split('\n').map(n=>n.trim()).filter(Boolean),contactPhone:form.elements.contactPhone.value,saveContact:form.elements.saveContact.checked,simulatedPaymentMethod:form.elements.simulatedPaymentMethod.value,quotedPriceCents:fixedOffer.priceCents,requestId:fixedRequestId});
-  $('privateCheckout').close();status('Privado confirmado · pago SIMULADO');await loadBookings();
- }catch(error){$('privateError').textContent=error.message;}finally{button.disabled=false;}
+  $('privateCheckout').close();status('Privado confirmado · pago SIMULADO');await openConfirmedTicket(result.booking);
+ }catch(error){$('privateError').textContent=error.message;}finally{paymentSubmitting=false;button.disabled=false;button.textContent=originalLabel;}
 };
 function checkout(d){
  if(!hasAccess()){signInToReserve('shared',d.id);return;}
@@ -52,19 +53,25 @@ $('seatGrid').onchange=()=>{
 };
 $('closeCheckout').onclick=()=>$('checkout').close();
 $('reserveForm').onsubmit=async e=>{
- e.preventDefault();const button=e.target.querySelector('button');button.disabled=true;
+ e.preventDefault();if(paymentSubmitting)return;paymentSubmitting=true;const button=e.target.querySelector('button');button.disabled=true;const originalLabel=button.textContent;button.textContent='Generando tu boleto…';
  try{
   const inputs=[...$('passengerNames').querySelectorAll('input')];if(!inputs.length)throw new Error('Selecciona un asiento');
-  await api('/bookings',{departureId:selected.id,seatNumbers:inputs.map(i=>Number(i.dataset.seat)),passengers:inputs.map(i=>i.value),contactPhone:e.target.elements.contactPhone.value,saveContact:e.target.elements.saveContact.checked,simulatedPaymentMethod:e.target.elements.simulatedPaymentMethod.value,quotedPriceCents:selected.priceCents,requestId});
-  $('checkout').close();status('Pago SIMULADO confirmado; boleto emitido');await loadBookings();
+  const result=await api('/bookings',{departureId:selected.id,seatNumbers:inputs.map(i=>Number(i.dataset.seat)),passengers:inputs.map(i=>i.value),contactPhone:e.target.elements.contactPhone.value,saveContact:e.target.elements.saveContact.checked,simulatedPaymentMethod:e.target.elements.simulatedPaymentMethod.value,quotedPriceCents:selected.priceCents,requestId});
+  $('checkout').close();status('Pago SIMULADO confirmado; boleto emitido');await openConfirmedTicket(result.booking);
  }catch(error){status(error.message);$('checkoutSummary').textContent=error.message;}
- finally{button.disabled=false;}
+ finally{paymentSubmitting=false;button.disabled=false;button.textContent=originalLabel;}
 };
-export async function loadBookings({background=false,cursor=null,ticket=null}={}){
+async function openConfirmedTicket(booking){
+ if(!booking?.id)throw new Error('No llegó la confirmación de la reserva. Revisa Mis viajes antes de reintentar.');
+ const url=new URL(location.href);for(const key of ['reserve','history','manage','panel','section'])url.searchParams.delete(key);url.searchParams.set('ticket',booking.id);history.replaceState(null,'',url.pathname+url.search);
+ await loadBookings({ticket:booking.id,confirmedBooking:booking});
+ $('myBookings').scrollIntoView({block:'start'});$('bookingList').querySelector('h3')?.setAttribute('tabindex','-1');$('bookingList').querySelector('h3')?.focus({preventScroll:true});
+}
+export async function loadBookings({background=false,cursor=null,ticket=null,confirmedBooking=null}={}){
  if(!hasAccess()){if(!background)signInFor(ticket?{ticket}:{history:'1'});return;}
  if(background&&loadingBookings)return;loadingBookings=true;const turn=++bookingsRevision;
  try{
-  const result=ticket?await api('/bookings/'+encodeURIComponent(ticket)):await api('/bookings'+(cursor?'?cursor='+encodeURIComponent(cursor):''));
+  const result=confirmedBooking?{booking:confirmedBooking}:ticket?await api('/bookings/'+encodeURIComponent(ticket)):await api('/bookings'+(cursor?'?cursor='+encodeURIComponent(cursor):''));
   const bookings=ticket?[result.booking]:result.bookings;
   if(turn!==bookingsRevision||background&&$('myBookings').hidden)return;
   const snapshot=JSON.stringify({bookings,nextCursor:result.nextCursor||null});if(background&&snapshot===lastBookingsSnapshot)return;lastBookingsSnapshot=snapshot;
@@ -118,7 +125,7 @@ function resumeTicket(){
 document.addEventListener('rutasec:account',()=>{resumeCheckout();resumeTicket();});resumeTicket();
 setInterval(()=>{if(!document.hidden&&!$('myBookings').hidden)loadBookings({background:true,cursor:historyCursor,ticket:viewedTicket});},5000);
 setInterval(async()=>{
- if(document.hidden||!$('checkout').open||!selected)return;const id=selected.id;
+ if(document.hidden||paymentSubmitting||!$('checkout').open||!selected)return;const id=selected.id;
  try{const data=await api('/catalog?operatorId='+encodeURIComponent(selected.operatorId)),next=data.departures.find(d=>d.id===id);if(!$('checkout').open||selected.id!==id)return;
   if(!next){$('checkoutSummary').textContent='La salida ya no tiene disponibilidad. Revisa Mis boletos si acabas de confirmar.';$('reserveForm').querySelector('button').disabled=true;return;}
   let changed=next.priceCents!==selected.priceCents;selected=next;

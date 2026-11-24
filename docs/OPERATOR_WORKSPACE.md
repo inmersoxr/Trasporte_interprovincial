@@ -43,3 +43,11 @@ Códigoa72479aa; Actions45393517383 SUCCESS:75pruebas+9recorridos navegador. sch
 ## Crear en Premium
 
 Crear viaje también aparece directamente en la barra inferior de Premium. Usa el mismo formulario y los recursos existentes. Al publicar conserva Premium y vuelve a En vivo, donde la salida queda Por iniciar; no es necesario cambiar a Standard.
+
+## R3 — fichas de vehículos/conductores y boleto inmediato (2026-11-24)
+
+EN PRUEBAS de entrega. Vehículos/Conductores en pestañas bajo Vehículos, alta y edición en diálogo, placa/marca/modelo/tipo/plazas y datos adicionales; cédula/licencia/teléfono/foto y vínculo laboral opcional. Reutiliza standard_drivers/documentos R2; configuración habitual en vehículo y snapshot driver por salida. Datos y fotografías privados, sin crear cuentas ni permisos. Crear viaje en ambas modalidades; recuperar conductor habitual y permitir cambio por salida. Migración0033 aditiva, sin borrado ni0025. Conflictos de conductor simultáneo en SQL, revisión optimista, aislamiento de empresa.
+
+Compra: bloqueo de doble envío, abrir boleto específico usando respuesta confirmada del POST y URL recuperable, sin depender de GET del historial; aplicar a compartido y privado. No emitir boletos ficticios ni confirmar localmente sin backend. Pagos de crédito/débito/transferencia siguen simulados.
+
+Evidencia local ya ejecutada: driver-resources API PASS; navegador cuatro vehículos/conductores/fotos/asignaciones/publicaciones/GPS PASS73s; presentación con lectura de historial503 forzada PASS29s. Ampliación tres compras por método confirmó boletos y avanzó al embarque; detectó inestabilidad del enlace de seguimiento, ajustado selector al primer enlace. Suite previa73/75: se corrigió alias SQL en perfil y fixture de identidades repetidas. No iniciar otra auditoría general por instrucción del usuario; workflow de publicación conserva checks existentes. Pruebas físicas de cámara/GPS y cuatro vehículos siguen pendientes. Completar evidencia Actions y remoto antes de declarar desplegado.

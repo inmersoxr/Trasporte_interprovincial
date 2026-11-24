@@ -1,3 +1,7 @@
+# Prioridad inmediata R3 — fichas vinculadas y confirmación de compra
+
+Crear/listar/editar vehículos y conductores en pestañas de recursos; conductor habitual por vehículo, selección y cambio por salida, histórico persistente. Fichas no requieren cuentas/invitaciones. Conservar Standard/Premium y navegación inferior. Pago simulado debe abrir directamente el boleto/QR confirmado por backend, sin depender de otra lectura del historial. El usuario pide publicar inmediatamente ambos cambios, sin otra auditoría general. Mantener plan maestro, datos, permisos, Pages y pagos reales desactivados.
+
 # Prioridad vigente — funcionalidad completa accesible, interfaz nueva
 
 La simplificación anterior NO autoriza ocultar módulos Standard/Premium. Mantener interfaz actual y navegación inferior; entrar en Operadores cambia al espacio de operadora con secciones Standard y Premium. Standard: viajes, creación, vehículos, reservas y empresa. Premium: en vivo, crear viaje, vehículos, empleados, gestión empresarial y empresa. Sin destino Avisos. Reubicar Vista de pasajero y Mi cuenta dentro de Empresa del menú inferior; no eliminarlos ni mantener accesos textuales arriba. El demo histórico es referencia de funciones y campos, no una pantalla que deba sustituir a la interfaz actual.

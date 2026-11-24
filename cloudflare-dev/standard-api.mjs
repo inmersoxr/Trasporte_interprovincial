@@ -71,6 +71,8 @@ export async function command(db, user, body, kind, operations, entityId) {
   } catch (error) {
     const saved = await stmt(db, 'SELECT * FROM standard_commands WHERE user_id=? AND request_id=?', [user.id, body.requestId]).first();
     if (saved?.kind === kind && saved.fingerprint === fingerprint) return saved.entity_id;
+    if(String(error.message).includes('trip_driver_conflict'))throw failure('El conductor ya tiene otro viaje en ese horario',409);
+    if(String(error.message).includes('driver_scope'))throw failure('Selecciona un conductor activo de tu empresa',403);
     if(String(error.message).includes('trip_staff_conflict'))throw failure('La persona responsable ya tiene otro viaje en ese horario',409);
     if (String(error.message).includes('vehicle_conflict')) throw failure('El vehículo ya tiene un servicio en ese horario', 409);
     if (String(error.message).includes('assignment_conflict')) throw failure('La asignación cambió; actualiza los miembros y vehículos',409);
@@ -158,9 +160,10 @@ export async function handleStandard(request, env) {
       if(body.employeeId&&!await stmt(env.DB,"SELECT 1 FROM premium_employees WHERE id=? AND operator_id=? AND status='active'",[body.employeeId,body.operatorId]).first())throw failure('Selecciona una persona activa de esta empresa',403);
       const at = Date.parse(body.departAt);
       if (!Number.isFinite(at) || at <= Date.now() || at > Date.now() + 366 * 86400000) throw failure('Fecha futura no válida');
+      const vehicleDefault=await stmt(env.DB,'SELECT default_driver_id FROM vehicles WHERE id=?',[offer.vehicle_id]).first(),driverId=body.driverId===null?null:body.driverId||vehicleDefault?.default_driver_id||null;if(driverId&&!await stmt(env.DB,"SELECT 1 FROM standard_drivers WHERE id=? AND operator_id=? AND status='active' AND license_expires_on>=?",[driverId,body.operatorId,new Date(at-18000000).toISOString().slice(0,10)]).first())throw failure('Selecciona un conductor de tu empresa con licencia vigente para la fecha del viaje',403);
       const duration = integer(body.durationMinutes ?? 240, 1, 2880, 'Duración');
       saved = await command(env.DB, user, body, 'departure', [stmt(env.DB, 'INSERT INTO departures(id,offer_id,vehicle_id,depart_at) VALUES(?,?,?,?)', [id, offer.id, offer.vehicle_id, new Date(at).toISOString()]),
-        stmt(env.DB, 'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,departure_id) VALUES(?,?,?,?,?)', [crypto.randomUUID(), offer.vehicle_id, at, at + duration * 60000, id]),...(body.employeeId?[stmt(env.DB,`INSERT INTO standard_departure_staff(departure_id,operator_id,employee_id,responsible_name,assigned_by) VALUES(?,?,?,(SELECT full_name FROM premium_employees WHERE id=? AND operator_id=? AND status='active'),?)`,[id,body.operatorId,body.employeeId,body.employeeId,body.operatorId,user.id])]:[])], id);
+        stmt(env.DB, 'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,departure_id) VALUES(?,?,?,?,?)', [crypto.randomUUID(), offer.vehicle_id, at, at + duration * 60000, id]),...(body.employeeId?[stmt(env.DB,`INSERT INTO standard_departure_staff(departure_id,operator_id,employee_id,responsible_name,assigned_by) VALUES(?,?,?,(SELECT full_name FROM premium_employees WHERE id=? AND operator_id=? AND status='active'),?)`,[id,body.operatorId,body.employeeId,body.employeeId,body.operatorId,user.id])]:[]),...(driverId?[stmt(env.DB,`INSERT INTO standard_departure_drivers(departure_id,operator_id,driver_id,driver_name,assigned_by) VALUES(?,?,?,(SELECT full_name FROM standard_drivers WHERE id=? AND operator_id=? AND status='active'),?)`,[id,body.operatorId,driverId,driverId,body.operatorId,user.id])]:[])], id);
     }
   }
   return { id: saved, environment: 'development' };

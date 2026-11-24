@@ -1,0 +1,25 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {runtime} from './runtime.mjs';import {verifiedActor} from './verified-actor.mjs';import {APP_ORIGIN} from '../identity.mjs';
+test('Driver resources: profiles, private photos, vehicle default, trip override, conflicts, revisions and history',async()=>{const r=await runtime({developmentAuth:false,pilot:true});try{
+ const owner=await verifiedActor(r,'resource-owner'),other=await verifiedActor(r,'resource-foreign'),op=(await owner.call('/operators',{name:'Empresa recursos propios'})).data.id,foreignOp=(await other.call('/operators',{name:'Otra empresa recursos'})).data.id;
+ const post=(path,b)=>owner.call('/pilot'+path,{operatorId:op,...b});assert.equal((await post('/prepare',{city:'Cuenca',acknowledge:true})).status,200);
+ const base={fullName:'Conductor Uno',phone:'+593991234567',identityNumber:'010000001',licenseNumber:'LIC-001',licenseCategory:'D',licenseExpiresOn:'2099-12-31'};
+ const driver=await post('/driver',{...base,requestId:crypto.randomUUID()});assert.equal(driver.status,200,JSON.stringify(driver));const id=driver.data.id;
+ const second=await post('/driver',{...base,fullName:'Conductor Dos',identityNumber:'010000002',licenseNumber:'LIC-002'});assert.equal(second.status,200,JSON.stringify(second));const id2=second.data.id;
+ assert.equal((await post('/driver',{...base})).status,409);
+ const alien=(await other.call('/operator-drivers',{operatorId:foreignOp,...base})).data.id;
+ const vbody={model:'Unidad real',brand:'Marca',plate:'TST-8901',type:'van',capacity:8,year:2024,color:'Blanco',unitCode:'01',defaultDriverId:id};const vehicle=await post('/vehicle',vbody);assert.equal(vehicle.status,200,JSON.stringify(vehicle));const vid=vehicle.data.id;
+ assert.equal((await post('/vehicle',{...vbody,plate:'TST-8902',defaultDriverId:alien})).status,403);
+ const photoBody=Uint8Array.from([137,80,78,71,13,10,26,10,0,1,2,3]);const upload=async(kind,subjectId)=>{const res=await r.mf.dispatchFetch(APP_ORIGIN+'/api/operator-documents?'+new URLSearchParams({operatorId:op,kind,subjectId,requestId:crypto.randomUUID(),filename:'prueba.png'}),{method:'POST',headers:{Cookie:owner.cookie,Origin:APP_ORIGIN,'Content-Type':'image/png'},body:photoBody});assert.equal(res.status,200,await res.clone().text());return(await res.json()).id;};
+ const photo=await upload('driver_photo',id);await upload('vehicle_photo',vid);
+ const ownPhoto=await owner.raw('/operator-documents/'+photo+'?inline=1');assert.equal(ownPhoto.status,200);assert.match(ownPhoto.headers.get('Content-Disposition'),/^inline/);assert.equal((await other.raw('/operator-documents/'+photo+'?inline=1')).status,403);
+ let dashboard=await owner.call('/pilot/dashboard?operatorId='+op);assert.equal(dashboard.data.drivers.length,2);assert.equal(dashboard.data.documents.length,2);assert.equal(dashboard.data.vehicles[0].driver_name,'Conductor Uno');assert.equal((await r.db.prepare('SELECT status FROM operators WHERE id=?').bind(op).first()).status,'approved');
+ const b={vehicleId:vid,origin:'Cuenca',destination:'Guayaquil',priceCents:1500,durationMinutes:240,departLocal:new Date(Date.now()-18000000+600000).toISOString().slice(0,16),pickup:'Lugar acordado',dropoff:'Destino acordado'};
+ const first=await post('/publish',b);assert.equal(first.status,200,JSON.stringify(first));const departure=first.data.departureId;assert.equal((await r.db.prepare('SELECT driver_id FROM standard_departure_drivers WHERE departure_id=?').bind(departure).first()).driver_id,id);
+ const spare=await post('/vehicle',{...vbody,model:'Otra unidad',plate:'TST-8903'});assert.equal(spare.status,200);assert.equal((await post('/publish',{...b,vehicleId:spare.data.id,driverId:id})).status,409);assert.equal((await r.db.prepare('SELECT COUNT(*) n FROM departures').first()).n,1);
+ const override=await post('/publish',{...b,vehicleId:spare.data.id,driverId:id2});assert.equal(override.status,200,JSON.stringify(override));assert.equal((await r.db.prepare('SELECT driver_id FROM standard_departure_drivers WHERE departure_id=?').bind(override.data.departureId).first()).driver_id,id2);
+ assert.equal((await post('/publish',{...b,departLocal:new Date(Date.now()-18000000+86400000).toISOString().slice(0,16),driverId:alien})).status,403);
+ const updated=await post('/vehicle',{...vbody,vehicleId:vid,expectedRevision:1,defaultDriverId:id2});assert.equal(updated.status,200,JSON.stringify(updated));assert.equal((await post('/vehicle',{...vbody,vehicleId:vid,expectedRevision:1})).status,409);
+ const renamed=await post('/driver',{...base,id,expectedRevision:1,fullName:'Nombre editado'});assert.equal(renamed.status,200,JSON.stringify(renamed));assert.equal((await post('/driver',{...base,id,expectedRevision:1})).status,409);
+ assert.equal((await r.db.prepare('SELECT driver_name FROM standard_departure_drivers WHERE departure_id=?').bind(departure).first()).driver_name,'Conductor Uno');
+ assert.equal((await r.db.prepare("SELECT COUNT(*) n FROM memberships WHERE role='driver'").first()).n,0);assert.equal((await other.call('/pilot/dashboard?operatorId='+op)).status,403);
+}finally{await r.mf.dispose();}});

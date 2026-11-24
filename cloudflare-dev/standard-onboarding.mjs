@@ -14,7 +14,7 @@ async function previous(db,user,body,kind,c){
  if(row&&(row.kind!==kind||row.fingerprint!==await c.hash(JSON.stringify(body))))throw c.failure('Reintento con contenido distinto',409);
  return row;
 }
-async function saveVersioned(db,user,body,kind,entityId,table,key,mutation,nonce,following,c){
+export async function saveVersioned(db,user,body,kind,entityId,table,key,mutation,nonce,following,c){
  const fingerprint=await c.hash(JSON.stringify(body)),condition=`EXISTS(SELECT 1 FROM ${table} WHERE ${key}=? AND last_nonce=?)`,test=[entityId,nonce];
  const result=await db.batch([mutation,
   ...following(condition,test),
@@ -24,7 +24,7 @@ async function saveVersioned(db,user,body,kind,entityId,table,key,mutation,nonce
  return {id:entityId};
 }
 function invalidate(db,op,c,condition,args){return[
- c.stmt(db,`UPDATE operators SET status='pending' WHERE id=? AND data_scope='alpha' AND ${condition}`,[op,...args]),
+ c.stmt(db,`UPDATE operators SET status='pending' WHERE id=? AND data_scope='alpha' AND NOT EXISTS(SELECT 1 FROM pilot_operators po WHERE po.operator_id=operators.id AND po.enabled=1) AND ${condition}`,[op,...args]),
  c.stmt(db,`UPDATE standard_operator_profiles SET review_state='draft',review_note='',revision=revision+1 WHERE operator_id=? AND ${condition}`,[op,...args])];}
 
 export async function onboardingData(db,operatorId,c){
@@ -44,7 +44,7 @@ export async function onboardingData(db,operatorId,c){
   const driver=result.drivers.find(d=>d.id===v.driver_id);
   if(!driver)missing.push('Asigna un conductor al vehículo '+v.model+'.');
   else{if(driver.license_expires_on<today())missing.push('Actualiza la licencia de '+driver.full_name+'.');if(!has('license',driver.id))missing.push('Falta licencia vigente de '+driver.full_name+'.');}
-  for(const kind of documentKinds.filter(k=>k.subject==='vehicle'))if(!has(kind.kind,v.id))missing.push('Falta '+kind.label.toLowerCase()+' de '+v.model+'.');
+  for(const kind of documentKinds.filter(k=>k.subject==='vehicle'&&!k.optional))if(!has(kind.kind,v.id))missing.push('Falta '+kind.label.toLowerCase()+' de '+v.model+'.');
  }
  return {...result,missing:[...new Set(missing)]};
 }
@@ -54,7 +54,7 @@ export async function readDocument(request,env,user,id,c,platform=false){
  if(platform){if(!await c.stmt(env.DB,"SELECT 1 FROM platform_admins WHERE user_id=? AND role='owner'",[user.id]).first())throw c.failure('Sin permiso para documentos privados',403);}
  else await c.owner(env.DB,user.id,row.operator_id);
  const object=await env.BUCKET.get(row.object_key);if(!object)throw c.failure('Archivo no disponible',404);
- return new Response(object.body,{headers:{'Content-Type':row.content_type,'Content-Disposition':'attachment; filename="documento.'+({'application/pdf':'pdf','image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[row.content_type]||'bin')+'"','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+ return new Response(object.body,{headers:{'Content-Type':row.content_type,'Content-Disposition':(new URL(request.url).searchParams.get('inline')==='1'&&['driver_photo','vehicle_photo'].includes(row.kind)?'inline':'attachment')+'; filename="documento.'+({'application/pdf':'pdf','image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[row.content_type]||'bin')+'"','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 }
 
 async function uploadDocument(request,env,user,op,c){
@@ -72,6 +72,7 @@ async function uploadDocument(request,env,user,op,c){
  const data=new Uint8Array(size);let offset=0;for(const chunk of chunks){data.set(chunk,offset);offset+=chunk.length;}
  const type=request.headers.get('Content-Type')?.split(';')[0],head=new TextDecoder().decode(data.slice(0,12));
  const valid=type==='application/pdf'&&head.startsWith('%PDF-')||type==='image/png'&&data.slice(0,8).join(',')==='137,80,78,71,13,10,26,10'||type==='image/jpeg'&&data[0]===255&&data[1]===216&&data[2]===255||type==='image/webp'&&head.startsWith('RIFF')&&new TextDecoder().decode(data.slice(8,12))==='WEBP';
+ if(kind.photo&&!type?.startsWith('image/'))throw c.failure('La fotografía debe ser JPG, PNG o WebP');
  if(!valid)throw c.failure('Usa un PDF o una imagen JPG, PNG o WebP válida');
  const contentHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',data)),v=>v.toString(16).padStart(2,'0')).join('');
  const fingerprint=await c.hash(JSON.stringify({kind:kind.kind,subject,expires,contentHash}));
@@ -140,17 +141,19 @@ export async function handleOnboarding(request,env,c){
     SELECT ?,?,?,?,?,?,?,?,?,? WHERE ?=0 OR EXISTS(SELECT 1 FROM standard_operator_profiles WHERE operator_id=?)
     ON CONFLICT(operator_id) DO UPDATE SET kind=excluded.kind,responsible_name=excluded.responsible_name,phone=excluded.phone,contact_email=excluded.contact_email,base_city=excluded.base_city,address=excluded.address,
     revision=revision+1,review_state='draft',review_note='',last_request=excluded.last_request,fingerprint=excluded.fingerprint,last_nonce=excluded.last_nonce WHERE revision=?`,[op,body.kind,responsible,number,contact,body.baseCity,address,body.requestId,fingerprint,nonce,revision,op,revision]),nonce,
-   (condition,args)=>[stmt(db,`UPDATE operators SET display_name=?,legal_name=?,tax_id=?,status=CASE WHEN data_scope='qa' THEN status ELSE 'pending' END WHERE id=? AND ${condition}`,[name,legal,tax||null,op,...args])],c);
+   (condition,args)=>[stmt(db,`UPDATE operators SET display_name=?,legal_name=?,tax_id=?,status=CASE WHEN data_scope='qa' OR EXISTS(SELECT 1 FROM pilot_operators po WHERE po.operator_id=operators.id AND po.enabled=1) THEN status ELSE 'pending' END WHERE id=? AND ${condition}`,[name,legal,tax||null,op,...args])],c);
  }
  if(path==='/api/operator-drivers'){
   const id=body.id||crypto.randomUUID(),revision=integer(body.expectedRevision??0,0,10000000,'Revisión');if(!uuid(id))throw failure('Conductor no válido');
   if(body.id&&!await stmt(db,'SELECT 1 FROM standard_drivers WHERE id=? AND operator_id=?',[id,op]).first())throw failure('Conductor de otra operadora',403);
   if(body.userId&&!await stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role='driver'",[body.userId,op]).first())throw failure('Cuenta de conductor ajena o sin permiso',403);
-  const values=[id,op,text(body.fullName,'Nombre del conductor'),phone(body.phone,failure),text(body.identityNumber,'Identificación',30),text(body.licenseNumber,'Licencia',30),text(body.licenseCategory,'Categoría de licencia',10),validDate(body.licenseExpiresOn,failure),body.userId||null,body.requestId,fingerprint,nonce];
-  return saveVersioned(db,user,body,kind,id,'standard_drivers','id',stmt(db,`INSERT INTO standard_drivers(id,operator_id,full_name,phone,identity_number,license_number,license_category,license_expires_on,user_id,last_request,fingerprint,last_nonce)
-   SELECT ?,?,?,?,?,?,?,?,?,?,?,? WHERE ?=0 OR EXISTS(SELECT 1 FROM standard_drivers WHERE id=?)
-   ON CONFLICT(id) DO UPDATE SET full_name=excluded.full_name,phone=excluded.phone,identity_number=excluded.identity_number,license_number=excluded.license_number,license_category=excluded.license_category,license_expires_on=excluded.license_expires_on,user_id=excluded.user_id,
-   revision=revision+1,last_request=excluded.last_request,fingerprint=excluded.fingerprint,last_nonce=excluded.last_nonce WHERE revision=?`,[...values,revision,id,revision]),nonce,(condition,args)=>invalidate(db,op,c,condition,args),c);
+  if(body.employeeId&&!await stmt(db,'SELECT 1 FROM premium_employees WHERE id=? AND operator_id=?',[body.employeeId,op]).first())throw failure('Empleado de otra empresa',403);
+  const category=String(body.licenseCategory||'').trim().toUpperCase();if(!/^[A-Z0-9+ -]{1,10}$/.test(category))throw failure('Revisa la categoría de licencia');
+  const values=[id,op,text(body.fullName,'Nombre del conductor'),phone(body.phone,failure),text(body.identityNumber,'Identificación',30),text(body.licenseNumber,'Licencia',30),category,validDate(body.licenseExpiresOn,failure),body.userId||null,body.requestId,fingerprint,nonce,body.employeeId||null];
+  return saveVersioned(db,user,body,kind,id,'standard_drivers','id',stmt(db,`INSERT INTO standard_drivers(id,operator_id,full_name,phone,identity_number,license_number,license_category,license_expires_on,user_id,last_request,fingerprint,last_nonce,employee_id)
+   SELECT ?,?,?,?,?,?,?,?,?,?,?,?,? WHERE ?=0 OR EXISTS(SELECT 1 FROM standard_drivers WHERE id=?)
+   ON CONFLICT(id) DO UPDATE SET full_name=excluded.full_name,phone=excluded.phone,identity_number=excluded.identity_number,license_number=excluded.license_number,license_category=excluded.license_category,license_expires_on=excluded.license_expires_on,user_id=excluded.user_id,employee_id=excluded.employee_id,
+   revision=revision+1,last_request=excluded.last_request,fingerprint=excluded.fingerprint,last_nonce=excluded.last_nonce WHERE revision=?`,[...values,revision,id,revision]),nonce,(condition,args)=>invalidate(db,op,c,condition,args),c).catch(error=>{if(/driver_identity_conflict|UNIQUE constraint failed: standard_drivers/.test(String(error.message)))throw failure('Ya existe un conductor con esa cédula o licencia en esta empresa',409);throw error;});
  }
  if(path==='/api/vehicle-details'){
   const vehicle=await stmt(db,'SELECT * FROM vehicles WHERE id=? AND operator_id=?',[body.vehicleId,op]).first();if(!vehicle)throw failure('Vehículo de otra operadora',403);
@@ -163,7 +166,7 @@ export async function handleOnboarding(request,env,c){
   return saveVersioned(db,user,body,kind,vehicle.id,'standard_vehicle_details','vehicle_id',stmt(db,`INSERT INTO standard_vehicle_details(vehicle_id,driver_id,brand,year,color,last_request,fingerprint,last_nonce)
    SELECT ?,?,?,?,?,?,?,? WHERE ?=0 OR EXISTS(SELECT 1 FROM standard_vehicle_details WHERE vehicle_id=?)
    ON CONFLICT(vehicle_id) DO UPDATE SET driver_id=excluded.driver_id,brand=excluded.brand,year=excluded.year,color=excluded.color,revision=revision+1,last_request=excluded.last_request,fingerprint=excluded.fingerprint,last_nonce=excluded.last_nonce WHERE revision=?`,[vehicle.id,body.driverId,text(body.brand,'Marca'),year,text(body.color,'Color'),body.requestId,fingerprint,nonce,revision,vehicle.id,revision]),nonce,
-   (condition,args)=>[stmt(db,`UPDATE vehicles SET plate=?,model=?,capacity=?,status=CASE WHEN (SELECT data_scope FROM operators WHERE id=?)='qa' THEN status ELSE 'pending' END WHERE id=? AND ${condition}`,[plate,text(body.model,'Modelo'),capacity,op,vehicle.id,...args]),...invalidate(db,op,c,condition,args)],c);
+   (condition,args)=>[stmt(db,`UPDATE vehicles SET plate=?,model=?,capacity=?,brand=?,year=?,color=?,default_driver_id=?,revision=revision+1,status=CASE WHEN (SELECT data_scope FROM operators WHERE id=?)='qa' OR EXISTS(SELECT 1 FROM pilot_operators po WHERE po.operator_id=vehicles.operator_id AND po.enabled=1) THEN status ELSE 'pending' END WHERE id=? AND ${condition}`,[plate,text(body.model,'Modelo'),capacity,text(body.brand,'Marca'),year,text(body.color,'Color'),body.driverId,op,vehicle.id,...args]),...invalidate(db,op,c,condition,args)],c);
  }
  const revision=integer(body.expectedRevision,1,10000000,'Revisión');
  if(!await stmt(db,'SELECT 1 FROM standard_documented_operators WHERE operator_id=?',[op]).first())throw failure('Completa el perfil, conductor, vehículo y documentos vigentes antes de solicitar revisión',409);
