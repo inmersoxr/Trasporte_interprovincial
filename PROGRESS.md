@@ -53,13 +53,13 @@ Fase00 VALIDADA. H1 desplegado3186c93c/Actions45333404724 SUCCESS,72 pruebas y7n
 | 01.08 | VALIDADA | PILOT_PREMIUM_ENABLED true; trial fee0 sin vencimiento configurado al crear organización propia, trigger0023 reutilizado. Premium/gestión habilitados en Worker y navegador; planes previos sin cambios; pagos reales desactivados. | a81c87f0f52d2ead823578fd3d4301bd553bf597 |
 | 01.09 | BLOQUEADA | Dos contextos independientes y recarga PASS en CI; falta que participante entre con la misma cuenta desde dos teléfonos/conexiones reales y confirme la misma empresa. No sustituir esta evidencia con fixtures. | c4088d72610d92df0199aff0eb42a40017f3da21 |
 | 01.10 | VALIDADA | 3186c93c/Actions45333404724 SUCCESS. schema0029 piloto/D1/R2true, flags true; activos coinciden, UI pública anónima móvil/escritorio PASS. Main/Pages intactos. Despliegue permite prueba física01.09, no cierra aún Fase01. | 3186c93cd3aa1ddc19230d155cb285be80baed77 |
-| 02.01 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
-| 02.02 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
-| 02.03 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
-| 02.04 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
-| 02.05 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
-| 02.06 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
-| 02.07 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
+| 02.01 | AUDITADA | UX-01/UX-02: navegación y flujos de operadora/empresa; completar validación entre superficies y roles. | Fuente y despliegues en cierre UX |
+| 02.02 | EN PRUEBAS | UX-01/UX-02: navegación y flujos de operadora/empresa; completar validación entre superficies y roles. | Fuente y despliegues en cierre UX |
+| 02.03 | EN PRUEBAS | UX-01/UX-02: navegación y flujos de operadora/empresa; completar validación entre superficies y roles. | Fuente y despliegues en cierre UX |
+| 02.04 | EN PRUEBAS | UX-01/UX-02: navegación y flujos de operadora/empresa; completar validación entre superficies y roles. | Fuente y despliegues en cierre UX |
+| 02.05 | EN PRUEBAS | UX-01/UX-02: navegación y flujos de operadora/empresa; completar validación entre superficies y roles. | Fuente y despliegues en cierre UX |
+| 02.06 | EN PRUEBAS | UX-01/UX-02: navegación y flujos de operadora/empresa; completar validación entre superficies y roles. | Fuente y despliegues en cierre UX |
+| 02.07 | EN PRUEBAS | UX-01/UX-02: navegación y flujos de operadora/empresa; completar validación entre superficies y roles. | Fuente y despliegues en cierre UX |
 | 03.01 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 03.02 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 03.03 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
@@ -295,3 +295,9 @@ UX-01 EN PRUEBAS: menú móvil de cinco destinos, rail de escritorio; Crear viaj
 Pruebas locales: presentación PASS26s, operadora cuatro unidades/conductores/salidas/GPS PASS66s, bus dos pisos/tramos/ventanilla y navegación recarga PASS15s; capturas móvil390 y escritorio1280 revisadas. Se corrigió un borrado accidental de enlaces de Empresa al incrustar el directorio. No declarar despliegue hasta Actions y comprobación remota.
 
 Fase02 global EN DESARROLLO: continuar coherencia entre consola principal, administración empresarial, identidad y pasajero; accesibilidad/errores y navegación por rol. Fases04–09 todavía tienen trabajo real: roles empresariales múltiples y alcance, propietarios, asignaciones temporales, generación multivehículo y calendario completo. No marcar esos módulos como completos por añadir accesos. Google/correo/SRI reales mantienen dependencia externa previa; pruebas físicas siguen pendientes.
+
+## UX-02 — contexto empresarial compartido
+
+EN PRUEBAS de publicación. Administración empresarial e identidad recuperan el mismo marco visual de operadora: logo/contexto, jerarquía de títulos, navegación inferior móvil/lateral escritorio, acciones contextuales y listas sin cuadrículas de funcionalidades. Tema de empresa y colores de seguridad se conservan. Regreso empresarial lleva a Empresa; iconos SVG reutilizados por consola y empresa con aria-hidden, sin alterar nombres accesibles. Formularios, borradores, clientes, cobros de prueba, nómina y mantenimiento existentes reutilizados. Sin cambios de base, API o permisos.
+
+Pruebas: enterprise-localPASS10s en360/390/1280 y identity-localPASS9s con borrador/publicación/recorte. Se corrigió CSS pseudocontent que alteraba nombres accesibles. UX-01 continúa en Actions45505096489; completar ambos despliegues/evidencias antes de declarar publicado. Fase02 global no se cierra por estos hitos: resta consolidar navegación entre todas las superficies/roles y revisión de pasajero. Todo el plan permanece abierto según cada criterio, no limitarlo al piloto.

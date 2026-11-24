@@ -1,9 +1,11 @@
+import {navIcon} from '../company/navigation-icons.mjs';
 import {renderSeatMap} from '../standard/seat-map.mjs';
 import {documentKinds} from '../standard/onboarding-policy.mjs';
 import {applyTheme} from '../company/theme.mjs';
 const $=id=>document.getElementById(id),op=new URLSearchParams(location.search).get('operator'),node=(tag,text)=>{const n=document.createElement(tag);n.textContent=text;return n;},money=c=>new Intl.NumberFormat('es-EC',{style:'currency',currency:'USD'}).format((c||0)/100),date=n=>new Date(n).toLocaleString('es-EC',{timeZone:'America/Guayaquil'}),today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Guayaquil',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());let data,core,identity,page='operations',sub='fleet',busy=false,actionBusy=false,actionRequest=null,taskHandler,taskDirty=false,taskRequest=null,map,markers=new Map(),fleetTurn=0,cursor=null;
 const groups={operations:[['fleet','Flota GPS'],['maintenance','Mantenimiento'],['sales','Venta de oficina']],team:[['employees','Personas'],['shifts','Turnos'],['payroll','Remuneraciones']],partners:[['customer','Clientes'],['supplier','Proveedores']],finance:[['receivable','Por cobrar'],['payable','Por pagar'],['expenses','Gastos'],['settlements','Liquidaciones'],['fiscal','Facturación']],reports:[['results','Resultados']]};
-const content=$('content');$('back').href='/pilot/?'+new URLSearchParams({operator:op||'',panel:'tools',mode:'premium'});
+for(const b of $('destinations').children){const icon=b.querySelector('.business-icon');if(icon)icon.innerHTML=navIcon(({operations:'live',team:'employees',partners:'partners',finance:'finance',reports:'reports'})[b.dataset.page]);}
+const content=$('content');$('back').href='/pilot/?'+new URLSearchParams({operator:op||'',panel:'company',mode:'premium'});
 async function api(path,body){try{const r=await fetch('/standard-api/api'+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(15000)}),v=await r.json();if(!r.ok)throw Error(v.error||'No se pudo completar');return v;}catch(e){if(e instanceof TypeError)throw Error('Sin conexión. Los datos del formulario se conservan para reintentar.');if(e.name==='TimeoutError')throw Error('La conexión tardó demasiado. Consulta el estado antes de reintentar.');throw e;}}
 
 const post=(path,b)=>api('/premium/enterprise'+path,{...b,operatorId:op,requestId:b.requestId||(busy?taskRequest:actionRequest)||crypto.randomUUID()});
