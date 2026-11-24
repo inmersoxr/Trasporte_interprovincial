@@ -134,7 +134,7 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     assert.equal(await b.page.locator('.qr canvas,.qr img').count()>0,true);
     assert.equal((await db.prepare("SELECT COUNT(*) n FROM seat_claims WHERE status='confirmed'").first()).n,1);
     assert.equal((await db.prepare('SELECT COUNT(*) n FROM bookings').first()).n,1);
-    await b.page.reload();await b.page.getByRole('button',{name:'Mis viajes'}).click();await b.page.locator(`[data-booking="${booking.id}"]`).waitFor();
+    await b.page.reload();await b.page.getByRole('button',{name:'Mis viajes',exact:true}).click();await b.page.locator(`[data-booking="${booking.id}"]`).waitFor();
     const qrImage=await b.page.locator('.qr canvas').first().evaluate(canvas=>canvas.toDataURL('image/png'));
 
     await operatorTab('reservations','manifest');await a.page.locator('#refreshOperations').click();await a.page.locator(`[data-manifest="${booking.id}"]`).getByText(/Pasajero Alpha de prueba/).waitFor();
@@ -159,7 +159,7 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
     assert.equal((await db.prepare('SELECT boarded_at FROM standard_passengers WHERE booking_id=?').bind(booking.id).first()).boarded_at,boarded);
     assert.equal((await db.prepare("SELECT COUNT(*) n FROM standard_operational_events WHERE event='boarded'").first()).n,1);
     assert.equal(await a.page.evaluate(()=>globalThis.testCameraStreams.every(s=>s.getTracks().every(t=>t.readyState==='ended'))),true);
-    await b.page.reload();await b.page.getByRole('button',{name:'Mis viajes'}).click();await b.page.getByText('EMBARCADO',{exact:true}).waitFor();
+    await b.page.reload();await b.page.getByRole('button',{name:'Mis viajes',exact:true}).click();await b.page.getByText('EMBARCADO',{exact:true}).waitFor();
     await operatorTab('reservations','manifest');await a.page.locator(`[data-service="${departures[1].id}"]`).getByRole('button',{name:'Cancelar salida y simular reembolsos'}).click();
     await operatorTab('reservations','manifest');await a.page.locator(`[data-service="${departures[1].id}"]`).getByText(/cancelled/).waitFor();
     assert.equal((await db.prepare("SELECT COUNT(*) n FROM departures WHERE status='published'").first()).n,2);

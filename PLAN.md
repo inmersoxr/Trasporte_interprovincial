@@ -348,3 +348,6 @@ El plan maestro171tareas continúa íntegro; estas fases amplían entidades exis
 GROUND2–7 software VALIDADA en6546da5c/Actions45437345514; GROUND8-DEPLOY VALIDADA, GROUND8-FISICO PENDIENTE. Mantener Fase8 global EN PRUEBAS hasta pruebas físicas. Ver PROGRESS y evidencia; sin reiniciar171tareas históricas.
 
 UX-01/UX-02 publicados986224b/Actions45505867765; Fase02 continúa EN DESARROLLO con02.02C pasajero/sesión/retorno y02.07 transversal. Mantener dependencias y171tareas; no cerrar plan por estos hitos.
+
+
+UX-03 publicada a87c850/Actions45507871842. UX-04/05 completan interacción y navegación de roles actuales y boleto; en pruebas de publicación. Fase02 global permanece EN DESARROLLO; no validar roles granulares ni el plan completo por estos cambios.
