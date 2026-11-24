@@ -201,3 +201,9 @@ UX-01 yUX-02 VALIDADA en su alcance de operadora/empresa, con interacciones y ca
 Fase02 global EN DESARROLLO: siguiente02.02C coherencia de pasajero/sesión/retorno y02.07 validación transversal de accesibilidad/roles. Luego seguir fase03/04 y dependencias de PLAN, reutilizando identidad y APIs existentes. Roles granulares/múltiples, propietarios, asignaciones temporales, programación multivehículo y calendario completo siguen pendientes; consultar FULL_PLAN_EXECUTION.md. No cerrar todo el plan ni presentar estos accesos como funciones ya completadas. Fuente válida es rama activa/commit986224b; root local conserva trabajo S1 diferido no publicable.
 
 URL principal https://rutasec-web-dev.drbrownlabs.workers.dev/pilot/ . Menú inferior móvil y rail escritorio, creación agrupada y recuperación de vehículo, sin duplicar datos ni módulos.
+
+## UX-03 — tarea02.02C pasajero y retorno
+
+EN PRUEBAS de publicación. Reserva agrupada en asientos/datos/pago, selección explícita de piso en vehículos de dos pisos conservando asientos de ambos pisos, estado de asiento actualizado durante polling, boleto con jerarquía legible. Botones de piso son typebutton y no confirman compras; selección/pago/inventario/QR siguen siendo los existentes. Cuenta de operadora incluye returnTo con empresa/modalidad/destino, validado por return-path existente.
+
+Presentación/QR/cámara/GPSPASS24s; bus70/tramos/compra y ventanilla verificados tras seleccionar Piso2 en ambos canales. Sin migraciones, cambios de API, permisos ni cobros reales. Continuar fase02 transversal y validación de identidad existente, luego fase04autorización/equipo; no presentar roles avanzados o propietarios como implementados.
