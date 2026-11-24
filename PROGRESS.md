@@ -17,8 +17,8 @@ Fase00 VALIDADA. H1 desplegado3186c93c/Actions45333404724 SUCCESS,72 pruebas y7n
 | 01.03 | VALIDADA | PILOT_REGISTRATION_ENABLED true en despliegue. Sin envío/código; contacto permanece no verificado. No concede admin global aun declarando correo preautorizado; rechazo fuera del host app y al apagar flag. | 2ac596631e4a064b5e74a5a5b82747325c1a5fe4 |
 | 01.04 | VALIDADA | scrypt reutilizado, cookies Secure/HttpOnly, sesiones hash7d, origen, rate limiting y revocación. Probe negativo en Cloudflare devuelve401 ejecutando comparación; sin cuenta creada ni secretos expuestos. | 419a89c2492a8bd2cbad7a20fa96536001c109fe |
 | 01.05 | VALIDADA | Worker y Chromium: login en segundo contexto, recarga, cambio de contraseña revoca sesión anterior, logout revoca cookie; vía teléfono y correo preservada. | 9e6bc88386845d5f9c08ba4c3f9f56edfa9b6b56 |
-| 01.06 | VALIDADA | Sin empresa, Operadores abre Empresa automáticamente; crear nombre persiste misma entidad vista desde segunda sesión. Reintento idempotente; ninguna empresa ficticia creada en remoto. | Validación identificada por commit 01.06 |
-| 01.07 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
+| 01.06 | VALIDADA | Sin empresa, Operadores abre Empresa automáticamente; crear nombre persiste misma entidad vista desde segunda sesión. Reintento idempotente; ninguna empresa ficticia creada en remoto. | b8684a8c60fe1b71ea1494236511488f072d6f6d |
+| 01.07 | VALIDADA | Membresía owner al crear empresa; UI Administrador principal; API de otra empresa403, platformRole null y cero admin global por declaración de contacto sin verificar. | Validación identificada por commit 01.07 |
 | 01.08 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.09 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.10 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
