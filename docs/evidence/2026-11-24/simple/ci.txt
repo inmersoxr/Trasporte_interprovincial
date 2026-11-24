@@ -1,0 +1,48 @@
+Source 45ed4b3d1ffa768de1eca995cb58cd7216560e10
+Actions45372210818 verify/deploy SUCCESS;74 unit tests and8 browser journeys.
+GPS/camera inputs in automated journeys are fixtures. Physical phone validation remains pending.
+
+2026-11-24T10:11:27.5027219Z ℹ tests 74
+2026-11-24T10:11:27.5028571Z ℹ pass 74
+2026-11-24T10:11:27.5029677Z ℹ fail 0
+2026-11-24T10:11:27.5030878Z ℹ duration_ms 46751.708651
+2026-11-24T10:12:14.3391224Z ✔ Alpha local browser: recurring operator schedule, Google at checkout and persistent tickets across independent sessions (45988.158064ms)
+2026-11-24T10:12:14.3396194Z ℹ tests 1
+2026-11-24T10:12:14.3396966Z ℹ pass 1
+2026-11-24T10:12:14.3397392Z ℹ fail 0
+2026-11-24T10:12:14.3399161Z ℹ duration_ms 45991.475993
+2026-11-24T10:12:19.8292531Z ✔ A2 local browser: email signup, mailbox code, password, admin entry, change and recovery without IDs (4904.032092ms)
+2026-11-24T10:12:19.8296106Z ℹ tests 1
+2026-11-24T10:12:19.8296851Z ℹ pass 1
+2026-11-24T10:12:19.8297178Z ℹ fail 0
+2026-11-24T10:12:19.8298551Z ℹ duration_ms 4907.20322
+2026-11-24T10:12:25.5352184Z ✔ G1 local browser: separate login, plan dates, manual ledger, auditor, denial and mobile (5137.418582ms)
+2026-11-24T10:12:25.5355504Z ℹ tests 1
+2026-11-24T10:12:25.5356217Z ℹ pass 1
+2026-11-24T10:12:25.5356548Z ℹ fail 0
+2026-11-24T10:12:25.5357783Z ℹ duration_ms 5140.572655
+2026-11-24T10:12:51.1288810Z ✔ GPS browser with emulated device: map movement, durable offline queue and independent public view (25028.089718ms)
+2026-11-24T10:12:51.1292605Z ℹ tests 1
+2026-11-24T10:12:51.1293622Z ℹ pass 1
+2026-11-24T10:12:51.1294048Z ℹ fail 0
+2026-11-24T10:12:51.1295815Z ℹ duration_ms 25031.343021
+2026-11-24T10:12:54.8721087Z ✔ Identity editor: mobile/desktop, draft, publish, crop and public themed profile (3194.875394ms)
+2026-11-24T10:12:54.8724416Z ℹ tests 1
+2026-11-24T10:12:54.8725896Z ℹ pass 1
+2026-11-24T10:12:54.8726317Z ℹ fail 0
+2026-11-24T10:12:54.8727482Z ℹ duration_ms 3198.068477
+2026-11-24T10:12:59.5078226Z ✔ Enterprise UX: contacts, receivables, partial payments, payroll and maintenance on mobile/desktop (4068.59246ms)
+2026-11-24T10:12:59.5083338Z ℹ tests 1
+2026-11-24T10:12:59.5085208Z ℹ pass 1
+2026-11-24T10:12:59.5085577Z ℹ fail 0
+2026-11-24T10:12:59.5087044Z ℹ duration_ms 4071.794105
+2026-11-24T10:13:05.5094654Z ✔ H1 browser: phone-first signup without code, own Premium operator, independent session and password revocation (5452.115394ms)
+2026-11-24T10:13:05.5098700Z ℹ tests 1
+2026-11-24T10:13:05.5100093Z ℹ pass 1
+2026-11-24T10:13:05.5101175Z ℹ fail 0
+2026-11-24T10:13:05.5102711Z ℹ duration_ms 5455.96445
+2026-11-24T10:13:19.7975253Z ✔ Presentation pilot: simple demo form, no drivers, publication, independent sale, operator camera QR and real-GPS protocol (13741.31042ms)
+2026-11-24T10:13:19.7978193Z ℹ tests 1
+2026-11-24T10:13:19.7978920Z ℹ pass 1
+2026-11-24T10:13:19.7979235Z ℹ fail 0
+2026-11-24T10:13:19.7981971Z ℹ duration_ms 13745.049953
