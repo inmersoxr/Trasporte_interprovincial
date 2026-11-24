@@ -39,3 +39,5 @@ Pruebas de firma/claims alterados, callbacks web/admin, CSRF, replay/expiración
 Los proveedores de CI son de prueba. El acceso real de Google requiere credenciales reales y consentimiento de una persona; no declarar Google activo porque las pruebas locales pasen. Estado de despliegue y activación: snapshot fechado de esta entrega. Sin nueva base, migraciones ni pagos. Rollback de frontend/flujo a versión anterior manteniendo tablas; credenciales permanecen en el Worker y pueden revocarse desde Google Cloud si el propietario lo requiere.
 
 Fuentes oficiales: [OAuth para servidor web](https://developers.google.com/identity/protocols/oauth2/web-server), [validación OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect), [políticas OAuth](https://developers.google.com/identity/protocols/oauth2/policies).
+
+Actualización del piloto H1: el registro por teléfono o correo/contraseña admite acceso sin código mientras el flag de piloto esté activo. Esto no declara verificado el contacto ni habilita administración global. La verificación normal y Google se conservan; el transporte de correo pendiente ya no bloquea el alta de piloto.

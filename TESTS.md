@@ -31,3 +31,8 @@ Una compilación/captura por sí sola no valida funcionalidad. Registrar fallos 
 - pilot-local.e2e.mjs: registro móvil prioritario teléfono, creación de operadora, portal Premium real, segunda sesión sin cookies previas, recarga, cambio y logout; alternativa correo;360/390/1280 sin desbordamiento. PASS11.51s, capturas inspeccionadas.
 - Fallos corregidos: alta de Premium duplicaba premium_tenants porque ya existe trigger0023: se reutiliza trigger. Primera entrada de operadora abría resumen sin exponer creación: ahora sin empresas abre Empresa automáticamente. Prueba de ruta503 se mantuvo y pasó tras corregir el backend; no se sustituyó por una ruta alternativa.
 - Sin teléfonos/conductores/vehículos físicos;01.09 conserva validación humana pendiente.
+
+## Cierre de entrega H1
+Actions45333404724 SUCCESS:72/72 y siete flujos Chromium. H1 automatizado prueba dos contextos sin cookies compartidas, no dos teléfonos físicos. Remoto: health0029/flags de piloto true; UI360/390/1280 y contactos visibles, validación de contraseña conserva datos sin crear cuenta; login negativo401. Capturas inspeccionadas. Activos fuente coinciden; main/Pages intactos. Sin exportaciones de D1 ni alta de datos ficticios públicos.01.09 sigue bloqueada por prueba humana física; no certificar piloto integral.
+
+- 01.01 VALIDADA: 3186c93c/Actions45333404724 SUCCESS;72tests y7navegadores. Registro sin correo/SMS en Worker real de prueba; frontend público muestra Crear cuenta y entrar sin código.

@@ -2,7 +2,7 @@
 
 Registro inicial 2026-11-24. No se marcan las fases posteriores como terminadas por el inventario histórico. Ver docs/ENTERPRISE_PILOT.md y snapshots para capacidades reutilizables ya comprobadas.
 
-Fase00 VALIDADA. G-BRANDING publicado y probado. Siguiente tarea:01.01 registro piloto por teléfono/correo, hasta H1; Google real bloqueado por credenciales y consentimiento.
+Fase00 VALIDADA. H1 desplegado3186c93c/Actions45333404724 SUCCESS,72 pruebas y7navegadores. Siguiente tarea bloqueada01.09: prueba desde dos teléfonos/conexiones reales del participante; H1 se entrega para esa prueba y Fase01 no se cierra hasta su confirmación. G-BRANDING público; Google real pendiente de credenciales/consentimiento.
 
 | ID | Estado | Evidencia / bloqueo | Commit |
 |---|---|---|---|
@@ -12,7 +12,7 @@ Fase00 VALIDADA. G-BRANDING publicado y probado. Siguiente tarea:01.01 registro 
 | 00.04 | VALIDADA | Google y correo reales bloqueados; acceso piloto sin código pendiente; pruebas físicas no validadas; código funcional separado de aceptación real. Ver docs/AUDIT_PHASE00_2026-11-24.md. | a7cecfa6d8a99d9ab9ebbe153a6bd4b0fe97d660 |
 | 00.05 | VALIDADA | Actions45330995683 SUCCESS; URLs about/privacy/terms HTTP200 anónimas; Chromium remoto390/1280 PASS; health schema0028/D1/R2true. Ver docs/AUDIT_PHASE00_2026-11-24.md. | 67bec5ed8db53772afb39cc5ac5d8b89fe96ccc8 |
 | 00.06 | VALIDADA | Fuente ded3bb70; versiones Workers conocidas y D1 Time Travel metadata verificada en Actions45322538944; punto UTC2026-11-24T05:07:11Z; sin exportar/restaurar datos. Ver docs/AUDIT_PHASE00_2026-11-24.md. | 7497e906a19c32e5c250c291ae657dfa45958f6e |
-| 01.01 | EN PRUEBAS | Worker/Chromium locales prueban registro teléfono/correo sin código; preparando despliegue H1 y regresión. | Implementación H1 pendiente de publicación |
+| 01.01 | VALIDADA | 3186c93c/Actions45333404724 SUCCESS;72tests y7navegadores. Registro sin correo/SMS en Worker real de prueba; frontend público muestra Crear cuenta y entrar sin código. | 3186c93cd3aa1ddc19230d155cb285be80baed77 |
 | 01.02 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.03 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.04 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |

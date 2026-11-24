@@ -27,4 +27,4 @@ La recuperación por correo sigue pendiente de transporte/remitente. Teléfono e
 
 01.09: sesiones independientes automatizadas no sustituyen la validación en dos teléfonos reales. Se despliega H1 para permitir esa prueba, se mantiene pendiente y no se cierra toda Fase01 hasta recibir evidencia física. Cuatro vehículos/conductores y56viajes siguen pendientes de datos y pruebas reales.
 
-Rollback: desactivar flags del piloto y recuperar Worker anterior; mantener tablas aditivas y datos. Las cuentas piloto sin contacto verificado no se consideran verificadas al apagar el flag. No hace falta crear otra base ni eliminar perfiles.
+Rollback seguro: desactivar los flags del piloto conservando el backend que exige verified_at>0; se puede recuperar el frontend anterior manteniendo tablas y datos. No reinstalar un backend histórico que interprete verified_at=0 como correo verificado. Las cuentas piloto sin contacto verificado no se consideran verificadas al apagar el flag. No hace falta crear otra base ni eliminar perfiles.
