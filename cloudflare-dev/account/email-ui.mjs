@@ -1,4 +1,17 @@
 // Shared email/password access, with mailbox proof before creating credentials.
+// Reused in account and platform forms; never stores or submits a visibility state.
+export function passwordVisibility(root){
+ if(!document.getElementById('rutasec-password-style')){const style=document.createElement('style');style.id='rutasec-password-style';style.textContent='.rutasec-password-field{position:relative;margin:12px 0}.rutasec-password-field>label{margin:0}.rutasec-password-field input{padding-right:56px;min-height:52px;box-sizing:border-box}.rutasec-password-toggle{position:absolute;right:4px;bottom:4px;min-width:44px;min-height:44px;width:44px;height:44px;padding:10px;margin:0;background:transparent;color:inherit;border:0;border-radius:8px}.rutasec-password-toggle:focus-visible{outline:2px solid currentColor;outline-offset:1px}.rutasec-password-toggle svg{display:block;width:24px;height:24px}.rutasec-mail-unavailable{padding:12px;border:1px solid currentColor;border-radius:10px}';document.head.append(style);}
+ for(const input of root.querySelectorAll('input[type="password"]')){
+  if(input.dataset.visibilityControl)continue;input.dataset.visibilityControl='true';const label=input.closest('label');if(!label)continue;
+  const wrapper=document.createElement('div');wrapper.className='rutasec-password-field';label.before(wrapper);wrapper.append(label);
+  const button=document.createElement('button');button.type='button';button.className='rutasec-password-toggle';button.setAttribute('aria-label','Mostrar contraseña');button.setAttribute('aria-pressed','false');
+  button.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path data-eye-slash d="M3 3l18 18"/></svg>';
+  const hide=()=>{input.type='password';button.setAttribute('aria-label','Mostrar contraseña');button.setAttribute('aria-pressed','false');button.querySelector('[data-eye-slash]').style.display='none';};hide();
+  button.onclick=()=>{const visible=input.type==='password';input.type=visible?'text':'password';button.setAttribute('aria-label',visible?'Ocultar contraseña':'Mostrar contraseña');button.setAttribute('aria-pressed',String(visible));button.querySelector('[data-eye-slash]').style.display=visible?'':'none';};wrapper.append(button);
+  input.form?.addEventListener('reset',hide);document.addEventListener('visibilitychange',()=>{if(document.hidden)hide();});
+ }
+}
 export function mountEmailAuth(container,{prefix,onSignedIn,config,onChallenge=()=>{}}){
  container.innerHTML=`<div data-auth-status role="status" aria-live="polite"></div>
  <form data-auth-login><h2>Iniciar sesión</h2><label>Correo electrónico<input name="email" type="email" autocomplete="username" required maxlength="254"></label><label>Contraseña<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label><button>Entrar</button><p><button type="button" data-mode="register">Crear cuenta</button> <button type="button" data-mode="forgot">Olvidé mi contraseña</button></p></form>
@@ -6,16 +19,19 @@ export function mountEmailAuth(container,{prefix,onSignedIn,config,onChallenge=(
  <form data-auth-code hidden><h2>Verifica tu correo</h2><p>Introduce los seis dígitos del correo. El código caduca en 10 minutos y permite hasta cinco intentos.</p><label>Código de verificación<input name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required></label><button>Verificar correo y entrar</button><p><button type="button" data-resend>Reenviar código</button> <button type="button" data-mode="register">Volver al registro</button></p></form>
  <form data-auth-forgot hidden><h2>Recuperar contraseña</h2><label>Correo electrónico<input name="email" type="email" autocomplete="email" required maxlength="254"></label><button>Enviar enlace para recuperar</button><p><button type="button" data-mode="login">Volver a entrar</button></p></form>
  <form data-auth-set hidden><h2 data-set-title>Elige tu contraseña</h2><label>Nueva contraseña<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><label>Repite la contraseña<input name="confirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><p>Usa al menos 12 caracteres. Puedes escribir una frase que recuerdes.</p><button>Guardar contraseña y entrar</button></form><p data-mail-status></p>`;
+ passwordVisibility(container);
  const $=s=>container.querySelector(s),status=message=>$('[data-auth-status]').textContent=message;
  const storageKey='rutasec-email-pending:'+prefix;let busy=false,kind=null,token=null,pending=null;
  try{const saved=sessionStorage.getItem(storageKey);if(/^[0-9a-f]{64}$/.test(saved||''))pending=saved;}catch{}
  function savePending(value){pending=value;try{if(value)sessionStorage.setItem(storageKey,value);else sessionStorage.removeItem(storageKey);}catch{}}
  function mode(name){for(const form of container.querySelectorAll('form'))form.hidden=!form.hasAttribute('data-auth-'+name);status('');}
  for(const button of container.querySelectorAll('[data-mode]'))button.onclick=()=>{savePending(null);token=null;mode(button.dataset.mode);};
- $('[data-mail-status]').textContent=config.email?'':'La confirmación y recuperación por correo todavía no están disponibles.';
+ const mailUnavailable='El envío de correo todavía no está activado. No se ha enviado ningún código. El registro y la recuperación estarán disponibles cuando se active el servicio; si ya tienes cuenta, puedes iniciar sesión.';
+ $('[data-mail-status]').textContent=config.email?'':mailUnavailable;
+ if(!config.email){for(const selector of ['[data-auth-register]','[data-auth-forgot]']){const form=$(selector),message=document.createElement('p');message.className='rutasec-mail-unavailable';message.textContent=mailUnavailable;form.querySelector('button:not([type=button])').before(message);const submit=form.querySelector('button:not([type=button])');submit.disabled=true;submit.textContent='Envío de correo no disponible';}$('[data-resend]').disabled=true;}
  async function action(form,path,body,success){
   if(busy)return;busy=true;const controls=[...container.querySelectorAll('button')],disabled=controls.map(el=>el.disabled);controls.forEach(el=>el.disabled=true);
-  try{const response=await fetch(prefix+'/auth/email/'+path,{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});const result=await response.json();if(!response.ok)throw new Error(result.error||'No se pudo completar la solicitud');form.reset();if(success)await success(result);if(result.message)status(result.message);}
+  try{if(!config.email&&['register','resend','forgot'].includes(path))throw new Error(mailUnavailable);const response=await fetch(prefix+'/auth/email/'+path,{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});const result=await response.json();if(!response.ok)throw new Error(result.error||'No se pudo completar la solicitud');form.reset();if(success)await success(result);if(result.message)status(result.message);}
   catch(error){status(error instanceof TypeError?'No se pudo conectar. Inténtalo de nuevo.':error.name==='TimeoutError'?'La conexión tardó demasiado. Inténtalo de nuevo.':error.message);}
   finally{controls.forEach((el,i)=>el.disabled=disabled[i]);busy=false;}
  }

@@ -1,5 +1,9 @@
 # RutasEC — Memoria persistente del repositorio
 
+## Corrección de acceso — 2026-11-24
+Usuario solicita ojo de contraseña y diagnosticar correo no recibido. Implementado helper compartido accesible en cuenta/admin; registro/recuperación muestran bloqueo contextual y no prometen envío con emailfalse. Chromium correo completo PASS11.26s, con prueba de teclado/visibilidad y proveedor desactivado. Remoto confirma ausencia de AUTH_EMAIL_FROM y AUTH_EMAIL binding o RESEND_API_KEY; sin transporte no puede llegar código. No saltar verificación ni crear usuarios ficticios. Snapshot2026-11-24-zzz-account-password-mail.md contiene entrega y límites.
+
+
 ## Entrega empresarial autorizada — 2026-11-24
 Usuario exige completar personalización y módulos parciales/pendientes del inventario, con UX por tareas y recorridos móviles, no botones aislados. Esta autorización amplía el alcance previo que solo auditaba ERP; mantener pagos simulados, demo/main intactos, S1/0025 pospuesto y servicios fiscales reales sujetos a configuración externa.
 

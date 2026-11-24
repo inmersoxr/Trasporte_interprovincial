@@ -1,4 +1,5 @@
-import {mountEmailAuth} from './email-ui.mjs';
+import {mountEmailAuth,passwordVisibility} from './email-ui.mjs';
+passwordVisibility(document);
 import {renderOperatorReview,mountReviewModeration} from './review.mjs';
 const $=id=>document.getElementById(id);let role='',selected='',revision=0,nextCursor=null,query='',busy=false;
 const notice=message=>$('status').textContent=message,node=(tag,value)=>{const el=document.createElement(tag);el.textContent=value;return el;},money=n=>'USD '+(n/100).toFixed(2);

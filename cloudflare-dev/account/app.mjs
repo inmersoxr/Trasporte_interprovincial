@@ -1,7 +1,8 @@
 import {session} from './session.mjs';
-import {mountEmailAuth} from './email-ui.mjs';
+import {mountEmailAuth,passwordVisibility} from './email-ui.mjs';
 import {returnPath} from './return-path.mjs';
 const $ = id => document.getElementById(id);
+passwordVisibility(document);
 const next = returnPath(new URLSearchParams(location.search).get('returnTo'));
 let googleReady = false;
 
@@ -44,7 +45,7 @@ $('linkGoogle').onclick = async () => {
 $('changePassword').onsubmit = async event => {
   event.preventDefault(); const form = event.target;
   if (form.elements.password.value !== form.elements.confirm.value) { $('status').textContent = 'Las contraseñas no coinciden'; return; }
-  const button = form.querySelector('button'); button.disabled = true;
+  const button = form.querySelector('button:not([type=button])'); button.disabled = true;
   try {
     const response = await fetch('/standard-api/auth/email/change-password', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({currentPassword:form.elements.currentPassword.value,password:form.elements.password.value})});
     const data = await response.json(); if (!response.ok) throw new Error(data.error);
@@ -53,7 +54,7 @@ $('changePassword').onsubmit = async event => {
   finally { button.disabled = false; }
 };
 $('accountProfile').onsubmit=async event=>{
- event.preventDefault();const form=event.target,button=form.querySelector('button');button.disabled=true;
+ event.preventDefault();const form=event.target,button=form.querySelector('button:not([type=button])');button.disabled=true;
  try{const response=await fetch('/standard-api/auth/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(form)))}),result=await response.json();if(!response.ok)throw new Error(result.error||'No se pudo guardar el perfil');await signedIn();$('status').textContent='Nombre y contacto guardados en tu cuenta.';}
  catch(error){$('status').textContent=error.message;}finally{button.disabled=false;}
 };
