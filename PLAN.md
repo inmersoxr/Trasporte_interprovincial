@@ -1,3 +1,7 @@
+# Prioridad vigente — plan completo después de la presentación
+
+El usuario informó que el piloto ya fue presentado y ordenó retomar íntegramente PLAN.md (fases00–13 y ampliaciónGROUND), con UX/UI como criterio obligatorio. Los recortes históricos de presentación no son un criterio para cerrar el producto. Reutilizar lo implementado; recuperar claridad del demo sin modificar Pages ni copiar sus datos ficticios. No pedir aprobaciones ordinarias entre fases. No confundir recorridos automatizados ni funciones visibles con aceptación de todo el plan. Mantener pagos simulados, datos, permisos y arquitectura única. La siguiente tarea es Fase02: coherencia de navegación y flujos en todas las superficies; después continuar dependencias y tareas abiertas del plan.
+
 # Prioridad inmediata R3 — fichas vinculadas y confirmación de compra
 
 Crear/listar/editar vehículos y conductores en pestañas de recursos; conductor habitual por vehículo, selección y cambio por salida, histórico persistente. Fichas no requieren cuentas/invitaciones. Conservar Standard/Premium y navegación inferior. Pago simulado debe abrir directamente el boleto/QR confirmado por backend, sin depender de otra lectura del historial. El usuario pide publicar inmediatamente ambos cambios, sin otra auditoría general. Mantener plan maestro, datos, permisos, Pages y pagos reales desactivados.

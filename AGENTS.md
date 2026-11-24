@@ -1,3 +1,7 @@
+# Prioridad vigente — plan completo después de la presentación
+
+El usuario informó que el piloto ya fue presentado y ordenó retomar íntegramente PLAN.md (fases00–13 y ampliaciónGROUND), con UX/UI como criterio obligatorio. Los recortes históricos de presentación no son un criterio para cerrar el producto. Reutilizar lo implementado; recuperar claridad del demo sin modificar Pages ni copiar sus datos ficticios. No pedir aprobaciones ordinarias entre fases. No confundir recorridos automatizados ni funciones visibles con aceptación de todo el plan. Mantener pagos simulados, datos, permisos y arquitectura única. La siguiente tarea es Fase02: coherencia de navegación y flujos en todas las superficies; después continuar dependencias y tareas abiertas del plan.
+
 # Alcance vigente — transporte terrestre de pasajeros
 
 RutasEC integra automóviles, SUV, vans, busetas, minibuses y buses de uno/dos pisos en la aplicación Cloudflare existente. Tipo de vehículo, autorización público/privado/comercial y modalidad son independientes. Máximo inicial100configurable en standard_transport_settings. Reutilizar layouts/snapshots, inventario por tramos, ventanilla, Premium/GPS/QR, roles y empresas. Referencias de tipo generadas no se presentan como fotos reales de la flota. No duplicar aplicaciones/infraestructura ni modificar Pages. Mantener pagos simulados y Premium Inteligente/Android pospuestos. Ver PLAN.md GROUND1–8 y docs/GROUND_TRANSPORT.md.
