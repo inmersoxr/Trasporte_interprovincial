@@ -135,7 +135,7 @@ test('D1 Standard catalog: authorization, persistence, idempotency and vehicle s
     const ticket2=(await call('/bookings',{...reserve([1]),departureId:dep2.data.id},b)).data.booking;
     await call('/bookings/'+ticket2.id,{action:'cancel'},b);
     assert.equal((await call('/operations',{operatorId:op.data.id,kind:'departure',id:dep2.data.id,action:'cancel'},a)).status,200);
-    assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM payment_events e JOIN payments p ON p.id=e.payment_id WHERE p.booking_id=?').bind(ticket2.id).first()).n,1);
+    assert.equal((await db.prepare("SELECT COUNT(*) AS n FROM payment_events e JOIN payments p ON p.id=e.payment_id WHERE p.booking_id=? AND e.kind='simulated_refund'").bind(ticket2.id).first()).n,1);
     const cancelRaceReq=await create('/private-requests',reqPayload(new Date(Date.now()+30*86400000).toISOString()),b);
     const cancelRaceOffer=await create('/private-offers',{...proposal(op.data.id,vehicle.data.id,20000),privateRequestId:cancelRaceReq.data.id});
     const cancelRaceBooking=await call('/private-requests/'+cancelRaceReq.data.id+'/select',{offerId:cancelRaceOffer.data.id,quotedPriceCents:20000,requestId:crypto.randomUUID()},b);

@@ -5,7 +5,7 @@ const dayNames = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','S�
 const section = document.createElement('section'); section.id='recurringSchedules'; section.hidden=true;
 section.innerHTML=`<h2>Viajes recurrentes</h2><p>Publica tus horarios habituales para un periodo. Cada salida tiene sus propios asientos y reservas. Hora de Ecuador continental (UTC−5).</p>
 <form id="recurringForm"><label>Ruta compartida<select name="offerId" required></select></label>
-<label>Desde<input name="startDate" type="date" required></label><label>Hasta<input name="endDate" type="date" required></label>
+<label>Frecuencia<select name="frequency"><option value="weekly">Semanal · elegir días</option><option value="daily">Diaria</option><option value="monthly">Mensual · mismo día del mes</option></select></label><p id="monthlyRecurrenceHelp" hidden>Se repite el día de la fecha inicial; los meses sin ese día se omiten. Se genera solo hasta la fecha final elegida.</p><label>Desde<input name="startDate" type="date" required></label><label>Hasta<input name="endDate" type="date" required></label>
 <label><input name="autoRenew" type="checkbox"> Mantener horarios activos: renovar automáticamente los próximos siete días hasta que los detenga</label><fieldset><legend>Días de salida</legend>${[1,2,3,4,5,6,0].map(day=>`<label><input name="weekdays" type="checkbox" value="${day}" checked> ${dayNames[day]}</label>`).join('')}</fieldset>
 <fieldset><legend>Horarios del mismo vehículo</legend><div id="recurringTimes"></div><button id="addRecurringTime" type="button">Añadir horario</button></fieldset>
 <label>Duración del recorrido (minutos)<input name="durationMinutes" type="number" min="1" max="2880" value="240" required></label>
@@ -26,10 +26,10 @@ function addTime(value=''){
 }
 addTime('08:00');
 $('addRecurringTime').onclick=()=>{if($('recurringTimes').children.length<12)addTime();};
-form.addEventListener('input',clearPreview);
+form.addEventListener('input',clearPreview);form.elements.frequency.onchange=()=>{const monthly=form.elements.frequency.value==='monthly';form.elements.autoRenew.disabled=monthly;if(monthly)form.elements.autoRenew.checked=false;$('monthlyRecurrenceHelp').hidden=!monthly;form.querySelector('[name=weekdays]').closest('fieldset').hidden=form.elements.frequency.value!=='weekly';};
 function body(){
- const data=new FormData(form);
- return {autoRenew:form.elements.autoRenew.checked,operatorId:$('operatorSelect').value,offerId:data.get('offerId'),timezone:'America/Guayaquil',startDate:data.get('startDate'),endDate:data.get('endDate'),weekdays:data.getAll('weekdays').map(Number),times:data.getAll('times'),durationMinutes:Number(data.get('durationMinutes'))};
+ const data=new FormData(form),frequency=data.get('frequency')||'weekly';
+ return {frequency,monthlyDay:frequency==='monthly'?Number(data.get('startDate').slice(8)):null,autoRenew:frequency!=='monthly'&&form.elements.autoRenew.checked,operatorId:$('operatorSelect').value,offerId:data.get('offerId'),timezone:'America/Guayaquil',startDate:data.get('startDate'),endDate:data.get('endDate'),weekdays:frequency==='weekly'?data.getAll('weekdays').map(Number):[0,1,2,3,4,5,6],times:data.getAll('times'),durationMinutes:Number(data.get('durationMinutes'))};
 }
 function syncForm(){
  const old=form.elements.offerId.value;

@@ -11,7 +11,7 @@ export async function handleReservations(request, env, core) {
   async function view(id) {
     const b = await stmt(db, `SELECT b.*,r.origin,r.destination,COALESCE(c.operator_name,o.display_name) AS operatorName,COALESCE(c.vehicle_model,v.model) AS vehicle,v.capacity,
       c.passenger_phone AS contactPhone,c.passenger_email AS contactEmail,COALESCE(c.pickup_point,r.pickup_point) AS pickupPoint,COALESCE(c.dropoff_point,r.dropoff_point) AS dropoffPoint,COALESCE(c.vehicle_plate,v.plate) AS vehiclePlate,pf.phone AS operatorPhone,
-      m.operator_id AS operatorId,m.vehicle_id AS vehicleId,p.status AS paymentStatus,t.id AS liveId,t.service_status AS serviceStatus
+      (SELECT json_extract(pe.payload_json,'$.method') FROM payment_events pe WHERE pe.payment_id=p.id AND pe.kind='simulated_method' LIMIT 1) AS simulatedPaymentMethod,m.operator_id AS operatorId,m.vehicle_id AS vehicleId,p.status AS paymentStatus,t.id AS liveId,t.service_status AS serviceStatus
       FROM bookings b JOIN route_offers r ON r.id=b.offer_id JOIN standard_booking_details m ON m.booking_id=b.id
       JOIN operators o ON o.id=m.operator_id JOIN vehicles v ON v.id=m.vehicle_id JOIN payments p ON p.booking_id=b.id
       LEFT JOIN standard_booking_contacts c ON c.booking_id=b.id LEFT JOIN standard_operator_profiles pf ON pf.operator_id=o.id
@@ -19,7 +19,7 @@ export async function handleReservations(request, env, core) {
     if (!b) throw failure('Boleto no encontrado',404);
     if (b.customer_id!==user.id && !await stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role IN('owner','admin','dispatcher')",[user.id,b.operatorId]).first()) throw failure('Boleto privado',403);
     b.passengers=await rows(db,'SELECT position,name,seat_number AS seatNumber,boarded_at AS boardedAt FROM standard_passengers WHERE booking_id=? AND cancelled_at IS NULL ORDER BY position',[id]);
-    return {...b,simulated:true,paymentLabel:b.paymentStatus==='refunded'?'Reembolso SIMULADO':'Pago SIMULADO confirmado',
+    return {...b,simulated:true,paymentMethodLabel:({credit:'Tarjeta de crédito',debit:'Tarjeta de débito',transfer:'Transferencia bancaria'})[b.simulatedPaymentMethod]||'Pago de prueba',paymentLabel:b.paymentStatus==='refunded'?'Reembolso SIMULADO':'Pago SIMULADO confirmado',
       qrCodes:b.passengers.map(p=>`RUTASEC-STANDARD:${b.id}:${p.position}`)};
   }
   if(request.method==='GET'&&!fixed) {
@@ -66,10 +66,11 @@ export async function handleReservations(request, env, core) {
   const seats=body.seatNumbers.map(n=>integer(n,1,d.capacity,'Asiento'));
   if(!Array.isArray(body.passengers)||body.passengers.length!==seats.length)throw failure('Pasajeros no válidos');
   const names=body.passengers.map(name=>text(name,'Nombre de pasajero',80)),id=crypto.randomUUID(),paymentId=crypto.randomUUID();
+  if(body.simulatedPaymentMethod&&!['credit','debit','transfer'].includes(body.simulatedPaymentMethod))throw failure('Método de pago simulado no válido');
   const operations=[
     stmt(db,"INSERT INTO bookings(id,customer_id,offer_id,departure_id,mode,service_at,passenger_count,amount_cents,status,confirmed_at) VALUES(?,?,?,?,'shared',?,?,?,'confirmed',CURRENT_TIMESTAMP)",[id,user.id,d.offer_id,d.id,d.depart_at,seats.length,d.price_cents*seats.length]),
     stmt(db,'INSERT INTO standard_booking_details(booking_id,operator_id,vehicle_id) VALUES(?,?,?)',[id,d.operator_id,d.vehicle_id]),
-    stmt(db,"INSERT INTO payments(id,booking_id,provider,method,amount_cents,status,idempotency_key,paid_at) VALUES(?,?,'simulated','other',?,'paid',?,CURRENT_TIMESTAMP)",[paymentId,id,d.price_cents*seats.length,user.id+':'+body.requestId])];
+    stmt(db,"INSERT INTO payments(id,booking_id,provider,method,amount_cents,status,idempotency_key,paid_at) VALUES(?,?,'simulated',?,?,'paid',?,CURRENT_TIMESTAMP)",[paymentId,id,body.simulatedPaymentMethod==='transfer'?'bank_transfer':'card',d.price_cents*seats.length,user.id+':'+body.requestId]),stmt(db,"INSERT INTO payment_events(id,payment_id,provider_event_id,kind,payload_json) VALUES(?,?,?,'simulated_method',?)",[crypto.randomUUID(),paymentId,'method:'+body.requestId,JSON.stringify({method:body.simulatedPaymentMethod||'credit'})])];
   operations.push(...bookingContacts(db,user,body,env,id,d.offer_id,d.vehicle_id,core));
   seats.forEach((seat,i)=>operations.push(
     stmt(db,'INSERT INTO standard_passengers(booking_id,position,name,seat_number) VALUES(?,?,?,?)',[id,i,names[i],seat]),

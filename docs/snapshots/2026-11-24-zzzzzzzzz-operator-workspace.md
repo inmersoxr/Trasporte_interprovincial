@@ -1,0 +1,8 @@
+# Prioridad vigente — funcionalidad completa accesible, interfaz nueva
+
+La simplificación anterior NO autoriza ocultar módulos Standard/Premium. Mantener interfaz actual y navegación inferior; entrar en Operadores cambia al espacio de operadora con secciones Standard y Premium. Standard: viajes, creación, vehículos, reservas y empresa. Premium: en vivo, vehículos, empleados, gestión empresarial y empresa. Sin destino Avisos. Reubicar Vista de pasajero y Mi cuenta dentro de Empresa del menú inferior; no eliminarlos ni mantener accesos textuales arriba. El demo histórico es referencia de funciones y campos, no una pantalla que deba sustituir a la interfaz actual.
+
+Las listas de vehículos y empleados se generan con registros propios persistentes. Un viaje puede vincular vehículo y persona responsable de la ficha laboral, sin hacer obligatoria una cuenta/invitación para esa persona. En vivo debe mostrar viajes activos de la empresa con persona, vehículo y GPS recibido, incluidos cuatro simultáneos; nunca posiciones de demo. El pasajero elige viaje/asiento, pago ficticio crédito/débito/transferencia, boleto completo/QR; operador escanea, embarca, inicia, transmite GPS y finaliza; compartir publicación y seguimiento por WhatsApp/menú nativo. Pagos siguen simulados; no pedir ni enviar datos bancarios reales. Preservar demo Pages, datos y plan maestro.
+
+
+Referencia previa8aa822a29a5f80a77472ce08e7e374b55a162e0d; Workers/D1/R2 existentes; sin borrar registros ni duplicar aplicaciones. Implementación y pruebas locales en curso; completar con commit/Actions/versions antes de cerrar. Guía OPERATOR_WORKSPACE.md.

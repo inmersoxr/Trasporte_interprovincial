@@ -47,7 +47,7 @@ jobs:
       - run: npm run build
       - run: node --check out/worker.mjs && node --check out/public/sw.js
       - name: Verify Alpha across independent browser sessions
-        run: npm run test:alpha-local && npm run test:email-local && npm run test:platform-local && npm run test:gps-local && npm run test:identity-local && npm run test:enterprise-local && npm run test:pilot-local && npm run test:presentation-local
+        run: npm run test:alpha-local && npm run test:email-local && npm run test:platform-local && npm run test:gps-local && npm run test:identity-local && npm run test:enterprise-local && npm run test:pilot-local && npm run test:presentation-local && npm run test:operator-workspace-local
   deploy:
     if: (github.event_name == 'push' && !contains(github.event.head_commit.message, '[verify-d1-restore-authorized]')) || (github.event_name == 'workflow_dispatch' && inputs.deploy)
     needs: verify

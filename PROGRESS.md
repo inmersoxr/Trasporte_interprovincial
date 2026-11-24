@@ -1,3 +1,7 @@
+# R1 — Recuperar módulos y completar relaciones/compartir
+
+R1-UI EN PRUEBAS: selector Standard/Premium, navegación inferior adaptada, sin Avisos, acceso de pasajero/cuenta reubicado en Empresa; módulos existentes vuelven a ser navegables. R1-DATOS EN PRUEBAS: vehículos/empleados CRUD reutilizados y vínculo de responsable por salida nuevo en0032, con aislamiento y conflictos atómicos. R1-COMPRA EN PRUEBAS: métodos/fichas ficticios del demo, boleto completo y estados/QR persistentes. R1-GPS EN PRUEBAS: cuatro sesiones GPS y selección de unidad con persona/vehículo, mapa estable y enlaces compartidos que no desaparecen. R1-DEPLOY PENDIENTE hasta Actions y comprobación pública. Pruebas físicas siguen pendientes.
+
 # Corrección vigente: circuito simple como el demo
 
 S0 — VALIDADA (software y despliegue de desarrollo; S0-FISICO PENDIENTE). Se reutiliza el formulario comercial de bookings.mjs y sus estilos; navegación inferior Mis viajes / Crear viaje / Mi empresa. No se exige conductor ni invitación. Vehículo se configura al publicar o se selecciona uno guardado; no se introducen placas ficticias. Empresas/vehículos/viajes previos se conservan. Publicar guarda D1 y catálogo; comprador en otra sesión recibe QR y el operador realiza escaneo/inicio/GPS/finalización. Migración0031 solo cambia elegibilidad de entrenamiento; no concede aprobación documental.

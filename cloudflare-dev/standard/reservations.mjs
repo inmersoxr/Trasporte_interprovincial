@@ -1,3 +1,4 @@
+import {mountDemoPayment} from './payment-demo.mjs';
 import {ticketChanges} from './ticket-changes.mjs';
 import {hasAccess,signInToReserve,signInFor,session} from '../account/session.mjs';
 import {api,status} from './app.mjs';
@@ -6,6 +7,7 @@ let selected,requestId,fixedOffer,fixedRequestId,latestCatalog,loadingBookings=f
 let historyCursor=null,nextCursor=null,viewedTicket=null,intentHandled=false;
 const older=document.createElement('button'),recent=document.createElement('button');older.id='olderBookings';older.textContent='Más antiguos';older.hidden=true;recent.textContent='Volver a recientes';recent.hidden=true;$('myBookings').append(older,recent);
 async function fillContact(form){try{const data=await session();if(!form.elements.contactPhone.value)form.elements.contactPhone.value=data.user?.phone||'';}catch{}}
+mountDemoPayment($('reserveForm'));mountDemoPayment($('privateReserveForm'));
 const bookingStates={confirmed:'Confirmada',cancelled:'Cancelada',refunded:'Reembolsada',expired:'Vencida',payment_pending:'Pendiente'};
 function enhance(data){
  latestCatalog=data;
@@ -31,7 +33,7 @@ $('privateReserveForm').onsubmit=async e=>{
  e.preventDefault();const form=e.target,button=form.querySelector('button');button.disabled=true;
  try{
   await api('/private-route-bookings',{offerId:fixedOffer.id,serviceAt:new Date(form.elements.serviceAt.value+'-05:00').toISOString(),
-   passengers:form.elements.passengers.value.split('\n').map(n=>n.trim()).filter(Boolean),contactPhone:form.elements.contactPhone.value,saveContact:form.elements.saveContact.checked,quotedPriceCents:fixedOffer.priceCents,requestId:fixedRequestId});
+   passengers:form.elements.passengers.value.split('\n').map(n=>n.trim()).filter(Boolean),contactPhone:form.elements.contactPhone.value,saveContact:form.elements.saveContact.checked,simulatedPaymentMethod:form.elements.simulatedPaymentMethod.value,quotedPriceCents:fixedOffer.priceCents,requestId:fixedRequestId});
   $('privateCheckout').close();status('Privado confirmado · pago SIMULADO');await loadBookings();
  }catch(error){$('privateError').textContent=error.message;}finally{button.disabled=false;}
 };
@@ -53,7 +55,7 @@ $('reserveForm').onsubmit=async e=>{
  e.preventDefault();const button=e.target.querySelector('button');button.disabled=true;
  try{
   const inputs=[...$('passengerNames').querySelectorAll('input')];if(!inputs.length)throw new Error('Selecciona un asiento');
-  await api('/bookings',{departureId:selected.id,seatNumbers:inputs.map(i=>Number(i.dataset.seat)),passengers:inputs.map(i=>i.value),contactPhone:e.target.elements.contactPhone.value,saveContact:e.target.elements.saveContact.checked,quotedPriceCents:selected.priceCents,requestId});
+  await api('/bookings',{departureId:selected.id,seatNumbers:inputs.map(i=>Number(i.dataset.seat)),passengers:inputs.map(i=>i.value),contactPhone:e.target.elements.contactPhone.value,saveContact:e.target.elements.saveContact.checked,simulatedPaymentMethod:e.target.elements.simulatedPaymentMethod.value,quotedPriceCents:selected.priceCents,requestId});
   $('checkout').close();status('Pago SIMULADO confirmado; boleto emitido');await loadBookings();
  }catch(error){status(error.message);$('checkoutSummary').textContent=error.message;}
  finally{button.disabled=false;}
@@ -68,7 +70,7 @@ export async function loadBookings({background=false,cursor=null,ticket=null}={}
   const snapshot=JSON.stringify({bookings,nextCursor:result.nextCursor||null});if(background&&snapshot===lastBookingsSnapshot)return;lastBookingsSnapshot=snapshot;
   historyCursor=cursor;viewedTicket=ticket;nextCursor=result.nextCursor||null;older.hidden=!nextCursor;recent.hidden=!cursor&&!ticket;
   for(const id of ['catalog','operator','privateRequests','tracking'])$(id).hidden=true;$('myBookings').hidden=false;
-  $('bookingList').innerHTML=bookings.map(b=>`<article data-booking="${b.id}"><strong>${esc(b.origin)} → ${esc(b.destination)}</strong><p>${esc(b.operatorName)} · ${esc(b.vehicle)}</p><p>${esc(new Date(b.service_at).toLocaleString('es-EC',{timeZone:'America/Guayaquil'}))} · ${esc(bookingStates[b.status]||b.status)}</p><p>${esc(b.paymentLabel)} · $${(b.amount_cents/100).toFixed(2)}</p><ul>${b.passengers.map(p=>`<li>${esc(p.name)} · asiento ${p.seatNumber??'privado'} · <strong>${p.boardedAt?'EMBARCADO':'Por embarcar'}</strong>${p.boardedAt?' · '+esc(new Date(p.boardedAt).toLocaleString('es-EC',{timeZone:'America/Guayaquil'})):''}</li>`).join('')}</ul>${b.status==='confirmed'?b.qrCodes.map((qr,i)=>b.passengers[i].boardedAt?`<p>QR del pasajero ${i+1} utilizado.</p>`:`<p>QR pasajero ${i+1}</p><div id="qr-${b.id}-${i}" class="qr"></div><details><summary>Código de respaldo</summary><p class="small">${esc(qr)}</p></details>`).join('')+(!b.passengers.some(p=>p.boardedAt)?`<button data-cancel="${b.id}">Cancelar y simular reembolso</button>`:''):''}</article>`).join('')||'<p>No hay boletos en esta cuenta.</p>';
+  $('bookingList').innerHTML=bookings.map(b=>`<article data-booking="${b.id}" class="ticket-card"><h3>Tu boleto RutasEC</h3><strong>${esc(b.origin)} → ${esc(b.destination)}</strong><p>${esc(b.operatorName)} · ${esc(b.vehicle)}</p><p>${esc(new Date(b.service_at).toLocaleString('es-EC',{timeZone:'America/Guayaquil'}))} · ${esc(bookingStates[b.status]||b.status)}</p><p>${esc(b.paymentLabel)}${b.paymentMethodLabel?' · '+esc(b.paymentMethodLabel):''} · $${(b.amount_cents/100).toFixed(2)}</p><ul>${b.passengers.map(p=>`<li>${esc(p.name)} · asiento ${p.seatNumber??'privado'} · <strong>${p.boardedAt?'EMBARCADO':'Por embarcar'}</strong>${p.boardedAt?' · '+esc(new Date(p.boardedAt).toLocaleString('es-EC',{timeZone:'America/Guayaquil'})):''}</li>`).join('')}</ul>${b.status==='confirmed'?b.qrCodes.map((qr,i)=>b.passengers[i].boardedAt?`<p>QR del pasajero ${i+1} utilizado.</p>`:`<p>QR pasajero ${i+1}</p><div id="qr-${b.id}-${i}" class="qr"></div><details><summary>Código de respaldo</summary><p class="small">${esc(qr)}</p></details>`).join('')+(!b.passengers.some(p=>p.boardedAt)?`<button data-cancel="${b.id}">Cancelar y simular reembolso</button>`:''):''}</article>`).join('')||'<p>No hay boletos en esta cuenta.</p>';
   for(const b of bookings)if(b.status==='confirmed'){
    b.qrCodes.forEach((qr,i)=>{if(!b.passengers[i].boardedAt)new window.QRCode($(`qr-${b.id}-${i}`),{text:qr,width:180,height:180});});
   }

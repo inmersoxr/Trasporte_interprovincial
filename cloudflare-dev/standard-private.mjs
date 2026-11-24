@@ -14,11 +14,12 @@ export async function createPrivate(db,user,body,core,env){
  if(!Array.isArray(body.passengers)||!body.passengers.length||body.passengers.length>offer.capacity)throw failure('Cantidad de pasajeros no válida');
  const names=body.passengers.map(n=>text(n,'Nombre de pasajero',80));
  integer(offer.duration_minutes,1,2880,'Duración publicada');
- const id=crypto.randomUUID(),operations=[
+ if(body.simulatedPaymentMethod&&!['credit','debit','transfer'].includes(body.simulatedPaymentMethod))throw failure('Método de pago simulado no válido');
+ const id=crypto.randomUUID(),paymentId=crypto.randomUUID(),operations=[
  stmt(db,"INSERT INTO bookings(id,customer_id,offer_id,mode,service_at,passenger_count,amount_cents,status,confirmed_at) VALUES(?,?,?,'private_fixed',?,?,?,'confirmed',CURRENT_TIMESTAMP)",[id,user.id,offer.id,new Date(at).toISOString(),names.length,offer.price_cents]),
  stmt(db,'INSERT INTO standard_booking_details(booking_id,operator_id,vehicle_id) VALUES(?,?,?)',[id,offer.operator_id,offer.vehicle_id]),
  stmt(db,'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,booking_id) VALUES(?,?,?,?,?)',[crypto.randomUUID(),offer.vehicle_id,at,at+offer.duration_minutes*60000,id]),
- stmt(db,"INSERT INTO payments(id,booking_id,provider,method,amount_cents,status,idempotency_key,paid_at) VALUES(?,?,'simulated','other',?,'paid',?,CURRENT_TIMESTAMP)",[crypto.randomUUID(),id,offer.price_cents,user.id+':'+body.requestId])];
+ stmt(db,"INSERT INTO payments(id,booking_id,provider,method,amount_cents,status,idempotency_key,paid_at) VALUES(?,?,'simulated',?,?,'paid',?,CURRENT_TIMESTAMP)",[paymentId,id,body.simulatedPaymentMethod==='transfer'?'bank_transfer':'card',offer.price_cents,user.id+':'+body.requestId]),stmt(db,"INSERT INTO payment_events(id,payment_id,provider_event_id,kind,payload_json) VALUES(?,?,?,'simulated_method',?)",[crypto.randomUUID(),paymentId,'method:'+body.requestId,JSON.stringify({method:body.simulatedPaymentMethod||'credit'})])];
  operations.push(...bookingContacts(db,user,body,env,id,offer.id,offer.vehicle_id,core));
  names.forEach((name,i)=>operations.push(stmt(db,'INSERT INTO standard_passengers(booking_id,position,name) VALUES(?,?,?)',[id,i,name])));
  return command(db,user,body,'private_fixed',operations,id);

@@ -37,7 +37,7 @@ def restore_and_verify(sql):
             raise ValueError('Integrity check failed')
         if db.execute('PRAGMA foreign_key_check').fetchall():
             raise ValueError('Foreign key check failed')
-        if not db.execute("SELECT version FROM schema_migrations WHERE version='0031_simple_pilot'").fetchone():
+        if not db.execute("SELECT version FROM schema_migrations WHERE version='0032_trip_responsible'").fetchone():
             raise ValueError('Expected integrated schema missing')
         if db.execute("SELECT 1 FROM seat_claims WHERE status IN('held','confirmed') GROUP BY departure_id,seat_number HAVING COUNT(*)>1 LIMIT 1").fetchone():
             raise ValueError('Duplicate active seat')

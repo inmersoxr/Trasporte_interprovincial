@@ -59,3 +59,8 @@
 
 /* Focused driver trip view, entered from the pilot agenda. */
 .pilot-trip-view .passenger-navigation{display:none!important}.pilot-trip-view .standard-shell{padding-bottom:40px}.pilot-trip-view #trackingControls{display:grid;gap:10px}.pilot-trip-view #trackingControls button{width:100%;margin:0;padding:14px;border-radius:12px}.pilot-trip-view #copyTracking{display:block;width:100%;margin:14px 0}.pilot-trip-view #closeTracking{display:none}.pilot-trip-view .app-legal-links{position:static;margin-top:22px;line-height:1.6}
+
+.standard-shell .share-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.standard-shell .share-actions a,.standard-shell .share-actions button{display:inline-flex;align-items:center;min-height:44px;padding:10px 12px;border-radius:9px;background:#f6c928;color:#141920;text-decoration:none;border:0;font:inherit}.standard-shell .trip-share{padding:10px 0}.standard-shell .trip-share input{width:100%}
+
+.demo-payment{border-top:1px solid #ffffff25;margin:18px 0;padding:14px 0}.standard-shell .payment-methods label{display:flex;align-items:center;gap:8px;margin:8px 0}.standard-shell .payment-methods input[type=radio]{width:auto}.demo-payment details{margin:14px 0}.demo-payment summary{cursor:pointer;padding:10px 0}.standard-shell .ticket-card h3{font-size:19px;margin:0 0 12px}.standard-shell .ticket-card{border:1px solid #ffffff22}
+.standard-shell .booking-account{padding:12px 0}.standard-shell .booking-account a{display:inline-flex;min-height:44px;align-items:center}

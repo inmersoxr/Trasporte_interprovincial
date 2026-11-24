@@ -16,7 +16,7 @@ export function mountSearch(section,search){
     for(const city of cities)select.add(new Option(city,city));
   }
   form.elements.date.min=new Date(Date.now()-5*3600000).toISOString().slice(0,10);
-  form.onsubmit=event=>{event.preventDefault();search();};
+  form.onsubmit=event=>{event.preventDefault();const url=new URL(location.href);url.searchParams.delete('trip');history.replaceState(null,'',url);search();};
   form.onreset=()=>queueMicrotask(search);hero.after(form);
   return ()=>{
     const query=new URLSearchParams(new FormData(form));

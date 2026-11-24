@@ -71,6 +71,7 @@ export async function command(db, user, body, kind, operations, entityId) {
   } catch (error) {
     const saved = await stmt(db, 'SELECT * FROM standard_commands WHERE user_id=? AND request_id=?', [user.id, body.requestId]).first();
     if (saved?.kind === kind && saved.fingerprint === fingerprint) return saved.entity_id;
+    if(String(error.message).includes('trip_staff_conflict'))throw failure('La persona responsable ya tiene otro viaje en ese horario',409);
     if (String(error.message).includes('vehicle_conflict')) throw failure('El vehículo ya tiene un servicio en ese horario', 409);
     if (String(error.message).includes('assignment_conflict')) throw failure('La asignación cambió; actualiza los miembros y vehículos',409);
     if (String(error.message).includes('request_limit')) throw failure('Límite de 10 solicitudes abiertas; cancela alguna antes de crear otra', 429);
@@ -154,11 +155,12 @@ export async function handleStandard(request, env) {
       const offer = await stmt(env.DB, `SELECT r.*,rv.vehicle_id FROM route_offers r JOIN standard_route_vehicles rv ON rv.offer_id=r.id
         WHERE r.id=? AND r.operator_id=? AND r.service_type='shared' AND r.active=1`, [body.offerId, body.operatorId]).first();
       if (!offer) throw failure('Oferta compartida ajena o inexistente', 403);
+      if(body.employeeId&&!await stmt(env.DB,"SELECT 1 FROM premium_employees WHERE id=? AND operator_id=? AND status='active'",[body.employeeId,body.operatorId]).first())throw failure('Selecciona una persona activa de esta empresa',403);
       const at = Date.parse(body.departAt);
       if (!Number.isFinite(at) || at <= Date.now() || at > Date.now() + 366 * 86400000) throw failure('Fecha futura no válida');
       const duration = integer(body.durationMinutes ?? 240, 1, 2880, 'Duración');
       saved = await command(env.DB, user, body, 'departure', [stmt(env.DB, 'INSERT INTO departures(id,offer_id,vehicle_id,depart_at) VALUES(?,?,?,?)', [id, offer.id, offer.vehicle_id, new Date(at).toISOString()]),
-        stmt(env.DB, 'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,departure_id) VALUES(?,?,?,?,?)', [crypto.randomUUID(), offer.vehicle_id, at, at + duration * 60000, id])], id);
+        stmt(env.DB, 'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,departure_id) VALUES(?,?,?,?,?)', [crypto.randomUUID(), offer.vehicle_id, at, at + duration * 60000, id]),...(body.employeeId?[stmt(env.DB,`INSERT INTO standard_departure_staff(departure_id,operator_id,employee_id,responsible_name,assigned_by) VALUES(?,?,?,(SELECT full_name FROM premium_employees WHERE id=? AND operator_id=? AND status='active'),?)`,[id,body.operatorId,body.employeeId,body.employeeId,body.operatorId,user.id])]:[])], id);
     }
   }
   return { id: saved, environment: 'development' };
