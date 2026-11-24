@@ -6,7 +6,7 @@ Siguiente tarea: cerrar G-BRANDING/00.05 en curso y completar auditoría00.01–
 
 | ID | Estado | Evidencia / bloqueo | Commit |
 |---|---|---|---|
-| 00.01 | AUDITADA | Auditoría inicial en código/migraciones y docs existentes; consolidación de evidencia pendiente antes de validar. | Pendiente de cierre identificable |
+| 00.01 | VALIDADA | Worker web/admin con proxy al mismo rutasec-api-dev; D1 rutasec-dev y R2 existentes; builds separados de Pages. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.01 — arquitectura auditada |
 | 00.02 | AUDITADA | Auditoría inicial en código/migraciones y docs existentes; consolidación de evidencia pendiente antes de validar. | Pendiente de cierre identificable |
 | 00.03 | AUDITADA | Auditoría inicial en código/migraciones y docs existentes; consolidación de evidencia pendiente antes de validar. | Pendiente de cierre identificable |
 | 00.04 | AUDITADA | Auditoría inicial en código/migraciones y docs existentes; consolidación de evidencia pendiente antes de validar. | Pendiente de cierre identificable |
