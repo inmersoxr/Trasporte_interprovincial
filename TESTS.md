@@ -36,3 +36,5 @@ Una compilación/captura por sí sola no valida funcionalidad. Registrar fallos 
 Actions45333404724 SUCCESS:72/72 y siete flujos Chromium. H1 automatizado prueba dos contextos sin cookies compartidas, no dos teléfonos físicos. Remoto: health0029/flags de piloto true; UI360/390/1280 y contactos visibles, validación de contraseña conserva datos sin crear cuenta; login negativo401. Capturas inspeccionadas. Activos fuente coinciden; main/Pages intactos. Sin exportaciones de D1 ni alta de datos ficticios públicos.01.09 sigue bloqueada por prueba humana física; no certificar piloto integral.
 
 - 01.01 VALIDADA: 3186c93c/Actions45333404724 SUCCESS;72tests y7navegadores. Registro sin correo/SMS en Worker real de prueba; frontend público muestra Crear cuenta y entrar sin código.
+
+- 01.02 VALIDADA: Selector inicial Teléfono, prefijo editable+593, formato E164 normalizado en backend y rechazo de número sin código; Chromium360/390/1280 y captura remota inspeccionados.
