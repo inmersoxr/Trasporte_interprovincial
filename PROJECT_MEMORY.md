@@ -1,5 +1,9 @@
 # RutasEC — Memoria persistente del repositorio
 
+## Preparación Google OAuth — 2026-11-24
+Usuario configura cliente Web Rutas Ecuador. Orígenes JavaScript vacíos; callbacks reales web/standard-api y admin/platform-api en docs/GOOGLE_OAUTH_CURRENT.md. Reutilizar identity.mjs, D1/usuarios/sesiones y correo existentes; no reconstruir autenticación. Preparada carga de credenciales GitHub→Worker API por stdin sin logs, comprobación remota de callbacks y retorno a empresa/identidad. Google se muestra antes del formulario de correo y su elección limpia desafío de correo pendiente. Client ID público puede proporcionarse; Secret solo GitHub Actions secrets o secreto API en Cloudflare. Sin credenciales reales aún, no declarar Google activo ni probar consentimiento real.
+
+
 ## Corrección de acceso — 2026-11-24
 Usuario solicita ojo de contraseña y diagnosticar correo no recibido. Implementado helper compartido accesible en cuenta/admin; registro/recuperación muestran bloqueo contextual y no prometen envío con emailfalse. Publicado712c49d y seguimiento1e07bbb, Actions45319595023 verify/deploy SUCCESS,69 pruebas y seis recorridos PASS. Chromium remoto comprueba ojo, teclado, aviso único/no promesa de envío y360/390/1280; activos cuenta/admin coinciden con fuente, Pages intacto. Chromium correo local PASS11.24s. Remoto confirma ausencia de AUTH_EMAIL_FROM y AUTH_EMAIL binding o RESEND_API_KEY; sin transporte no puede llegar código. No saltar verificación ni crear usuarios ficticios. Snapshot2026-11-24-zzz-account-password-mail.md contiene entrega y límites.
 

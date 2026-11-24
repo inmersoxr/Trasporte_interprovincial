@@ -3,7 +3,7 @@ export function returnPath(value) {
   if (typeof value !== 'string' || value.length > 1024 || !value.startsWith('/') || value.startsWith('//') || /[\\\r\n]/.test(value)) return null;
   try {
     const base = 'https://rutasec.invalid', target = new URL(value, base);
-    if (target.origin !== base || !/^\/(standard|premium|miniapp)\//.test(target.pathname)) return null;
+    if (target.origin !== base || !/^\/(standard|premium|miniapp|company|business)\//.test(target.pathname)) return null;
     return target.pathname + target.search + target.hash;
   } catch { return null; }
 }

@@ -58,6 +58,8 @@ test('Alpha local browser: recurring operator schedule, Google at checkout and p
       });
       const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));page.setDefaultTimeout(15000);
       async function google(){
+        // Choosing Google must supersede a pending email-registration challenge.
+        const prefix=new URL(page.url()).origin===ADMIN_ORIGIN?'/platform-api':'/standard-api';await page.evaluate(prefix=>sessionStorage.setItem('rutasec-email-pending:'+prefix,'e'.repeat(64)),prefix);await page.reload();await page.locator('[data-auth-code]').waitFor();
         await page.getByRole('button',{name:'Continuar con Google',exact:true}).click();
         try{await page.getByRole('link',{name:'Aceptar acceso de prueba'}).click();}
         catch(error){throw new Error(error.message+'; screen='+new URL(page.url()).pathname+'; text='+(await page.locator('body').innerText()).slice(0,1000)+'; errors='+JSON.stringify(errors));}

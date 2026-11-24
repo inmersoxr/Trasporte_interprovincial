@@ -65,7 +65,7 @@ try {
   const auth = mountEmailAuth($('emailAuth'), {prefix:'/standard-api',config,onSignedIn:signedIn,onChallenge:()=>{$('signin').hidden=false;$('account').hidden=true;}});
   $('google').disabled = !googleReady;
   $('googleStatus').textContent = googleReady ? '' : 'El acceso con Google todavía no está habilitado.';
-  $('google').onclick = () => location.assign('/standard-api/auth/google/start' + (next ? '?returnTo=' + encodeURIComponent(next) : ''));
+  $('google').onclick = () => { auth.showLogin(); location.assign('/standard-api/auth/google/start' + (next ? '?returnTo=' + encodeURIComponent(next) : '')); };
   const data = await session(); if (data.authenticated && !auth.hasChallenge()) await signedIn();
   if (new URLSearchParams(location.search).has('error')) $('status').textContent = 'No se pudo iniciar sesión. Inténtalo de nuevo.';
 } catch (error) { $('status').textContent = error instanceof TypeError ? 'Sin conexión. Vuelve a conectar para entrar.' : error.message; }
