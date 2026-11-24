@@ -4,7 +4,7 @@ Estado: plan de trabajo; NO constituye verificación de fases completadas.
 
 ## Entrega empresarial e identidad — 2026-11-24
 
-Ampliación expresamente autorizada: completar módulos de piloto e identidad con UX por tareas. Matriz, rutas, persistencia, pruebas y límites en [ENTERPRISE_PILOT.md](ENTERPRISE_PILOT.md). Facturación SRI real pendiente de certificado/adaptador/configuración y validación externa; pagos simulados. Seguridad S1/0025 pospuesta. No alterar demo/main.
+Ampliación expresamente autorizada: módulos de piloto e identidad implementados con UX por tareas y desplegados en Workers/D1/R2 existentes. Actions45309144150 SUCCESS,69 pruebas y seis recorridos navegador, migraciones0027/0028 y health comprobados. Matriz, rutas, persistencia, pruebas y límites en [ENTERPRISE_PILOT.md](ENTERPRISE_PILOT.md). Facturación SRI real pendiente de certificado/adaptador/configuración y validación externa; pagos simulados. Seguridad S1/0025 pospuesta. No alterar demo/main.
 
 ## Alcance Alpha vigente — 2026-11-18, posterior a la auditoría
 **Estado actual G:** correcciones A–F desplegadas y verificadas en Workers/D1/R2 existentes por Actions44415780046,54 tests + tres navegadores PASS. Health0020, Standard abre por defecto, catálogo solo Alpha, Pages intacto. Continúa pendiente aceptación con Google/correo reales (faltan configuración OAuth/remitente/transporte) y teléfonos físicos; ver ALPHA_ACCEPTANCE.md y snapshot2026-11-18-zzzzzzzzzz-alpha-delivery.md. Los estados locales y bloqueos anteriores de abajo son históricos.

@@ -27,6 +27,16 @@ SRI: falta gestión de certificado, secuencias y adaptador firmado probado; fisc
 
 ## Entrega remota
 
-Pendiente de confirmación al escribir esta sección: solo considerar desplegado después de Actions exitoso, health0028/enterprise-identity-v1 y comprobaciones de activos. Se actualizará esta sección con SHA/run y resultados. No se inicia prueba empresarial remota creando datos ficticios.
+**Desplegado y comprobado.** Commit funcional `c1754e0b8e6a484ef66458db866384aaa566e11f`; [Actions45309144150](https://github.com/inmersoxr/Trasporte_interprovincial/actions/runs/45309144150) verify/deploy SUCCESS. Paquete exacto sin S1:69/69 PASS52.12s CI (225.06s local); seis recorridos Chromium PASS en CI. La comparación con baseline contiene38 archivos, cero cambios de código/demo raíz y cero cambios S1.
+
+Migraciones0027/0028 aplicadas al D1 existente. Health remoto confirma enterprise-identity-v1/schema0028, D1/R2true y paymentsdisabled. Versiones Workers API `af4bc2e0-3431-46cd-8c54-19ad5a1f5f75`, web `3c89f3c9-05a9-42e9-a94d-75164401f33c`, admin `1ab249bb-b762-4ad1-9824-1ba52c02f84e`. Activos company/editor, company/theme, business/app y business.css descargados coinciden byte a byte con fuente probada.
+
+Aplicación: https://rutasec-web-dev.drbrownlabs.workers.dev/standard/ . Entradas contextuales Identidad de empresa y Administración de empresa usan la operadora autenticada; no pedir IDs manuales.
+
+Remoto no autenticado: company-identity401, enterprise401, perfil inexistente404; Chromium390px abre Standard/Identidad/Empresa sin errores JS ni desbordamiento y con mensaje de acceso requerido. Chromium de inspección necesitó ignoreHTTPSErrors por el certificado del proxy del entorno; curl verificó HTTPS normalmente. No se sembraron compañías/cuentas ficticias ni se accedió a datos empresariales privados para esta comprobación.
+
+Configuración pública de acceso: googlefalse, emailfalse, pushtrue. Bloqueos exactos: GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET; AUTH_EMAIL_FROM y binding AUTH_EMAIL o RESEND_API_KEY. Las seis pruebas autenticadas de CI usan proveedores de prueba; no equivalen a alta real por Google/correo.
+
+`main` continúa0e8934886b30ec9eec8db5a26886ba4bafcd6b4a. Pages SHA256 antes/después `c8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f`, sin alteración. Restore-check fue skipped: no se exportó D1 ni se realizó respaldo nuevo en esta entrega.
 
 Rollback: recuperar versiones previas de Workers sin revertir/eliminar tablas aditivas; datos preservados. No nuevos servicios de pago. Coste incremental: almacenamiento D1/R2, alertas acotadas y polling10s solo con flota visible. Estado de Pages/main se vuelve a comprobar después del despliegue.
