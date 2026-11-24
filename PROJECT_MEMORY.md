@@ -284,3 +284,20 @@ Guía e inventario: docs/OPERATOR_WORKSPACE.md. Evidencias: docs/evidence/2026-1
 
 ## R2 — corrección solicitada por el propietario
 Premium también necesita Crear viaje como acción propia del menú inferior. Reutilizar el mismo flujo persistente, sin cambiar automáticamente a Standard al publicar ni ocultar vehículos, empleados o gestión. Verificación y despliegue en curso; no cambia D1 ni pagos.
+
+## Ampliación a todo el transporte terrestre — GROUND (2026-11-24)
+
+Alcance autorizado: misma aplicación/Workers/D1/R2/rama, automóviles/SUV/vans/busetas/minibuses/buses de uno o dos pisos. Tipo de vehículo, autorización pública/privada/comercial y modalidad son independientes. Pagos simulados; Premium Inteligente y Android pospuestos; Pages protegido.
+
+| ID | Fase | Dependencias | Aceptación |
+|---|---|---|---|
+| GROUND-1 | Auditoría tipos/capacidad/inventario | R3 publicado | Inventario de límites y compatibilidad, sin duplicar entidades |
+| GROUND-2 | Registro de vehículos/empresas | GROUND-1 | Tipos ampliados, máximo configurable100, autorización empresarial/vehicular persistente |
+| GROUND-3 | Distribución de asientos | GROUND-2 | Numeración, filas/columnas/pasillo, uno/dos pisos, bloqueos; reutilizar por salida |
+| GROUND-4 | Rutas/terminales/programación/tramos | GROUND-3 | Paradas y frecuencias reutilizables, inventario atómico con tramos no superpuestos |
+| GROUND-5 | Marketplace/compra | GROUND-4 | Filtros y comparación, asientos y precio por tramo, boleto/QR persistentes |
+| GROUND-6 | Ventanilla | GROUND-5 | Mismo inventario/validaciones, permisos y canal de venta persistente |
+| GROUND-7 | Premium/GPS/QR | GROUND-6 | Capacidades nuevas integradas sin módulos separados ni GPS ficticio |
+| GROUND-8 | Validación/despliegue | GROUND-7 | Circuito4/12/20/50/70, regresión, migraciones no destructivas y deploy efectivo |
+
+El plan maestro171tareas continúa íntegro; estas fases amplían entidades existentes. Pruebas físicas no se sustituyen con emulación.

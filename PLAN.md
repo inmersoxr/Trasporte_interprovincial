@@ -323,3 +323,20 @@ La prueba física01.09 requiere una URL desplegada01.10. Se comprueban antes dos
 | P2 | P1 | Administrador elige horario/destino/vehículo y viaje único o recurrencia diaria/semanal/mensual; vista previa no escribe, publicación explícita y agenda persistente. |
 | P3 | P2 | Compra simulada sin doble asiento, QR/embarque único, GPS real del dispositivo, mapa administrativo conjunto, pasajero y enlace público; automatización y validación física se registran separadas. |
 | P4 | P0–P3 software | Actions verde, D1/Workers existentes, assets remotos comprobados y guía; no bloquea entrega por validación física pendiente. |
+
+## Ampliación a todo el transporte terrestre — GROUND (2026-11-24)
+
+Alcance autorizado: misma aplicación/Workers/D1/R2/rama, automóviles/SUV/vans/busetas/minibuses/buses de uno o dos pisos. Tipo de vehículo, autorización pública/privada/comercial y modalidad son independientes. Pagos simulados; Premium Inteligente y Android pospuestos; Pages protegido.
+
+| ID | Fase | Dependencias | Aceptación |
+|---|---|---|---|
+| GROUND-1 | Auditoría tipos/capacidad/inventario | R3 publicado | Inventario de límites y compatibilidad, sin duplicar entidades |
+| GROUND-2 | Registro de vehículos/empresas | GROUND-1 | Tipos ampliados, máximo configurable100, autorización empresarial/vehicular persistente |
+| GROUND-3 | Distribución de asientos | GROUND-2 | Numeración, filas/columnas/pasillo, uno/dos pisos, bloqueos; reutilizar por salida |
+| GROUND-4 | Rutas/terminales/programación/tramos | GROUND-3 | Paradas y frecuencias reutilizables, inventario atómico con tramos no superpuestos |
+| GROUND-5 | Marketplace/compra | GROUND-4 | Filtros y comparación, asientos y precio por tramo, boleto/QR persistentes |
+| GROUND-6 | Ventanilla | GROUND-5 | Mismo inventario/validaciones, permisos y canal de venta persistente |
+| GROUND-7 | Premium/GPS/QR | GROUND-6 | Capacidades nuevas integradas sin módulos separados ni GPS ficticio |
+| GROUND-8 | Validación/despliegue | GROUND-7 | Circuito4/12/20/50/70, regresión, migraciones no destructivas y deploy efectivo |
+
+El plan maestro171tareas continúa íntegro; estas fases amplían entidades existentes. Pruebas físicas no se sustituyen con emulación.
