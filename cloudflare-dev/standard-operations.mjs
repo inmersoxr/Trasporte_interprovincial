@@ -115,12 +115,12 @@ export async function handleOperations(request,env,core){
   if(existing.service_status==='completed')return {status:'completed',liveId:existing.id};
   const next=JSON.parse(existing.state_json);next.status='arrived';if(existing.mode!=='operations')next.anchorMeters=road.totalMeters;next.anchorAt=Date.now();next.updatedAt=next.anchorAt;next.revision++;
   const guard=`EXISTS(SELECT 1 FROM standard_tracking WHERE id=? AND service_status='completed' AND revision=?)`;
-  const operations=[stmt(db,"UPDATE standard_tracking SET service_status='completed',state_json=?,revision=? WHERE id=? AND revision=?",[JSON.stringify(next),next.revision,existing.id,existing.revision])];
+  const operations=[stmt(db,"UPDATE standard_tracking SET service_status='completed',state_json=?,revision=? WHERE id=? AND revision=? RETURNING id",[JSON.stringify(next),next.revision,existing.id,existing.revision])];
   if(b.kind==='departure')operations.push(stmt(db,`UPDATE departures SET status='completed' WHERE id=? AND ${guard}`,[target.id,existing.id,next.revision]));
   if(b.kind==='custom')operations.push(stmt(db,`UPDATE standard_custom_bookings SET status='completed' WHERE id=? AND ${guard}`,[target.id,existing.id,next.revision]));
   operations.push(stmt(db,`UPDATE standard_vehicle_slots SET active=0 WHERE ${column}=? AND ${guard}`,[target.id,existing.id,next.revision]),
    stmt(db,`INSERT OR IGNORE INTO standard_operational_events(id,operator_id,entity_kind,entity_id,event) SELECT ?,?,?,?,? WHERE ${guard}`,[target.id+':finish',b.operatorId,b.kind,target.id,existing.mode==='operations'?'service_completed':'simulation_completed',existing.id,next.revision]));
-  const result=await db.batch(operations);if(result[0].meta.changes!==1)throw failure('Seguimiento cambió; reintenta finalizar',409);
+  const result=await db.batch(operations);if(result[0].results.length!==1)throw failure('Seguimiento cambió; reintenta finalizar',409);
   return {status:'completed',liveId:existing.id};
  }
  throw failure('Acción no válida');

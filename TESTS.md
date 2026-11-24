@@ -57,3 +57,18 @@ Actions45333404724 SUCCESS:72/72 y siete flujos Chromium. H1 automatizado prueba
 
 ## Evidencias visuales persistentes
 Capturas reales de integración, no teléfonos físicos: [móvil](docs/evidence/2026-11-24/h1-signup-mobile.png), [escritorio](docs/evidence/2026-11-24/h1-signup-desktop.png). Metodología y alcance en [README de evidencias](docs/evidence/2026-11-24/README.md). Estado actual por tarea en PROGRESS.md;01.09 BLOQUEADA hasta prueba humana.
+
+## Circuito de presentación en pruebas
+- Integración backend completa PASS: 7salidas reales en D1 local desde empresa nueva, sin fixtures de documentos. Reserva concurrente200/409, QR concurrente200/409, aislamiento entre2conductores, invitación usada/expirada/revocada y revocación de acceso, GPS/enlace público/fin. Última prueba6.17s.
+- Regresión equipo/permisos4/4 PASS25.03s.
+- Chromium: nueva empresa, vehículo, invitación→registro del conductor→aceptación, Hoy/Mi semana, publicación7salidas, compra con QR, decodificación jsQR desde vídeo, GPS emulado automático, pasajero y receptor sin cuenta y finalización. PASS27.72s. Capturas reales inspeccionadas.
+- Fallos corregidos: pie fijo heredado tapaba Guardar vehículo; se hizo estático en /pilot/. Un módulo de recurrencia consultaba recursos administrativos al abrir el mapa del conductor y mostraba un error de permiso; ahora respeta rol. Finalizar con enlaces GPS activos devolvía409 por conteo de cambios del trigger; se utiliza UPDATE RETURNING sin debilitar el control de revisión.
+- GPS/cámara emulados solo en pruebas, nunca coordenadas ficticias en aplicación o catálogo remoto. Reales/teléfonos físicos pendientes sin detener entrega por nueva instrucción.
+
+## Circuito de presentación P0–P4 — 2026-11-24
+
+Prioridad del propietario: publicar datos ingresados por él; cero empresas, vehículos, viajes o GPS precargados. Portal /pilot/ reutiliza cuentas, organización, flota/asignaciones/invitaciones, D1, reservas/QR, operaciones y GPS existentes. Menú administración Operación / Vehículos y equipo; conductor Hoy / Mi semana. Perfil/identidad enlaza al editor existente. Administración ve todos sus viajes con vehículo/conductor y mapa de unidades en curso, limitado a su empresa. Conductor no recibe equipo/invitaciones/finanzas ni viajes ajenos.
+
+Por defecto Solo este viaje. Frecuencias optativas diaria/semanal/mensual con fecha final y vista previa explícita sin escrituras; publicar requiere confirmación. Cada instancia tiene inventario independiente. No se activó renovación automática. Migración0030 aditiva, conserva datos y documentación; elegibilidad de formación explícita sin falsificar revisión legal. No se incluyó S1/0025, Android ni pagos reales.
+
+Pruebas dirigidas: siete casos de piloto/recurrencia PASS y Chromium con invitación/registro, vista previa, compra, lectura jsQR desde vídeo local, permisos de conductor, GPS emulado, observador anónimo y fin de enlace PASS. Se corrigieron errores administrativos mostrados al conductor y meta.changes de finalización afectado por trigger. Capturas1280/390 inspeccionadas. Mapa del navegador local usa tiles externos bloqueados; no demuestra cartografía/red/GPS físicos. Regresión y despliegue en verificación; actualizar con Actions/commits antes de cierre. Cámara, contactos, cuatro vehículos y teléfonos físicos siguen pendientes, sin bloquear entrega técnica.

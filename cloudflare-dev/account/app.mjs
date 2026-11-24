@@ -19,7 +19,7 @@ async function signedIn() {
   $('teams').replaceChildren();
   for (const op of data.operators) {
     const p = document.createElement('p'), link = document.createElement('a');
-    link.href = (op.premiumActive?'/premium/':'/standard/')+'?operator='+op.id+(op.premiumActive?'':'&manage=1');
+    link.href = '/pilot/?operator='+op.id;
     link.textContent = op.display_name + ' · ' + ({owner:'Administrador principal',admin:'Administrador',dispatcher:'Despachador',driver:'Conductor'}[op.role] || 'Miembro');
     p.append(link); $('teams').append(p);
   }

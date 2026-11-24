@@ -1,8 +1,25 @@
+# Circuito prioritario de presentación
+
+El plan completo continúa vigente. Prioridad actual: entregar empresa→vehículos→conductores invitados→publicación→compra/QR→embarque→GPS; pruebas físicas permanecen pendientes, sin detener el trabajo técnico.
+
+| ID | Estado | Evidencia / siguiente acción |
+|---|---|---|
+| P0 | EN PRUEBAS | Preparación explícita de empresa y vehículo de piloto sin documentos falsos; backend probado. |
+| P1 | EN PRUEBAS | Invitación vinculada, aceptación, asignación y revocación; permisos de conductor comprobados. |
+| P2 | EN PRUEBAS | Publicación individual o recurrencia diaria/semanal/mensual elegida, vista previa sin escrituras y agenda Hoy/Mi semana mediante interfaz real. |
+| P3 | EN PRUEBAS | Compra/QR/cámara/GPS/observador anónimo integrados en Chromium; coordenadas/cámara de prueba, no pruebas físicas. |
+| P4 | EN DESARROLLO | Congelar fuente, regresión, despliegue y comprobación remota; entregar URL y guía. |
+
+# Prioridad inmediata de presentación — 2026-11-24
+
+Prioridad vigente: circuito de presentación mañana. Continuar tareas implementables sin esperar01.09; mantener pruebas físicas pendientes. Secuencia P0 preparar operadora/vehículo piloto -> P1 invitación vinculada a vehículo -> P2 publicar/agenda -> P3 reserva/QR/embarque/GPS entre sesiones -> P4 desplegar y comprobar. Plan171tareas preservado; no declarar fases amplias terminadas por este recorte.
+
+
 # Progreso de RutasEC
 
 Registro inicial 2026-11-24. No se marcan las fases posteriores como terminadas por el inventario histórico. Ver docs/ENTERPRISE_PILOT.md y snapshots para capacidades reutilizables ya comprobadas.
 
-Fase00 VALIDADA. H1 desplegado3186c93c/Actions45333404724 SUCCESS,72 pruebas y7navegadores. Siguiente tarea bloqueada01.09: prueba desde dos teléfonos/conexiones reales del participante; H1 se entrega para esa prueba y Fase01 no se cierra hasta su confirmación. G-BRANDING público; Google real pendiente de credenciales/consentimiento.
+Fase00 VALIDADA. H1 desplegado3186c93c/Actions45333404724 SUCCESS,72 pruebas y7navegadores. 01.09 conserva prueba física pendiente; por nueva instrucción no bloquea el circuito de presentación. G-BRANDING público; Google real pendiente de credenciales/consentimiento.
 
 | ID | Estado | Evidencia / bloqueo | Commit |
 |---|---|---|---|

@@ -16,9 +16,11 @@ export function planSchedule(body, now = Date.now()) {
   if (!Array.isArray(body.weekdays) || !body.weekdays.length || body.weekdays.length > 7 || body.weekdays.some(d=>!Number.isInteger(d)||d<0||d>6) || new Set(body.weekdays).size !== body.weekdays.length) throw invalid('Selecciona días de la semana distintos');
   if (!Array.isArray(body.times) || !body.times.length || body.times.length > 12 || body.times.some(t=>typeof t!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) || new Set(body.times).size !== body.times.length) throw invalid('Indica horarios válidos y distintos');
   if (!Number.isSafeInteger(body.durationMinutes) || body.durationMinutes < 1 || body.durationMinutes > 2880) throw invalid('Duración no válida');
+  const frequency=body.frequency||'weekly';if(!['daily','weekly','monthly'].includes(frequency))throw invalid('Frecuencia no válida');const monthlyDay=body.monthlyDay??Number(body.startDate.slice(8));if(frequency==='monthly'&&(!Number.isInteger(monthlyDay)||monthlyDay<1||monthlyDay>31))throw invalid('Día mensual no válido');
   const weekdays = [...body.weekdays].sort(), times = [...body.times].sort(), departures = [];
   for (let day = start; day <= end; day += DAY) {
-    if (!weekdays.includes(new Date(day).getUTCDay())) continue;
+    if(frequency==='monthly'&&new Date(day).getUTCDate()!==monthlyDay)continue;
+    if(frequency==='weekly'&&!weekdays.includes(new Date(day).getUTCDay()))continue;
     const date = new Date(day).toISOString().slice(0,10);
     for (const time of times) {
       const at = Date.parse(date + 'T' + time + ':00-05:00');
@@ -29,7 +31,7 @@ export function planSchedule(body, now = Date.now()) {
   if (!departures.length) throw invalid('No hay salidas futuras en los días y horarios elegidos');
   if (departures.length > 90) throw invalid('Una programación admite hasta 90 salidas. Reduce el periodo o los horarios');
   if (departures.some((d,i)=>i>0&&d.startsAt<departures[i-1].endsAt)) throw invalid('Los horarios se cruzan para el mismo vehículo. Usa otro vehículo u otros horarios');
-  return {timezone:'America/Guayaquil',startDate:body.startDate,endDate:body.endDate,weekdays,times,durationMinutes:body.durationMinutes,departures};
+  return {frequency,monthlyDay:frequency==='monthly'?monthlyDay:null,timezone:'America/Guayaquil',startDate:body.startDate,endDate:body.endDate,weekdays,times,durationMinutes:body.durationMinutes,departures};
 }
 
 export async function handleRecurring(request, env, core) {
@@ -102,8 +104,8 @@ export async function handleRecurring(request, env, core) {
   if (item === 'preview') return {preview:{...plan,count:plan.departures.length,origin:offer.origin,destination:offer.destination,vehicle:offer.model,capacity:offer.capacity,priceCents:offer.price_cents}};
 
   const id = crypto.randomUUID();
-  const operations = [stmt(db,`INSERT INTO standard_recurring_schedules(id,operator_id,offer_id,vehicle_id,timezone,start_date,end_date,weekdays_json,times_json,duration_minutes,auto_renew)
-    VALUES(?,?,?,?,?,?,?,?,?,?,?)`,[id,body.operatorId,offer.id,offer.vehicle_id,plan.timezone,plan.startDate,plan.endDate,JSON.stringify(plan.weekdays),JSON.stringify(plan.times),plan.durationMinutes,body.autoRenew===true?1:0])];
+  const operations = [stmt(db,`INSERT INTO standard_recurring_schedules(id,operator_id,offer_id,vehicle_id,timezone,start_date,end_date,weekdays_json,times_json,duration_minutes,auto_renew,frequency,monthly_day)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,[id,body.operatorId,offer.id,offer.vehicle_id,plan.timezone,plan.startDate,plan.endDate,JSON.stringify(plan.weekdays),JSON.stringify(plan.times),plan.durationMinutes,body.autoRenew===true?1:0,plan.frequency,plan.monthlyDay])];
   // Bounded chunks stay below D1's parameter limit and use a single atomic batch.
   for (let offset=0; offset<plan.departures.length; offset+=12) {
     const chunk = plan.departures.slice(offset,offset+12).map(d=>({...d,id:crypto.randomUUID(),slotId:crypto.randomUUID()}));
@@ -122,7 +124,7 @@ export async function renewSchedules(env,now=Date.now()){
  const db=env.DB,today=new Date(now-5*3600000).toISOString().slice(0,10),end=new Date(now-5*3600000+7*86400000).toISOString().slice(0,10);
  const schedules=(await db.prepare("SELECT * FROM standard_recurring_schedules WHERE auto_renew=1 AND status='active' AND end_date<? ORDER BY end_date,id LIMIT 1").bind(end).all()).results;let renewed=0,failed=0;
  for(const s of schedules){try{
-  const tomorrow=new Date(now-5*3600000+86400000).toISOString().slice(0,10),plan=planSchedule({startDate:s.start_date>tomorrow?s.start_date:tomorrow,endDate:end,weekdays:JSON.parse(s.weekdays_json),times:JSON.parse(s.times_json),durationMinutes:s.duration_minutes},now),ops=[db.prepare("UPDATE standard_recurring_schedules SET end_date=?,renewal_error='' WHERE id=? AND status='active' AND auto_renew=1").bind(end,s.id)];
+  const tomorrow=new Date(now-5*3600000+86400000).toISOString().slice(0,10),plan=planSchedule({frequency:s.frequency,monthlyDay:s.monthly_day??Number(s.start_date.slice(8)),startDate:s.start_date>tomorrow?s.start_date:tomorrow,endDate:end,weekdays:JSON.parse(s.weekdays_json),times:JSON.parse(s.times_json),durationMinutes:s.duration_minutes},now),ops=[db.prepare("UPDATE standard_recurring_schedules SET end_date=?,renewal_error='' WHERE id=? AND status='active' AND auto_renew=1").bind(end,s.id)];
   for(let offset=0;offset<plan.departures.length;offset+=12){
    const chunk=plan.departures.slice(offset,offset+12).map(d=>({...d,id:crypto.randomUUID(),slotId:crypto.randomUUID()}));
    ops.push(db.prepare('INSERT OR IGNORE INTO departures(id,offer_id,vehicle_id,depart_at,schedule_id) VALUES '+chunk.map(()=>'(?,?,?,?,?)').join(',')).bind(...chunk.flatMap(d=>[d.id,s.offer_id,s.vehicle_id,d.departAt,s.id])));

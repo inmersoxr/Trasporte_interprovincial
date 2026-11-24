@@ -25,6 +25,7 @@
     "test:identity-local": "node tests/identity-local.e2e.mjs",
     "test:enterprise-local": "node tests/enterprise-local.e2e.mjs",
     "test:gps-local": "node tests/gps-local.e2e.mjs",
+    "test:presentation-local": "node tests/presentation-local.e2e.mjs",
     "test:pilot-local": "node tests/pilot-local.e2e.mjs",
     "test:alpha-local": "node tests/alpha-local.e2e.mjs"
   },

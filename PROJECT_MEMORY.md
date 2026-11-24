@@ -1,5 +1,9 @@
 # RutasEC — Memoria persistente del repositorio
 
+## Prioridad de presentación — 2026-11-24
+Usuario ordena no parar por cada fase/prueba física: mantener plan completo y entregar ahora circuito básico empresa, vehículos reales introducidos por usuario, conductores invitados con acceso aislado, agenda diaria/semanal, viajes publicados, compra simulada/QR, embarque, inicio y GPS. Pruebas físicas quedan pendientes sin bloquear implementación/despliegue. Vista /pilot/ y /join/ reutilizan APIs/sesiones/reservas/cámara/GPS existentes; migración0030 extiende elegibilidad explícita de entrenamiento sin documentos/badges falsos. API/Chromium integrado pasa; preparando regresión y despliegue. Ver PRESENTATION_PILOT.md y PROGRESS.md. No declarar todo el plan/fases completado por este recorte.
+
+
 ## Plan maestro y H1 autorizado — 2026-11-24
 AGENTS/PLAN/PROGRESS/TESTS publicados con171tareas/fases00–13. Fase00 auditada y validada en commits00.01–00.06; snapshots históricos preservados. Nueva instrucción permite registro piloto sin verificación, teléfono internacional prioritario y correo alternativo; no equivale a posesión del contacto ni permite admin global. H1 implementado y desplegado3186c93c/Actions45333404724 SUCCESS72pruebas+7navegadores: auth_phone_accounts/auth_pilot_users/migración0029, sesiones/contraseñas existentes, creación owner de organización y trial Premium gratuito por flags, sin alterar organizaciones previas ni pagos reales. Dos contextos independientes automatizados PASS; remoto schema0029/pilot-access-v1/D1/R2true, flags de acceso/Premium true y UI pública verificada. Prueba física01.09 pendiente; H1 está entregado para realizarla. No cerrar Fase01 ni avanzar a validación física ficticia. Guía H1_PILOT_ACCESS.md.
 
@@ -221,3 +225,11 @@ Cada operadora tiene una **página pública propia** dentro de RutasEC, con URL 
 **Flujo:** viaje completado → invitación a calificar → selección obligatoria de 1–5 estrellas → comentario opcional → publicación/moderación según política → actualización del promedio y visualización pública. Definir reglas de edición, disputas, elegibilidad y publicación al implementar; no inventar reseñas ni estadísticas reales.
 
 **Estado:** decisión funcional y arquitectura conceptual documentadas; no se acredita implementación, prueba ni despliegue. Mantener prioridad Standard primero, con perfil básico y reputación verificable; ampliar personalización Premium después. Snapshot: `docs/snapshots/2026-11-18-perfiles-reputacion-operadoras.md`.
+
+## Circuito de presentación P0–P4 — 2026-11-24
+
+Prioridad del propietario: publicar datos ingresados por él; cero empresas, vehículos, viajes o GPS precargados. Portal /pilot/ reutiliza cuentas, organización, flota/asignaciones/invitaciones, D1, reservas/QR, operaciones y GPS existentes. Menú administración Operación / Vehículos y equipo; conductor Hoy / Mi semana. Perfil/identidad enlaza al editor existente. Administración ve todos sus viajes con vehículo/conductor y mapa de unidades en curso, limitado a su empresa. Conductor no recibe equipo/invitaciones/finanzas ni viajes ajenos.
+
+Por defecto Solo este viaje. Frecuencias optativas diaria/semanal/mensual con fecha final y vista previa explícita sin escrituras; publicar requiere confirmación. Cada instancia tiene inventario independiente. No se activó renovación automática. Migración0030 aditiva, conserva datos y documentación; elegibilidad de formación explícita sin falsificar revisión legal. No se incluyó S1/0025, Android ni pagos reales.
+
+Pruebas dirigidas: siete casos de piloto/recurrencia PASS y Chromium con invitación/registro, vista previa, compra, lectura jsQR desde vídeo local, permisos de conductor, GPS emulado, observador anónimo y fin de enlace PASS. Se corrigieron errores administrativos mostrados al conductor y meta.changes de finalización afectado por trigger. Capturas1280/390 inspeccionadas. Mapa del navegador local usa tiles externos bloqueados; no demuestra cartografía/red/GPS físicos. Regresión y despliegue en verificación; actualizar con Actions/commits antes de cierre. Cámara, contactos, cuatro vehículos y teléfonos físicos siguen pendientes, sin bloquear entrega técnica.

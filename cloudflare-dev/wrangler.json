@@ -7,7 +7,8 @@
   "vars": {
     "ALLOW_DEVELOPMENT_AUTH": "false",
     "PILOT_REGISTRATION_ENABLED": "true",
-    "PILOT_PREMIUM_ENABLED": "true"
+    "PILOT_PREMIUM_ENABLED": "true",
+    "PILOT_OPERATIONS_ENABLED": "true"
   },
   "d1_databases": [
     {

@@ -1,3 +1,8 @@
+# Prioridad inmediata de presentación — 2026-11-24
+
+Prioridad vigente: circuito de presentación mañana. Continuar tareas implementables sin esperar01.09; mantener pruebas físicas pendientes. Secuencia P0 preparar operadora/vehículo piloto -> P1 invitación vinculada a vehículo -> P2 publicar/agenda -> P3 reserva/QR/embarque/GPS entre sesiones -> P4 desplegar y comprobar. Plan171tareas preservado; no declarar fases amplias terminadas por este recorte.
+
+
 # Plan maestro de RutasEC
 
 Vigente desde 2026-11-24 por instrucción del propietario. Este plan integra, no elimina, docs/ROADMAP.md, docs/PREMIUM_ROADMAP.md, PROJECT_MEMORY.md, auditorías y snapshots históricos. PLAN define alcance/dependencias/aceptación; PROGRESS contiene estados y evidencias; TESTS contiene resultados.

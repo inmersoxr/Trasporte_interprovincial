@@ -35,7 +35,7 @@ function syncForm(){
  const old=form.elements.offerId.value;
  form.elements.offerId.replaceChildren(...[...$('departureForm').elements.offerId.options].map(option=>option.cloneNode(true)));
  if([...form.elements.offerId.options].some(o=>o.value===old))form.elements.offerId.value=old;
- section.hidden=!$('operatorSelect').value;clearPreview();load();
+ section.hidden=!$('operatorSelect').value||!['owner','admin','dispatcher'].includes(document.querySelector('.standard-shell').dataset.memberRole||'owner');clearPreview();if(!section.hidden)load();
 }
 function setBusy(value){busy=value;$('previewRecurring').disabled=value;$('publishRecurring').disabled=value||!previewBody;}
 $('previewRecurring').onclick=async()=>{

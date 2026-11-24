@@ -1,3 +1,8 @@
+# Prioridad inmediata de presentación — 2026-11-24
+
+Prioridad vigente: circuito de presentación mañana. Continuar tareas implementables sin esperar01.09; mantener pruebas físicas pendientes. Secuencia P0 preparar operadora/vehículo piloto -> P1 invitación vinculada a vehículo -> P2 publicar/agenda -> P3 reserva/QR/embarque/GPS entre sesiones -> P4 desplegar y comprobar. Plan171tareas preservado; no declarar fases amplias terminadas por este recorte.
+
+
 # Protocolo vigente del agente — 2026-11-24
 
 Al iniciar: leer AGENTS.md, PLAN.md, PROGRESS.md y TESTS.md; identificar siguiente tarea, comprobar repositorio y despliegue, continuar sin reiniciar. Conservar también PROJECT_MEMORY.md y snapshots. Estos cuatro archivos son la fuente de continuidad; las instrucciones históricas siguientes se mantienen para trazabilidad, pero prevalece este bloque y el plan vigente.

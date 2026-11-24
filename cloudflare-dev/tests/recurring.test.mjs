@@ -101,3 +101,14 @@ test('90 departures publish in one bounded transaction; stopping and booking con
     assert.equal((await f.call('/recurring-schedules',body,f.a)).data.schedule.status,'stopped');
   }finally{await f.mf.dispose();}
 });
+
+test('chosen daily and monthly frequencies preserve calendar days and skip nonexistent month dates',()=>{
+ const now=Date.parse('2030-01-30T12:00:00Z');
+ const body={startDate:'2030-01-31',endDate:'2030-03-31',weekdays:allDays,times:['08:00'],durationMinutes:60};
+ const monthly=planSchedule({...body,frequency:'monthly'},now);
+ assert.deepEqual(monthly.departures.map(d=>d.departAt.slice(0,10)),['2030-01-31','2030-03-31']);
+ assert.equal(monthly.monthlyDay,31);
+ assert.equal(planSchedule({...body,frequency:'daily',endDate:'2030-02-02',weekdays:[1]},now).departures.length,3);
+ const weekly=planSchedule({...body,frequency:'weekly',endDate:'2030-02-14',weekdays:[4]},now);
+ assert.equal(weekly.departures.length,3);
+});
