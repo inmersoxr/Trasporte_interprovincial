@@ -14,8 +14,8 @@ Fase00 VALIDADA. H1 desplegado3186c93c/Actions45333404724 SUCCESS,72 pruebas y7n
 | 00.06 | VALIDADA | Fuente ded3bb70; versiones Workers conocidas y D1 Time Travel metadata verificada en Actions45322538944; punto UTC2026-11-24T05:07:11Z; sin exportar/restaurar datos. Ver docs/AUDIT_PHASE00_2026-11-24.md. | 7497e906a19c32e5c250c291ae657dfa45958f6e |
 | 01.01 | VALIDADA | 3186c93c/Actions45333404724 SUCCESS;72tests y7navegadores. Registro sin correo/SMS en Worker real de prueba; frontend público muestra Crear cuenta y entrar sin código. | 3186c93cd3aa1ddc19230d155cb285be80baed77 |
 | 01.02 | VALIDADA | Selector inicial Teléfono, prefijo editable+593, formato E164 normalizado en backend y rechazo de número sin código; Chromium360/390/1280 y captura remota inspeccionados. | 1bd09dc0f390e06e69ad5f3bd1d7f55fcedb25d7 |
-| 01.03 | VALIDADA | PILOT_REGISTRATION_ENABLED true en despliegue. Sin envío/código; contacto permanece no verificado. No concede admin global aun declarando correo preautorizado; rechazo fuera del host app y al apagar flag. | Validación identificada por commit 01.03 |
-| 01.04 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
+| 01.03 | VALIDADA | PILOT_REGISTRATION_ENABLED true en despliegue. Sin envío/código; contacto permanece no verificado. No concede admin global aun declarando correo preautorizado; rechazo fuera del host app y al apagar flag. | 2ac596631e4a064b5e74a5a5b82747325c1a5fe4 |
+| 01.04 | VALIDADA | scrypt reutilizado, cookies Secure/HttpOnly, sesiones hash7d, origen, rate limiting y revocación. Probe negativo en Cloudflare devuelve401 ejecutando comparación; sin cuenta creada ni secretos expuestos. | Validación identificada por commit 01.04 |
 | 01.05 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.06 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.07 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
