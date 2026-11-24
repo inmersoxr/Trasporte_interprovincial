@@ -48,3 +48,5 @@ Actions45333404724 SUCCESS:72/72 y siete flujos Chromium. H1 automatizado prueba
 - 01.06 VALIDADA: Sin empresa, Operadores abre Empresa automáticamente; crear nombre persiste misma entidad vista desde segunda sesión. Reintento idempotente; ninguna empresa ficticia creada en remoto.
 
 - 01.07 VALIDADA: Membresía owner al crear empresa; UI Administrador principal; API de otra empresa403, platformRole null y cero admin global por declaración de contacto sin verificar.
+
+- 01.08 VALIDADA: PILOT_PREMIUM_ENABLED true; trial fee0 sin vencimiento configurado al crear organización propia, trigger0023 reutilizado. Premium/gestión habilitados en Worker y navegador; planes previos sin cambios; pagos reales desactivados.
