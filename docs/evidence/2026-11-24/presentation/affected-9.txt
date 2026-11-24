@@ -1,0 +1,17 @@
+✔ Pilot circuit: own vehicle invitation, isolated driver agenda, seven persistent trips, atomic seats/QR and real-GPS protocol (5047.800286ms)
+✔ recurrence uses Ecuador dates, weekdays and independent UTC instants, including leap days (2.155025ms)
+✔ recurrence rejects invalid calendars, oversized periods, duplicate times and vehicle overlaps (1.359019ms)
+✔ recurring publication is persistent, idempotent and tenant-scoped; seats and single-date cancellation remain independent (6763.904146ms)
+✔ overlapping publications are all-or-nothing and do not leave orphan schedules or vehicle slots (6159.145537ms)
+✔ 90 departures publish in one bounded transaction; stopping and booking concurrently never cancel a confirmed ticket (6740.830854ms)
+✔ chosen daily and monthly frequencies preserve calendar days and skip nonexistent month dates (0.805884ms)
+✔ Premium P2: invitations are single-use, role enforcement, scoped assignments and revocation (7502.829178ms)
+✔ P6: D1 rejects stale assignment after membership revocation, even outside API prechecks (3723.156778ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 37452.250608

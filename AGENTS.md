@@ -58,3 +58,6 @@ J7 operaciones básicas: panel, manifiesto, abordaje, estados, historial, seguim
 J8 regresión integral Standard, dos sesiones/dispositivos, persistencia, errores y documentación de lo que es demo versus funcional. Revisión Senior posterior sobre evidencia y código.
 
 Premium empresarial, controles avanzados de planes, pagos reales, liquidaciones, y auditoría/refactorización Senior quedan después del Standard funcional; el demo Premium existente se conserva íntegro. La pasarela real se aborda únicamente en la fase final autorizada, según el roadmap. Si la infraestructura J1 no está lista, no fingir su disponibilidad ni conectar Standard a endpoints inexistentes.
+
+### Elección de programación del piloto
+El propietario decide datos, vehículos, conductores, horarios y publicaciones. No sembrar viajes ni crear siete salidas por defecto. Solo este viaje es inicial; recurrencia diaria/semanal/mensual optativa con fecha final y vista previa sin escrituras, publicación explícita. Administración ve toda su organización; conductor solo sus asignaciones. Mantener plan completo sin exigir cerrar fases empresariales para entregar circuito de presentación.

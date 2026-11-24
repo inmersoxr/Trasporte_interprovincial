@@ -4,11 +4,11 @@ El plan completo continúa vigente. Prioridad actual: entregar empresa→vehícu
 
 | ID | Estado | Evidencia / siguiente acción |
 |---|---|---|
-| P0 | EN PRUEBAS | Preparación explícita de empresa y vehículo de piloto sin documentos falsos; backend probado. |
-| P1 | EN PRUEBAS | Invitación vinculada, aceptación, asignación y revocación; permisos de conductor comprobados. |
-| P2 | EN PRUEBAS | Publicación individual o recurrencia diaria/semanal/mensual elegida, vista previa sin escrituras y agenda Hoy/Mi semana mediante interfaz real. |
+| P0 | VALIDADA | 295bd0b2: preparación explícita de empresa y vehículo sin documentos falsos; integración y navegador aislados PASS. |
+| P1 | VALIDADA | 295bd0b2: invitación vinculada, aceptación, asignación y revocación; permisos/agenda aislada comprobados en Worker y navegador. |
+| P2 | VALIDADA | Publicación individual o recurrencia diaria/semanal/mensual elegida, vista previa sin escrituras y agenda Hoy/Mi semana mediante interfaz real. Fuente295bd0b2; ninguna salida creada sin confirmación. |
 | P3 | EN PRUEBAS | Compra/QR/cámara/GPS/observador anónimo integrados en Chromium; coordenadas/cámara de prueba, no pruebas físicas. |
-| P4 | EN DESARROLLO | Congelar fuente, regresión, despliegue y comprobación remota; entregar URL y guía. |
+| P4 | VALIDADA | 295bd0b2 / Actions45340992233 SUCCESS; schema0030,74pruebas+8navegadores, portal público390/1280 y assets exactos PASS. Guía docs/PRESENTATION_PILOT.md. |
 
 # Prioridad inmediata de presentación — 2026-11-24
 
@@ -194,3 +194,11 @@ Fase00 VALIDADA. H1 desplegado3186c93c/Actions45333404724 SUCCESS,72 pruebas y7n
 | 13.15 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 13.16 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 13.17 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
+
+## Entrega publicada del circuito — 2026-11-24T06:37Z
+
+Fuente295bd0b26cbe8f3782ca4a1f2e2a16da8e3df87f. Actions45340992233 verify/deploy SUCCESS:74pruebas y8recorridos navegador. Migración0030 aplicada en D1 existente; health pilot-circuit-v1, D1/R2true, pagosdisabled. Versiones API2ceaf44e-6f94-4e5c-b185-3b874f4b5f47, web29ecaf5c-9a04-4023-a20e-1ab6ef583d96 y admina9fbc7f1-6163-4f63-8d9a-de6110b2c600. Recuperación nativa D1 comprobada mediante metadata, sin exportación/restauración ni borrado.
+
+URL de operación: https://rutasec-web-dev.drbrownlabs.workers.dev/pilot/ . Marketplace: https://rutasec-web-dev.drbrownlabs.workers.dev/standard/ . Navegador público390/1280 PASS: acceso piloto redirige a cuenta, registro sin código visible, sin desbordamiento ni erroresJS. Assets pilot/join/GPS/permisos coinciden byte a byte con fuente; dashboard anónimo401. Google y correo reales siguenfalse; teléfono/correo+contraseña del piloto no dependen de esos proveedores. No es login mediante WhatsApp.
+
+Main permanece0e8934886b30ec9eec8db5a26886ba4bafcd6b4a y Pages HTTP200/hashc8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f intactos. No se sembraron datos/GPS/cuentas en público. Pruebas reales con cuatro vehículos/conductores/cámaras y teléfonos independientes siguen EN PRUEBAS; fixtureGPS/cámara de CI no las valida. Mantener aplicación visible para GPS web. El plan171tareas continúa: no se declaran completadas todas las fases ni seguridad comercial. Evidencias y capturas: docs/evidence/2026-11-24/presentation/.

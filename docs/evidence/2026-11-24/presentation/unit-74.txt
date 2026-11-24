@@ -1,0 +1,97 @@
+
+> pretest
+> node build-frontend.mjs
+
+Worker listo: sync-service/out/worker.mjs. Vincular un bucket R2 como BUCKET.
+Isolated Cloudflare frontend built in cloudflare-dev/out/
+
+> test
+> node --test tests/*.test.mjs ../sync-service/tests/*.test.mjs
+
+✔ Two-phone lifecycle: 8→6 seats, ticket, operator, board, shared SOS and arrival (55.794724ms)
+✔ Concurrent payments cannot oversell; identical requests never duplicate; cancellation releases seats once (10.710012ms)
+✔ Editing validation, draft publication, fare conflict, private booking and cancellation history (8.017881ms)
+✔ Exact seat numbers are persisted and concurrent seat collision is rejected (3.983814ms)
+✔ Private transport request persists separately from shared departures (3.788418ms)
+✔ Boarding address and map coordinates are preserved on a ticket (2.777775ms)
+✔ Private request can be claimed by an authenticated operator (3.568647ms)
+✔ Fixed-price private route chooses independent date/time without occupying shared seats (3.976873ms)
+✔ Unpaid seat selections do not reserve; automatic assignment is atomic; notification uses operator phone (4.306936ms)
+✔ Applications persist exactly once, require consent, remain private and never create operators (43.125753ms)
+✔ Administrative review is protected, version checked and has no automatic approval/activation (5.47769ms)
+✔ No invented contact defaults; unpublished legal drafts stay private; reviewed content is configurable (5.27623ms)
+✔ Road geometry follows OSM road nodes and covers Cuenca–Guayaquil (2.001403ms)
+✔ Shared API permissions, pause/resume/speed, persistent SOS and completion with sender absent (53.037172ms)
+✔ Admin hostname serves only its assets and explicit platform/auth proxy with no frame or cache exposure (28.782724ms)
+✔ Google admin entry uses its own callback and keeps state/PKCE on the separate hostname (3154.846863ms)
+✔ same-origin APIs bypass offline cache and HTML fallback (1.220745ms)
+✔ parity SW activation preserves the independent Standard PWA cache (1.850595ms)
+✔ Standard SW bypasses APIs and its precache includes real public files (1.9501ms)
+✔ all service worker precache files exist; copied config cannot target original demo (0.471534ms)
+✔ Premium and miniapp offline shells cache only assets and bypass all private API/auth requests (2.248165ms)
+✔ Alpha boarding binds ticket to its service/time and records once; ordinary cookie sessions control tracking (8217.15507ms)
+✔ First platform owner bootstrap requires an existing active user and cannot replace existing authority (134.32745ms)
+✔ P3: D1 analytics count real bookings, cancellations and occupancy, scoped by tenant and period (6347.337127ms)
+✔ Alpha catalog quarantines QA without deleting it; filters use Ecuador dates and remaining seats (6798.472832ms)
+✔ Cloudflare entry opens Standard and keeps the copied demo under its own path (1.76853ms)
+✔ checkout return paths never redirect to external origins or APIs (1.126265ms)
+✔ Alpha defaults reject unverified legacy access; Google accounts retain tickets across independent sessions (6953.534827ms)
+✔ Company identity: two Premium brands, Standard limits, drafts, publication, CAS and media isolation (3207.587865ms)
+✔ Spontaneous market opts in without published routes, alerts eligible operators, accepts any quote and revalidates pause (7137.086691ms)
+✔ Native push validates destinations and signs audience-bound ES256 VAPID without private data (4.204475ms)
+✔ Notification subscriptions are private; concurrent dispatch leases once, transient failures retry and expired endpoints are removed (6023.991719ms)
+✔ Alpha email code: pending password is hashed; mailbox proof activates once and legacy-token bypass fails (7180.705986ms)
+✔ Alpha email code: five guesses, resend invalidation, expiry and preauthorized mailbox owner (6580.943914ms)
+✔ Alpha email code: unavailable transport and failed resend never activate or falsely report delivery (3352.231574ms)
+✔ Enterprise: staff/shifts, isolated AR/AP, concurrent payments/reversals, payroll, maintenance and direct sales (3790.857276ms)
+✔ GPS distance estimates reject jumps and do not manufacture missing segments (0.769774ms)
+✔ P4: immutable internal costs, idempotency, voiding, scoped documents and honest simulated totals (5991.591254ms)
+✔ Google activation preserves absent secrets, rejects partial pairs and never logs credential payloads (85.806079ms)
+✔ Google login returns to company tools without accepting external or API destinations (0.537674ms)
+✔ GPS real protocol: authorization, history retries, late samples, public expiry/revocation and completion (7640.479701ms)
+✔ health verifies both bindings without cache (26.37583ms)
+✔ missing bindings or schema fail closed without leaking internal error (3.432681ms)
+✔ unknown routes and health writes are rejected (1.150413ms)
+✔ A1 Google: signed JWT claims, PKCE/state, explicit dev linking, revocable cookie and CSRF (6705.554467ms)
+✔ A1: Google customer registration reuses subject, never merges by email or grants enterprise roles (6326.569441ms)
+✔ Alpha journey: contact and meeting snapshots, saved profile, private receipt and complete cursor histories (5791.180419ms)
+✔ Alpha onboarding: verified identity is not approval; private R2 documents, reviewed fleet and expiry guard real publication (8481.80995ms)
+✔ Company staff share operations, drivers see only assigned services, commercial subscription controls Premium (7851.930787ms)
+✔ Public catalog and operator manifests continue beyond former limits without duplicates or losing deep links (12087.44052ms)
+✔ A2 email signup requires mailbox proof; cookie login, owner policy, no public keys or UUID step (4186.561727ms)
+✔ A2 password recovery/change revoke sessions, expire tokens and reject races without changing another account (9268.142517ms)
+✔ A2 mail failure never claims delivery or activates users; rate limits, expiry and CSRF fail closed (6522.167775ms)
+✔ H1: unverified phone/email pilot, isolated owner, Premium trial, duplicate safety, persistent login and revocable sessions (9700.202444ms)
+✔ Pilot circuit: own vehicle invitation, isolated driver agenda, seven persistent trips, atomic seats/QR and real-GPS protocol (7694.082812ms)
+✔ G1 platform: separate authority, optimistic plans, manual ledger concurrency and durable audit (3182.743264ms)
+✔ G1 platform: stable pagination and case-insensitive search do not expose global data to tenants (3032.757696ms)
+✔ Premium P1: tenant entitlement, monotonic mileage, atomic shared calendar and closure races (3256.239557ms)
+✔ P5: safe publication, optimistic revisions, scoped R2 images, tenant manifest and shared catalog (3209.205472ms)
+✔ Public profiles: Standard base and Premium advanced media stay isolated and publish only selected images (6748.586687ms)
+✔ Reviews require verified completed boarding; one per account/service, private reports, CAS reply and audited moderation (3707.034685ms)
+✔ Private fixed and custom bookings become reviewable only after their own boarding and completion (6537.171667ms)
+✔ Recovery verifier restores the current integrated schema and checks inventory in temporary SQLite (162.453762ms)
+✔ recurrence uses Ecuador dates, weekdays and independent UTC instants, including leap days (1.733565ms)
+✔ recurrence rejects invalid calendars, oversized periods, duplicate times and vehicle overlaps (1.276391ms)
+✔ recurring publication is persistent, idempotent and tenant-scoped; seats and single-date cancellation remain independent (3116.737455ms)
+✔ overlapping publications are all-or-nothing and do not leave orphan schedules or vehicle slots (5849.484648ms)
+✔ 90 departures publish in one bounded transaction; stopping and booking concurrently never cancel a confirmed ticket (3071.515087ms)
+✔ chosen daily and monthly frequencies preserve calendar days and skip nonexistent month dates (0.50944ms)
+✔ Travel changes preserve prices, prevent schedule/seat conflicts, refund only selected passengers and keep QR positions stable (6086.019043ms)
+✔ Opt-in recurring schedules extend safely without duplicate departures and stopping blocks renewal (5759.891765ms)
+✔ D1 Standard catalog: authorization, persistence, idempotency and vehicle scheduling (6815.414946ms)
+✔ Premium P2: invitations are single-use, role enforcement, scoped assignments and revocation (6052.49015ms)
+✔ P6: D1 rejects stale assignment after membership revocation, even outside API prechecks (2942.240951ms)
+ℹ tests 74
+ℹ suites 0
+ℹ pass 74
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 249394.431296
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

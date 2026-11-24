@@ -299,3 +299,13 @@ Pagos simulados; Android/OTA/GPS nativo en segundo plano pospuestos. Premium com
 
 ## Dependencia operativa H1
 La prueba física01.09 requiere una URL desplegada01.10. Se comprueban antes dos contextos independientes y recarga en automatización; se entrega la versión y se conserva01.09 pendiente de teléfonos reales. Esto evita una dependencia circular sin declarar la aceptación física realizada. Fase01 no se cierra hasta esa validación.
+
+## Circuito prioritario elegido por el propietario (sin sustituir171tareas)
+
+| ID | Dependencias | Aceptación |
+|---|---|---|
+| P0 | 00/H1 existentes | Persona crea empresa y registra vehículo con placa/capacidad, sin datos precargados ni aprobación documental ficticia. |
+| P1 | P0 | Invitar conductor a vehículo, aceptar con cuenta independiente, roles limitados y revocación comprobados. |
+| P2 | P1 | Administrador elige horario/destino/vehículo y viaje único o recurrencia diaria/semanal/mensual; vista previa no escribe, publicación explícita y agenda persistente. |
+| P3 | P2 | Compra simulada sin doble asiento, QR/embarque único, GPS real del dispositivo, mapa administrativo conjunto, pasajero y enlace público; automatización y validación física se registran separadas. |
+| P4 | P0–P3 software | Actions verde, D1/Workers existentes, assets remotos comprobados y guía; no bloquea entrega por validación física pendiente. |
