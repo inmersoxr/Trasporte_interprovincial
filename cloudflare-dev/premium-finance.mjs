@@ -13,6 +13,7 @@ export async function expense(path,body,user,operatorId,db,c){const {stmt,failur
  }
  const match=path.match(/^\/api\/premium\/expenses\/([0-9a-f-]{36})\/void$/i);if(!match)return null;
  if(!await stmt(db,'SELECT 1 FROM premium_expenses WHERE id=? AND operator_id=?',[match[1],operatorId]).first())throw failure('Registro ajeno o inexistente',403);
+ if(await stmt(db,"SELECT 1 FROM premium_business_documents WHERE expense_id=? AND operator_id=? AND status='open'",[match[1],operatorId]).first())throw failure('Anula primero el documento asociado a este gasto',409);
  const reason=text(body.reason,'Motivo de anulación',200);
  await db.batch([stmt(db,"UPDATE premium_expenses SET status='void',void_reason=?,voided_at=CURRENT_TIMESTAMP WHERE id=? AND status='posted'",[reason,match[1]]),stmt(db,"INSERT OR IGNORE INTO audit_events(id,actor_user_id,entity_type,entity_id,action) VALUES(?,?,'premium_expense',?,'void')",[match[1]+':void',user.id,match[1]])]);return{id:match[1],status:'void'};
 }

@@ -22,6 +22,8 @@
     "test:platform-local": "node tests/platform-local.e2e.mjs",
     "test:platform": "node tests/platform.e2e.mjs",
     "test:email-local": "node tests/email-local.e2e.mjs",
+    "test:identity-local": "node tests/identity-local.e2e.mjs",
+    "test:enterprise-local": "node tests/enterprise-local.e2e.mjs",
     "test:gps-local": "node tests/gps-local.e2e.mjs",
     "test:alpha-local": "node tests/alpha-local.e2e.mjs"
   },

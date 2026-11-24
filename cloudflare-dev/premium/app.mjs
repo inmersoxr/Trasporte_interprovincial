@@ -17,11 +17,11 @@ export async function run(action){const operator=$('operator'),wasDisabled=opera
 export const post=(path,data)=>api(path,{...data,operatorId:$('operator').value,requestId:data.requestId||crypto.randomUUID()});
 export async function refresh(){
  const operatorId=$('operator').value;if(!operatorId){status('Crea primero una operadora y vehículos en Standard.');return;}
- const data=await api('/premium?operatorId='+encodeURIComponent(operatorId));
+ const data=await api('/premium?operatorId='+encodeURIComponent(operatorId));document.dispatchEvent(new CustomEvent('premium:dashboard',{detail:data}));
  $('activation').hidden=data.enabled;$('workspace').hidden=!data.enabled;
  if(!data.enabled){$('activate').hidden=!data.canActivate;status(data.notice||'Premium aún no está habilitado para esta operadora.');return;}
  renderTeam(data);await renderBusiness(data);await renderFinance(data);await renderBranding(data);
- const canManage=['owner','admin'].includes(data.role);$('maintenance').hidden=!canManage;
+ const canManage=['owner','admin'].includes(data.role);let businessLink=document.getElementById('enterpriseLink');if(!businessLink){businessLink=node('a','Administración de empresa →');businessLink.id='enterpriseLink';document.querySelector('header').append(businessLink);}businessLink.href='/business/?operator='+encodeURIComponent(operatorId);businessLink.hidden=!['owner','admin','dispatcher'].includes(data.role);$('maintenance').hidden=!canManage;
  $('fleet').replaceChildren();$('jobs').replaceChildren();const select=$('maintenance').elements.vehicleId;select.replaceChildren();
  for(const v of data.vehicles){
   select.add(new Option(v.model,v.id));const card=node('div','');card.className='card';card.append(node('h3',v.model+' · '+v.capacity+' plazas'));

@@ -18,6 +18,8 @@ for (const file of await readdir(root)) {
 for (const dir of ['assets', 'vendor', 'shared']) {
   await cp(new URL(dir, root), new URL('public/' + dir, output), { recursive: true });
 }
+await cp(new URL('business/', import.meta.url), new URL('public/business/', output), { recursive: true });
+await cp(new URL('company/', import.meta.url), new URL('public/company/', output), { recursive: true });
 await cp(new URL('account/', import.meta.url), new URL('public/account/', output), { recursive: true });
 await cp(new URL('miniapp/', import.meta.url), new URL('public/miniapp/', output), { recursive: true });
 await cp(new URL('premium/', import.meta.url), new URL('public/premium/', output), { recursive: true });
@@ -31,6 +33,7 @@ await writeFile(new URL('public/icon.svg',output),'<svg xmlns="http://www.w3.org
 for(const app of ['standard','premium','account','miniapp']){
  const path=new URL('public/'+app+'/index.html',output);let markup=await readFile(path,'utf8');
  const iconLinks='<link rel="icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/assets/icon-192.png">';
+ if(['standard','premium'].includes(app)){const themeScript='<script type="module" src="../company/theme.mjs"></script>';markup=markup.includes('</head>')?markup.replace('</head>',themeScript+'</head>'):markup.replace('<body>',themeScript+'<body>');}
  markup=markup.includes('</head>')?markup.replace('</head>',iconLinks+'</head>'):markup.replace('<body>',iconLinks+'<body>');
  if(['premium','account'].includes(app))markup=markup.replace('<h1>','<img src="/assets/rutasec-logo.png" alt="RutasEC" width="136" height="110"><h1>');
  await writeFile(path,markup);
@@ -56,7 +59,7 @@ let sw = await readFile(new URL('sw.js', root), 'utf8');
 sw = sw.replace("const CACHE = '", "const CACHE = 'rutasec-cloudflare-dev-"+revision+"-");
 sw = sw.replace("key.startsWith('rutasec-')", "key.startsWith('rutasec-cloudflare-dev-')");
 sw = sw.replace("self.addEventListener('fetch', event => {", `self.addEventListener('fetch', event => {
-  if (/^\\/(api|standard-api|standard|account|premium|miniapp)(?:\\/|$)/.test(new URL(event.request.url).pathname)) return;`);
+  if (/^\\/(api|standard-api|standard|account|premium|miniapp|company|business)(?:\\/|$)/.test(new URL(event.request.url).pathname)) return;`);
 await writeFile(new URL('public/sw.js', output), sw);
 let html = await readFile(new URL('index.html', root), 'utf8');
 html = html.replace('<title>', '<title>DEV · ');

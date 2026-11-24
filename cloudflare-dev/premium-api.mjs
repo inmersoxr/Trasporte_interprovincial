@@ -1,3 +1,4 @@
+import {enterprise} from './premium-enterprise.mjs';
 import {commercialPremium} from './standard-permissions.mjs';
 import {uploadMedia,profile} from './premium-profiles.mjs';
 import {finance,expense,document} from './premium-finance.mjs';
@@ -23,8 +24,9 @@ export async function handlePremium(request,env,c) {
  const role=membership.role;
  const teamPaths=['/api/premium/branches','/api/premium/invites','/api/premium/revoke','/api/premium/assignments'];
  if(path==='/api/premium/activate'||teamPaths.includes(path))await owner(db,user.id,operatorId);
- else if(request.method==='POST'&&!['owner','admin'].includes(role))throw failure('El rol no permite esta operación',403);
+ else if(request.method==='POST'&&!['owner','admin'].includes(role)&&!(path==='/api/premium/enterprise/direct-sale'&&role==='dispatcher'))throw failure('El rol no permite esta operación',403);
  const entitlement=await stmt(db,`SELECT t.plan,t.active,t.activated_at FROM premium_tenants t JOIN operators o ON o.id=t.operator_id WHERE t.operator_id=? AND (o.data_scope='qa' OR ${commercialPremium})`,[operatorId]).first();
+ if(path.startsWith('/api/premium/enterprise')){if(!entitlement?.active)throw failure('Premium no habilitado',403);return enterprise(request,env,c,user,operatorId,role,body);}
  if(path==='/api/premium'&&request.method==='GET') {
   if(!entitlement?.active)return {enabled:false,canActivate:env.ALLOW_DEVELOPMENT_AUTH==='true',notice:'Solicita la habilitación del plan a la administración de RutasEC.',environment:'development',payments:'disabled'};
   return {enabled:true,role,entitlement,environment:'development',payments:'disabled',
@@ -64,8 +66,9 @@ export async function handlePremium(request,env,c) {
   }
   const start=Date.parse(body.startsAt),end=Date.parse(body.endsAt),now=Date.now();
   if(!Number.isFinite(start)||!Number.isFinite(end)||start<now-300000||start>now+366*86400000||end<=start||end-start>30*86400000)throw failure('Horario de mantenimiento no válido');
+  if(body.componentPlanId&&!await stmt(db,'SELECT 1 FROM premium_component_plans WHERE id=? AND operator_id=? AND vehicle_id=?',[body.componentPlanId,operatorId,body.vehicleId]).first())throw failure('Control preventivo ajeno',403);
   const saved=await command(db,user,body,'premium_maintenance',[
-   stmt(db,'INSERT INTO premium_maintenance(id,operator_id,vehicle_id,summary,starts_at,ends_at,estimated_cost_cents) VALUES(?,?,?,?,?,?,?)',[id,operatorId,body.vehicleId,text(body.summary,'Descripción',200),start,end,integer(body.estimatedCostCents??0,0,100000000,'Costo estimado')]),
+   stmt(db,'INSERT INTO premium_maintenance(id,operator_id,vehicle_id,summary,starts_at,ends_at,estimated_cost_cents,component_plan_id) VALUES(?,?,?,?,?,?,?,?)',[id,operatorId,body.vehicleId,text(body.summary,'Descripción',200),start,end,integer(body.estimatedCostCents??0,0,100000000,'Costo estimado'),body.componentPlanId||null]),
    stmt(db,'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,maintenance_id) VALUES(?,?,?,?,?)',[crypto.randomUUID(),body.vehicleId,start,end,id])],id);
   return {id:saved};
  }
