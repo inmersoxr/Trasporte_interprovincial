@@ -21,3 +21,5 @@ Una compilación/captura por sí sola no valida funcionalidad. Registrar fallos 
 - 00.03: auditoría de lectura/contratos y evidencias existentes. schema0028 remoto D1/R2true; 71 pruebas CI y seis navegadores; migraciones0001–0028 publicadas salvo0025 pospuesta. No implica pruebas físicas nuevas.
 
 - 00.04: auditoría de lectura/contratos y evidencias existentes. Google y correo reales bloqueados; acceso piloto sin código pendiente; pruebas físicas no validadas; código funcional separado de aceptación real. No implica pruebas físicas nuevas.
+
+- 00.05: Actions45330995683 SUCCESS; URLs about/privacy/terms HTTP200 anónimas; Chromium remoto390/1280 PASS; health schema0028/D1/R2true. No implica restauración nueva ni validación de teléfonos físicos.

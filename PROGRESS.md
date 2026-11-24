@@ -10,7 +10,7 @@ Siguiente tarea: cerrar G-BRANDING/00.05 en curso y completar auditoría00.01–
 | 00.02 | VALIDADA | Matriz docs/ENTERPRISE_PILOT.md, docs/PREMIUM_AUDIT_IDENTITY.md y módulos standard/premium; diferencias nuevas registradas. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.02 — inventario consolidado |
 | 00.03 | VALIDADA | schema0028 remoto D1/R2true; 71 pruebas CI y seis navegadores; migraciones0001–0028 publicadas salvo0025 pospuesta. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.03 — persistencia y endpoints auditados |
 | 00.04 | VALIDADA | Google y correo reales bloqueados; acceso piloto sin código pendiente; pruebas físicas no validadas; código funcional separado de aceptación real. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.04 — brechas clasificadas |
-| 00.05 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
+| 00.05 | VALIDADA | Actions45330995683 SUCCESS; URLs about/privacy/terms HTTP200 anónimas; Chromium remoto390/1280 PASS; health schema0028/D1/R2true. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.05 — despliegue y Branding público validados |
 | 00.06 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.01 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.02 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
