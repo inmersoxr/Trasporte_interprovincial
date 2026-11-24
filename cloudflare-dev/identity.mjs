@@ -25,7 +25,7 @@ export async function verifyGoogleIdToken(token,{audience,nonce,jwks,now=Date.no
  return claims;
 }
 export async function handleAuth(request,env,c,network=fetch){const {identity,stmt,rows,hash,failure}=c,db=env.DB,url=new URL(request.url),path=url.pathname;
- if(path.startsWith('/auth/email/'))return handlePassword(request,env,c,network);
+ if(path.startsWith('/auth/email/')||path.startsWith('/auth/pilot/'))return handlePassword(request,env,c,network);
  if(path==='/auth/profile'&&request.method==='POST'){
   requireOrigin(request,failure);const user=await identity(request,db),raw=await request.text();if(raw.length>2048)throw failure('Solicitud demasiado grande',413);
   let body;try{body=JSON.parse(raw);}catch{throw failure('Solicitud no válida');}
@@ -36,14 +36,14 @@ export async function handleAuth(request,env,c,network=fetch){const {identity,st
  }
  const origin=url.origin===ADMIN_ORIGIN?ADMIN_ORIGIN:APP_ORIGIN,adminOrigin=origin===ADMIN_ORIGIN;
  const configured=!!(env.GOOGLE_CLIENT_ID&&env.GOOGLE_CLIENT_SECRET),callback=origin+(adminOrigin?'/platform-api':'/standard-api')+'/auth/google/callback';
- if(path==='/auth/config'&&request.method==='GET')return response({google:configured,email:mailReady(env),emailMissing:[...(!env.AUTH_EMAIL_FROM?['AUTH_EMAIL_FROM']:[]),...(!env.AUTH_EMAIL?.send&&!env.RESEND_API_KEY?['AUTH_EMAIL binding or RESEND_API_KEY']:[])],missingGoogleConfiguration:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET'].filter(name=>!env[name]),push:!!(env.VAPID_PUBLIC_KEY&&env.VAPID_PRIVATE_KEY),apple:false,environment:'development'});
+ if(path==='/auth/config'&&request.method==='GET')return response({google:configured,email:mailReady(env),pilotRegistration:env.PILOT_REGISTRATION_ENABLED==='true'&&!adminOrigin,emailMissing:[...(!env.AUTH_EMAIL_FROM?['AUTH_EMAIL_FROM']:[]),...(!env.AUTH_EMAIL?.send&&!env.RESEND_API_KEY?['AUTH_EMAIL binding or RESEND_API_KEY']:[])],missingGoogleConfiguration:['GOOGLE_CLIENT_ID','GOOGLE_CLIENT_SECRET'].filter(name=>!env[name]),push:!!(env.VAPID_PUBLIC_KEY&&env.VAPID_PRIVATE_KEY),apple:false,environment:'development'});
  if(path==='/auth/session'&&request.method==='GET'){
   const developmentAuth=env.ALLOW_DEVELOPMENT_AUTH==='true';
   if(!cookie(request,COOKIE))return response({authenticated:false,developmentAuth});
   try{const user=await identity(new Request(request.url,{headers:{Cookie:request.headers.get('Cookie')}}),db),profile=await stmt(db,`SELECT u.id,u.display_name,
    COALESCE(a.email,(SELECT email FROM auth_identities WHERE user_id=u.id AND provider='google')) AS email,
    (SELECT phone FROM standard_passenger_profiles WHERE user_id=u.id) AS phone,
-   a.user_id IS NOT NULL AS hasPassword FROM users u LEFT JOIN auth_email_accounts a ON a.user_id=u.id WHERE u.id=?`,[user.id]).first();
+   (a.user_id IS NOT NULL OR p.user_id IS NOT NULL) AS hasPassword,p.phone AS loginPhone,CASE WHEN p.user_id IS NOT NULL THEN 'phone' ELSE 'email' END AS passwordKind,CASE WHEN a.verified_at>0 OR EXISTS(SELECT 1 FROM auth_identities WHERE user_id=u.id AND provider='google') THEN 1 ELSE 0 END AS contactVerified FROM users u LEFT JOIN auth_email_accounts a ON a.user_id=u.id LEFT JOIN auth_phone_accounts p ON p.user_id=u.id WHERE u.id=?`,[user.id]).first();
    profile.providers=(await rows(db,'SELECT provider FROM auth_identities WHERE user_id=?',[user.id])).map(row=>row.provider);
    return response({authenticated:true,developmentAuth,user:profile,platformRole:(await stmt(db,'SELECT role FROM platform_admins WHERE user_id=?',[user.id]).first())?.role||null,operators:await rows(db,`SELECT o.id,o.display_name,m.role,(COALESCE(t.active,0)=1 AND (o.data_scope='qa' OR ${commercialPremium})) AS premiumActive FROM memberships m JOIN operators o ON o.id=m.operator_id LEFT JOIN premium_tenants t ON t.operator_id=o.id WHERE m.user_id=?`,[user.id])});}catch{return response({authenticated:false,developmentAuth});}
  }

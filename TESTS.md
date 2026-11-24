@@ -25,3 +25,9 @@ Una compilación/captura por sí sola no valida funcionalidad. Registrar fallos 
 - 00.05: Actions45330995683 SUCCESS; URLs about/privacy/terms HTTP200 anónimas; Chromium remoto390/1280 PASS; health schema0028/D1/R2true. No implica restauración nueva ni validación de teléfonos físicos.
 
 - 00.06: Fuente ded3bb70; versiones Workers conocidas y D1 Time Travel metadata verificada en Actions45322538944; punto UTC2026-11-24T05:07:11Z; sin exportar/restaurar datos. No implica restauración nueva ni validación de teléfonos físicos.
+
+## H1 en pruebas — 2026-11-24
+- pilot-access.test.mjs: ruta real Worker, scrypt, cookie, registros teléfono/correo sin código, dueño de organización, Premium gratuito, idempotencia, contactos duplicados concurrentes, no privilegio global aun con correo preautorizado, sesión independiente, cambio de clave y revocación.
+- pilot-local.e2e.mjs: registro móvil prioritario teléfono, creación de operadora, portal Premium real, segunda sesión sin cookies previas, recarga, cambio y logout; alternativa correo;360/390/1280 sin desbordamiento. PASS11.51s, capturas inspeccionadas.
+- Fallos corregidos: alta de Premium duplicaba premium_tenants porque ya existe trigger0023: se reutiliza trigger. Primera entrada de operadora abría resumen sin exponer creación: ahora sin empresas abre Empresa automáticamente. Prueba de ruta503 se mantuvo y pasó tras corregir el backend; no se sustituyó por una ruta alternativa.
+- Sin teléfonos/conductores/vehículos físicos;01.09 conserva validación humana pendiente.

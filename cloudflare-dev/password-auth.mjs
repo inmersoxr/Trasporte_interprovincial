@@ -6,6 +6,7 @@ const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),b=>b.toSt
 const reply=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 export const mailReady=env=>!!env.AUTH_EMAIL_FROM&&(typeof env.AUTH_EMAIL?.send==='function'||!!env.RESEND_API_KEY);
 export function normalizeEmail(value,failure){if(typeof value!=='string')throw failure('Escribe un correo válido');const email=value.trim().toLowerCase();if(email.length>254||!/^[-a-z0-9.!#$%&'*+\/=?^_`{|}~]+@[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,63}$/i.test(email))throw failure('Escribe un correo válido');return email;}
+export function normalizePhone(value,failure){if(typeof value!=='string')throw failure('Escribe el teléfono con código internacional');const phone=value.trim().replace(/[ ()-]/g,'');if(!/^\+[1-9][0-9]{7,14}$/.test(phone))throw failure('Escribe el código internacional, por ejemplo +593, seguido del número');return phone;}
 function password(value,failure){if(typeof value!=='string'||value.length<12||value.length>128)throw failure('La contraseña debe tener entre 12 y 128 caracteres');return value;}
 let hashing=Promise.resolve();
 export function passwordHash(value,salt=random()) {const task=hashing.then(async()=>{const key=await new Promise((resolve,reject)=>scrypt(value,salt,32,{N:32768,r:8,p:3,maxmem:67108864},(error,result)=>error?reject(error):resolve(result)));return'scrypt$32768$8$3$'+salt+'$'+Buffer.from(key).toString('hex');});hashing=task.catch(()=>{});return task;}
@@ -43,6 +44,31 @@ async function audit(db,c,id,user,action){return c.stmt(db,"INSERT OR IGNORE INT
 export async function handlePassword(request,env,c,network=fetch){const {stmt,hash,failure,identity}=c,db=env.DB,url=new URL(request.url),path=url.pathname;
  if(request.method!=='POST')throw failure('Método no permitido',405);requireOrigin(request,failure);const raw=await request.text();if(raw.length>4096)throw failure('Solicitud demasiado grande',413);let b;try{b=JSON.parse(raw);}catch{throw failure('Solicitud no válida');}if(!b||typeof b!=='object'||Array.isArray(b))throw failure('Solicitud no válida');
  const ip=request.headers.get('CF-Connecting-IP')||'unknown';await rate(db,'email-ip:'+path,ip,path.endsWith('/login')?30:15,600000,c);
+ if(path.startsWith('/auth/pilot/')){
+  if(env.PILOT_REGISTRATION_ENABLED!=='true'||url.origin!==APP_ORIGIN)throw failure('Acceso de piloto no habilitado aquí',403);
+  if(path==='/auth/pilot/register'){
+   const kind=b.kind==='email'?'email':b.kind==='phone'?'phone':null;if(!kind)throw failure('Selecciona teléfono o correo');
+   const value=kind==='email'?normalizeEmail(b.email,failure):normalizePhone(b.phone,failure),key=await hash(value),table=kind==='email'?'auth_email_accounts':'auth_phone_accounts',column=kind==='email'?'email_hash':'phone_hash';
+   await rate(db,'pilot-register',key,4,3600000,c);if(await stmt(db,'SELECT 1 FROM '+table+' WHERE '+column+'=?',[key]).first())throw failure('Ese contacto ya tiene una cuenta. Inicia sesión o utiliza la recuperación disponible.',409);
+   const encoded=await passwordHash(password(b.password,failure)),id=crypto.randomUUID(),nonce=random(),token=random(),sessionHash=await hash(token),name=typeof b.name==='string'&&b.name.trim()?b.name.trim().slice(0,120):'Usuario RutasEC';
+   const ops=[stmt(db,'INSERT INTO users(id,display_name) VALUES(?,?)',[id,name]),kind==='email'?stmt(db,'INSERT INTO auth_email_accounts(email_hash,email,user_id,password_hash,verified_at,last_nonce) VALUES(?,?,?,?,0,?)',[key,value,id,encoded,nonce]):stmt(db,'INSERT INTO auth_phone_accounts(phone_hash,phone,user_id,password_hash,last_nonce) VALUES(?,?,?,?,?)',[key,value,id,encoded,nonce]),stmt(db,'INSERT INTO auth_pilot_users(user_id,contact_kind) VALUES(?,?)',[id,kind]),stmt(db,'INSERT INTO standard_sessions(token_hash,user_id,expires_at) VALUES(?,?,?)',[sessionHash,id,Date.now()+604800000]),stmt(db,"INSERT INTO audit_events(id,actor_user_id,entity_type,entity_id,action) VALUES(?,?,'pilot_account',?,'registered_unverified')",[crypto.randomUUID(),id,id])];
+   if(kind==='phone')ops.push(stmt(db,'INSERT INTO standard_passenger_profiles(user_id,phone) VALUES(?,?)',[id,value]));
+   try{await db.batch(ops);}catch(e){if(/UNIQUE|constraint/i.test(e.message))throw failure('Ese contacto ya tiene una cuenta. Inicia sesión.',409);throw e;}return sessionResponse(token);
+  }
+  if(path==='/auth/pilot/login'){
+   const value=normalizePhone(b.phone,failure),key=await hash(value);await rate(db,'phone-login',key,8,600000,c);
+   const a=await stmt(db,"SELECT a.*,u.status FROM auth_phone_accounts a JOIN users u ON u.id=a.user_id WHERE phone_hash=?",[key]).first(),valid=await passwordMatches(typeof b.password==='string'&&b.password.length<=128?b.password:'',a?.password_hash);
+   if(!a||!valid||a.status!=='active')throw failure('Teléfono o contraseña incorrectos',401);const token=random(),sessionHash=await hash(token);
+   await db.batch([stmt(db,'INSERT INTO standard_sessions(token_hash,user_id,expires_at) SELECT ?,user_id,? FROM auth_phone_accounts WHERE phone_hash=? AND version=?',[sessionHash,Date.now()+604800000,key,a.version]),stmt(db,"INSERT INTO audit_events(id,actor_user_id,entity_type,entity_id,action) SELECT ?,?,'phone_account',?,'signed_in' WHERE EXISTS(SELECT 1 FROM standard_sessions WHERE token_hash=?)",[crypto.randomUUID(),a.user_id,a.user_id,sessionHash])]);
+   if(!await stmt(db,'SELECT 1 FROM standard_sessions WHERE token_hash=?',[sessionHash]).first())throw failure('Tu contraseña cambió. Vuelve a entrar',409);return sessionResponse(token);
+  }
+  if(path==='/auth/pilot/change-password'){
+   const user=await identity(request,db),a=await stmt(db,'SELECT * FROM auth_phone_accounts WHERE user_id=?',[user.id]).first();if(!a||!await passwordMatches(typeof b.currentPassword==='string'&&b.currentPassword.length<=128?b.currentPassword:'',a.password_hash))throw failure('La contraseña actual no es correcta',401);
+   const encoded=await passwordHash(password(b.password,failure)),nonce=random(),token=random(),sessionHash=await hash(token),guard='EXISTS(SELECT 1 FROM auth_phone_accounts WHERE user_id=? AND last_nonce=?)';
+   const result=await db.batch([stmt(db,'UPDATE auth_phone_accounts SET password_hash=?,version=version+1,last_nonce=? WHERE user_id=? AND version=?',[encoded,nonce,user.id,a.version]),stmt(db,'DELETE FROM standard_sessions WHERE user_id=? AND '+guard,[user.id,user.id,nonce]),stmt(db,'INSERT INTO standard_sessions(token_hash,user_id,expires_at) SELECT ?,?,? WHERE '+guard,[sessionHash,user.id,Date.now()+604800000,user.id,nonce]),stmt(db,"INSERT INTO audit_events(id,actor_user_id,entity_type,entity_id,action) SELECT ?,?,'phone_account',?,'password_changed' WHERE "+guard,[crypto.randomUUID(),user.id,user.id,user.id,nonce])]);if(result[0].meta.changes!==1)throw failure('Tu cuenta cambió. Vuelve a entrar',409);return sessionResponse(token);
+  }
+  throw failure('Ruta de piloto no disponible',404);
+ }
  if(path==='/auth/email/register'&&b.password!==undefined||path==='/auth/email/resend'&&b.challenge!==undefined)return sendCode(request,env,b,c,network);
  if(['/auth/email/register','/auth/email/forgot','/auth/email/resend'].includes(path)){
   if(!mailReady(env))throw failure('El envío de correos aún no está activado. No se ha enviado ningún mensaje',503);
@@ -58,6 +84,7 @@ export async function handlePassword(request,env,c,network=fetch){const {stmt,ha
  if(path==='/auth/email/login'){
   const email=normalizeEmail(b.email,failure),secret=typeof b.password==='string'&&b.password.length<=128?b.password:'';await rate(db,'email-login',await hash(email),8,600000,c);
   const account=await stmt(db,"SELECT a.*,u.status FROM auth_email_accounts a JOIN users u ON u.id=a.user_id WHERE a.email_hash=?",[await hash(email)]).first();const valid=await passwordMatches(secret,account?.password_hash);
+  if(account?.verified_at===0&&env.PILOT_REGISTRATION_ENABLED!=='true')throw failure('El acceso sin verificar del piloto está pausado',403);
   if(!valid||!account||account.status!=='active')throw failure('Correo o contraseña incorrectos',401);
   const token=random(),sessionHash=await hash(token);await db.batch([stmt(db,"INSERT INTO standard_sessions(token_hash,user_id,expires_at) SELECT ?,user_id,? FROM auth_email_accounts WHERE email_hash=? AND version=?",[sessionHash,Date.now()+604800000,account.email_hash,account.version]),stmt(db,"INSERT INTO audit_events(id,actor_user_id,entity_type,entity_id,action) SELECT ?,?,'email_account',?,'signed_in' WHERE EXISTS(SELECT 1 FROM standard_sessions WHERE token_hash=?)",[crypto.randomUUID(),account.user_id,account.user_id,sessionHash])]);
   if(!await stmt(db,'SELECT 1 FROM standard_sessions WHERE token_hash=?',[await hash(token)]).first())throw failure('Tu contraseña cambió. Vuelve a entrar',409);return sessionResponse(token);

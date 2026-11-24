@@ -45,9 +45,9 @@ export async function verifiedIdentity(request, env) {
   if (env.ALLOW_DEVELOPMENT_AUTH === 'true') return user;
   if (request.headers.has('Authorization')) throw failure('Inicia sesión con tu cuenta de RutasEC',403);
   const verified = await stmt(env.DB, `SELECT 1 FROM standard_sessions WHERE token_hash=? AND user_id=? AND expires_at>?
-    AND (EXISTS(SELECT 1 FROM auth_email_accounts WHERE user_id=? AND verified_at IS NOT NULL)
-    OR EXISTS(SELECT 1 FROM auth_identities WHERE user_id=? AND provider='google' AND email IS NOT NULL))`,
-    [await hash(cookie(request,COOKIE)),user.id,Date.now(),user.id,user.id]).first();
+    AND (EXISTS(SELECT 1 FROM auth_email_accounts WHERE user_id=? AND verified_at>0)
+    OR EXISTS(SELECT 1 FROM auth_identities WHERE user_id=? AND provider='google' AND email IS NOT NULL) OR (?=1 AND EXISTS(SELECT 1 FROM auth_pilot_users WHERE user_id=?)))`,
+    [await hash(cookie(request,COOKIE)),user.id,Date.now(),user.id,user.id,env.PILOT_REGISTRATION_ENABLED==='true'?1:0,user.id]).first();
   if (!verified) throw failure('Inicia sesión con una cuenta verificada para continuar', 403);
   return user;
 }
@@ -127,7 +127,10 @@ export async function handleStandard(request, env) {
     const name = text(body.name, 'Nombre');
     saved = await command(env.DB, user, body, 'operator', [
       stmt(env.DB, "INSERT INTO operators(id,legal_name,display_name,status,data_scope) VALUES(?,?,?,?,?)", [id, name, name,env.ALLOW_DEVELOPMENT_AUTH==='true'?'approved':'pending',env.ALLOW_DEVELOPMENT_AUTH==='true'?'qa':'alpha']),
-      stmt(env.DB, "INSERT INTO memberships(user_id,operator_id,role) VALUES(?,?,'owner')", [user.id, id])], id);
+      stmt(env.DB, "INSERT INTO memberships(user_id,operator_id,role) VALUES(?,?,'owner')", [user.id, id]),
+      ...(env.PILOT_PREMIUM_ENABLED==='true'?[
+        stmt(env.DB,"INSERT INTO platform_subscriptions(operator_id,plan,status,fee_cents,cycle_months,revision,last_request,fingerprint,notes) VALUES(?,'premium','trial',0,1,1,?,?,'Piloto autorizado: sin cobros; segmentación comercial pospuesta')",[id,body.requestId,'pilot:'+id]),
+        stmt(env.DB,"INSERT INTO audit_events(id,actor_user_id,entity_type,entity_id,action) VALUES(?,?,'pilot_entitlement',?,'premium_enabled')",[crypto.randomUUID(),user.id,id])]:[])], id);
   } else {
     if(path==='/api/departures'){if(!['owner','admin','dispatcher'].includes(await role(env.DB,user.id,body.operatorId,failure)))throw failure('Sin permiso para publicar salidas',403);}else await manage(env.DB, user.id, body.operatorId,failure);
     if (path === '/api/vehicles') {

@@ -1,5 +1,11 @@
 # RutasEC — Memoria persistente del repositorio
 
+## Plan maestro y H1 autorizado — 2026-11-24
+AGENTS/PLAN/PROGRESS/TESTS publicados con171tareas/fases00–13. Fase00 auditada y validada en commits00.01–00.06; snapshots históricos preservados. Nueva instrucción permite registro piloto sin verificación, teléfono internacional prioritario y correo alternativo; no equivale a posesión del contacto ni permite admin global. H1 implementado local: auth_phone_accounts/auth_pilot_users/migración0029, sesiones/contraseñas existentes, creación owner de organización y trial Premium gratuito por flags, sin alterar organizaciones previas ni pagos reales. Dos contextos independientes automatizados PASS; prueba física01.09 pendiente tras despliegue. No cerrar Fase01 ni avanzar a validación física ficticia. Guía H1_PILOT_ACCESS.md.
+
+Branding público /about/, /privacy/, /terms/ publicado1c0c6289/Actions45330995683 SUCCESS y HTTP200/Chromium anónimo390/1280 PASS, contacto autorizado rutasecuador45@gmail.com. Google preparado ded3bb70/Actions45322538944 con71pruebas+6navegadores; activación real pendiente de credenciales/consentimiento.
+
+
 ## Preparación Google OAuth — 2026-11-24
 Usuario configura cliente Web Rutas Ecuador. Orígenes JavaScript vacíos; callbacks reales web/standard-api y admin/platform-api en docs/GOOGLE_OAUTH_CURRENT.md. Reutilizar identity.mjs, D1/usuarios/sesiones y correo existentes; no reconstruir autenticación. Preparada carga de credenciales GitHub→Worker API por stdin sin logs, comprobación remota de callbacks y retorno a empresa/identidad. Google se muestra antes del formulario de correo y su elección limpia desafío de correo pendiente. Client ID público puede proporcionarse; Secret solo GitHub Actions secrets o secreto API en Cloudflare. Sin credenciales reales aún, no declarar Google activo ni probar consentimiento real.
 

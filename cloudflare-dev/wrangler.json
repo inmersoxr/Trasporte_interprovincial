@@ -5,7 +5,9 @@
   "workers_dev": true,
   "keep_vars": true,
   "vars": {
-    "ALLOW_DEVELOPMENT_AUTH": "false"
+    "ALLOW_DEVELOPMENT_AUTH": "false",
+    "PILOT_REGISTRATION_ENABLED": "true",
+    "PILOT_PREMIUM_ENABLED": "true"
   },
   "d1_databases": [
     {

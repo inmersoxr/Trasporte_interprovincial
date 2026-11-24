@@ -6,13 +6,13 @@ Fase00 VALIDADA. G-BRANDING publicado y probado. Siguiente tarea:01.01 registro 
 
 | ID | Estado | Evidencia / bloqueo | Commit |
 |---|---|---|---|
-| 00.01 | VALIDADA | Worker web/admin con proxy al mismo rutasec-api-dev; D1 rutasec-dev y R2 existentes; builds separados de Pages. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.01 — arquitectura auditada |
-| 00.02 | VALIDADA | Matriz docs/ENTERPRISE_PILOT.md, docs/PREMIUM_AUDIT_IDENTITY.md y módulos standard/premium; diferencias nuevas registradas. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.02 — inventario consolidado |
-| 00.03 | VALIDADA | schema0028 remoto D1/R2true; 71 pruebas CI y seis navegadores; migraciones0001–0028 publicadas salvo0025 pospuesta. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.03 — persistencia y endpoints auditados |
-| 00.04 | VALIDADA | Google y correo reales bloqueados; acceso piloto sin código pendiente; pruebas físicas no validadas; código funcional separado de aceptación real. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.04 — brechas clasificadas |
-| 00.05 | VALIDADA | Actions45330995683 SUCCESS; URLs about/privacy/terms HTTP200 anónimas; Chromium remoto390/1280 PASS; health schema0028/D1/R2true. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.05 — despliegue y Branding público validados |
-| 00.06 | VALIDADA | Fuente ded3bb70; versiones Workers conocidas y D1 Time Travel metadata verificada en Actions45322538944; punto UTC2026-11-24T05:07:11Z; sin exportar/restaurar datos. Ver docs/AUDIT_PHASE00_2026-11-24.md. | Commit identificado por 00.06 — punto de recuperación pre-H1 documentado |
-| 01.01 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
+| 00.01 | VALIDADA | Worker web/admin con proxy al mismo rutasec-api-dev; D1 rutasec-dev y R2 existentes; builds separados de Pages. Ver docs/AUDIT_PHASE00_2026-11-24.md. | c2618fb494af327e3106854b50f97247892ed105 |
+| 00.02 | VALIDADA | Matriz docs/ENTERPRISE_PILOT.md, docs/PREMIUM_AUDIT_IDENTITY.md y módulos standard/premium; diferencias nuevas registradas. Ver docs/AUDIT_PHASE00_2026-11-24.md. | b29eebdd1986a181c535a592b7b5cb94afa83bc1 |
+| 00.03 | VALIDADA | schema0028 remoto D1/R2true; 71 pruebas CI y seis navegadores; migraciones0001–0028 publicadas salvo0025 pospuesta. Ver docs/AUDIT_PHASE00_2026-11-24.md. | a247a67a0631dc238c134238d288fbd2629140ea |
+| 00.04 | VALIDADA | Google y correo reales bloqueados; acceso piloto sin código pendiente; pruebas físicas no validadas; código funcional separado de aceptación real. Ver docs/AUDIT_PHASE00_2026-11-24.md. | a7cecfa6d8a99d9ab9ebbe153a6bd4b0fe97d660 |
+| 00.05 | VALIDADA | Actions45330995683 SUCCESS; URLs about/privacy/terms HTTP200 anónimas; Chromium remoto390/1280 PASS; health schema0028/D1/R2true. Ver docs/AUDIT_PHASE00_2026-11-24.md. | 67bec5ed8db53772afb39cc5ac5d8b89fe96ccc8 |
+| 00.06 | VALIDADA | Fuente ded3bb70; versiones Workers conocidas y D1 Time Travel metadata verificada en Actions45322538944; punto UTC2026-11-24T05:07:11Z; sin exportar/restaurar datos. Ver docs/AUDIT_PHASE00_2026-11-24.md. | 7497e906a19c32e5c250c291ae657dfa45958f6e |
+| 01.01 | EN PRUEBAS | Worker/Chromium locales prueban registro teléfono/correo sin código; preparando despliegue H1 y regresión. | Implementación H1 pendiente de publicación |
 | 01.02 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.03 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |
 | 01.04 | PENDIENTE | Validar implementación existente antes de decidir cambios. | Pendiente de cierre identificable |

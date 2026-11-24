@@ -15,3 +15,5 @@ URLs previstas:
 
 Publicación de estas páginas no equivale a aprobación de Google: su política de OAuth exige una homepage pública con descripción/enlaces y dominio verificable bajo control del desarrollador. Si Google exige verificar propiedad, se debe completar ese paso en Google Cloud/Search Console; no se promete que workers.dev sea aprobado automáticamente.
 Fuentes oficiales consultadas: https://developers.google.com/identity/protocols/oauth2/policies ; https://www.spdp.gob.ec/docs/proteccion-de-datos-personales/cuales-son-mis-derechos/derecho-de-eliminacion/ .
+
+Cierre:1c0c62893fbdba0028fd23f7db175d49bf287f15, Actions45330995683 verify/deploy SUCCESS. Tres URLs HTTP200 sin sesión/contacto autorizado; Chromium remoto390/1280/navegación/sin desbordamiento ni errores PASS. Homepage y políticas públicas funcionales; aprobación Google/dominio no certificadas.

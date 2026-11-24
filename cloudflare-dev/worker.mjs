@@ -9,7 +9,7 @@ import {handleAuth} from './identity.mjs';
 import {verifiedIdentity,stmt,rows,hash,failure,integer,text,command} from './standard-api.mjs';
 import { handleStandard } from './standard-api.mjs';
 // Isolated development API. The original demo Worker/ledger are never imported.
-const REVISION = 'enterprise-identity-v1';
+const REVISION = 'pilot-access-v1';
 
 function json(body, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -40,10 +40,10 @@ export default {
     try {
       const migration = await env.DB.prepare(
         'SELECT version FROM schema_migrations WHERE version = ?'
-      ).bind('0028_enterprise_management').first();
+      ).bind('0029_pilot_access').first();
       // List one object only; never publish object names or content.
       await env.BUCKET.list({ limit: 1 });
-      if (!migration || migration.version !== '0028_enterprise_management') throw new Error('Migration missing');
+      if (!migration || migration.version !== '0029_pilot_access') throw new Error('Migration missing');
       return json({ service: 'RutasEC development', environment: 'development',
         revision: REVISION, ok: true, d1: true, r2: true,
         schema: migration.version, payments: 'disabled' });

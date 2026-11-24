@@ -37,8 +37,8 @@ Aceptación de fase: H1: acceso y creación de operadora sin códigos, Premium d
 | 01.06 | Creación de operadora | 01.05 | Creación de operadora: recorrido completo con permisos, persistencia y evidencia verificable; conservar lo existente. |
 | 01.07 | Administrador principal de la organización | 01.06 | Administrador principal de la organización: recorrido completo con permisos, persistencia y evidencia verificable; conservar lo existente. |
 | 01.08 | Premium completo por configuración de piloto | 01.07 | Premium completo por configuración de piloto: recorrido completo con permisos, persistencia y evidencia verificable; conservar lo existente. |
-| 01.09 | Persistencia desde otro dispositivo | 01.08 | Persistencia desde otro dispositivo: recorrido completo con permisos, persistencia y evidencia verificable; conservar lo existente. La parte física permanece pendiente hasta prueba humana/documentada. |
-| 01.10 | Desplegar versión funcional H1 | 01.09 | Desplegar versión funcional H1: recorrido completo con permisos, persistencia y evidencia verificable; conservar lo existente. |
+| 01.09 | Persistencia desde otro dispositivo | 01.08 + despliegue01.10 para la comprobación física | Persistencia desde otro dispositivo: recorrido completo con permisos, persistencia y evidencia verificable; conservar lo existente. La parte física permanece pendiente hasta prueba humana/documentada. |
+| 01.10 | Desplegar versión funcional H1 | 01.01–01.08 + prueba automatizada de sesiones01.09 | Desplegar versión funcional H1: recorrido completo con permisos, persistencia y evidencia verificable; conservar lo existente. |
 
 ## Fase 02 — Sistema UX/UI
 
@@ -291,3 +291,6 @@ Las letras y unidades son una plantilla, no vehículos/conductores registrados. 
 
 ## Límites vigentes
 Pagos simulados; Android/OTA/GPS nativo en segundo plano pospuestos. Premium completo para la operadora del piloto mediante configuración autorizada; segmentación comercial definitiva pospuesta. Mantener multiempresa y permisos de backend. No modificar demo GitHub Pages ni crear infraestructuras duplicadas.
+
+## Dependencia operativa H1
+La prueba física01.09 requiere una URL desplegada01.10. Se comprueban antes dos contextos independientes y recarga en automatización; se entrega la versión y se conserva01.09 pendiente de teléfonos reales. Esto evita una dependencia circular sin declarar la aceptación física realizada. Fase01 no se cierra hasta esa validación.
