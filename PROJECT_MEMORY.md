@@ -1,3 +1,7 @@
+# Prioridad simplificada del propietario — 2026-11-24
+
+La instrucción más reciente reemplaza los prerrequisitos de conductores/invitaciones para esta entrega. Circuito único: crear empresa → crear/publicar viaje con el formulario del demo (vehículo y plazas incluidos) → compra persistente desde otra sesión → QR → operador escanea/inicia/GPS/finaliza. Navegación inferior de app. No exigir alta de conductores, aceptar invitaciones, registrar previamente flota ni verificar contactos para publicar en el piloto. Mantener cuentas/permisos básicos existentes, pagos simulados y demo Pages intacto. Plan completo conservado para después; no borrar datos ni funciones históricas.
+
 # RutasEC — Memoria persistente del repositorio
 
 ## Prioridad de presentación — 2026-11-24

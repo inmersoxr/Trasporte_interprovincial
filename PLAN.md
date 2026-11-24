@@ -1,3 +1,7 @@
+# Prioridad simplificada del propietario — 2026-11-24
+
+La instrucción más reciente reemplaza los prerrequisitos de conductores/invitaciones para esta entrega. Circuito único: crear empresa → crear/publicar viaje con el formulario del demo (vehículo y plazas incluidos) → compra persistente desde otra sesión → QR → operador escanea/inicia/GPS/finaliza. Navegación inferior de app. No exigir alta de conductores, aceptar invitaciones, registrar previamente flota ni verificar contactos para publicar en el piloto. Mantener cuentas/permisos básicos existentes, pagos simulados y demo Pages intacto. Plan completo conservado para después; no borrar datos ni funciones históricas.
+
 # Prioridad inmediata de presentación — 2026-11-24
 
 Prioridad vigente: circuito de presentación mañana. Continuar tareas implementables sin esperar01.09; mantener pruebas físicas pendientes. Secuencia P0 preparar operadora/vehículo piloto -> P1 invitación vinculada a vehículo -> P2 publicar/agenda -> P3 reserva/QR/embarque/GPS entre sesiones -> P4 desplegar y comprobar. Plan171tareas preservado; no declarar fases amplias terminadas por este recorte.

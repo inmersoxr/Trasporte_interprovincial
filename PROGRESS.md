@@ -1,3 +1,9 @@
+# Corrección vigente: circuito simple como el demo
+
+S0 — EN PRUEBAS. Se reutiliza el formulario comercial de bookings.mjs y sus estilos; navegación inferior Mis viajes / Crear viaje / Mi empresa. No se exige conductor ni invitación. Vehículo se configura al publicar o se selecciona uno guardado; no se introducen placas ficticias. Empresas/vehículos/viajes previos se conservan. Publicar guarda D1 y catálogo; comprador en otra sesión recibe QR y el operador realiza escaneo/inicio/GPS/finalización. Migración0031 solo cambia elegibilidad de entrenamiento; no concede aprobación documental.
+
+La solicitud anterior de corregir invitaciones quedó sustituida por esta instrucción antes de publicar: no se desplegó aquel trabajo en curso. Las pruebas físicas siguen pendientes; no confundir geolocalización/cámara emuladas con teléfonos reales.
+
 # Circuito prioritario de presentación
 
 El plan completo continúa vigente. Prioridad actual: entregar empresa→vehículos→conductores invitados→publicación→compra/QR→embarque→GPS; pruebas físicas permanecen pendientes, sin detener el trabajo técnico.

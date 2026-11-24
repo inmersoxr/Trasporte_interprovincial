@@ -40,8 +40,8 @@ export async function handlePilot(request,env,c){
  }
  if(!setting?.enabled)throw failure('Habilita primero las pruebas de esta empresa',409);
  if(path==='/vehicle'){
-  const plate=String(b.plate||'').trim().toUpperCase().replace(/\s/g,'');if(!/^[A-Z0-9-]{5,12}$/.test(plate))throw failure('Revisa la placa');if(!['van','auto','suv','minivan'].includes(b.type))throw failure('Selecciona tipo de vehículo');const id=await stable('vehicle');
-  try{const saved=await command(db,user,b,'pilot_vehicle',[stmt(db,"INSERT INTO vehicles(id,operator_id,type,model,plate,capacity,status) VALUES(?,?,?,?,?,?,'active')",[id,op,b.type,text(b.model,'Modelo',120),plate,integer(b.capacity,1,30,'Plazas')]),stmt(db,'INSERT INTO pilot_vehicles(vehicle_id,operator_id) VALUES(?,?)',[id,op])],id);return{id:saved};}catch(e){if(/UNIQUE.*plate/.test(e.message))throw failure('Esa placa ya está registrada',409);throw e;}
+  const plate=String(b.plate||'').trim().toUpperCase().replace(/\s/g,'');if(plate&&!/^[A-Z0-9-]{5,12}$/.test(plate))throw failure('Revisa la placa');if(!['van','auto','suv','minivan'].includes(b.type))throw failure('Selecciona tipo de vehículo');const id=await stable('vehicle');
+  try{const saved=await command(db,user,b,'pilot_vehicle',[stmt(db,"INSERT INTO vehicles(id,operator_id,type,model,plate,capacity,status) VALUES(?,?,?,?,?,?,'active')",[id,op,b.type,text(b.model,'Modelo',120),plate||null,integer(b.capacity,1,30,'Plazas')]),stmt(db,'INSERT INTO pilot_vehicles(vehicle_id,operator_id) VALUES(?,?)',[id,op])],id);return{id:saved};}catch(e){if(/UNIQUE.*plate/.test(e.message))throw failure('Esa placa ya está registrada',409);throw e;}
  }
  const vehicle=async()=>{const v=await stmt(db,'SELECT v.* FROM vehicles v JOIN pilot_vehicles p ON p.vehicle_id=v.id WHERE v.id=? AND v.operator_id=?',[b.vehicleId,op]).first();if(!v)throw failure('Vehículo ajeno o fuera del piloto',403);return v;};
  const idle=async v=>{if(await stmt(db,"SELECT 1 FROM standard_tracking t JOIN departures d ON d.id=t.departure_id WHERE d.vehicle_id=? AND t.service_status='running'",[v.id]).first())throw failure('Finaliza el viaje en curso antes de reasignar',409);};
@@ -61,7 +61,7 @@ export async function handlePilot(request,env,c){
  }
  if(path==='/publish'||path==='/preview'){
   const old=await stmt(db,'SELECT * FROM standard_commands WHERE user_id=? AND request_id=?',[user.id,b.requestId]).first();if(old&&path==='/publish'){await command(db,user,b,'pilot_publish',[],old.entity_id);return b.frequency&&b.frequency!=='once'?{scheduleId:old.entity_id,count:(await stmt(db,'SELECT COUNT(*) n FROM departures WHERE schedule_id=?',[old.entity_id]).first()).n}:{departureId:old.entity_id,count:1};}
-  const v=await vehicle();if(!await stmt(db,"SELECT 1 FROM premium_assignments a JOIN memberships m ON m.user_id=a.driver_user_id AND m.operator_id=a.operator_id AND m.role='driver' WHERE a.vehicle_id=? AND a.operator_id=?",[v.id,op]).first())throw failure('El conductor debe aceptar su invitación antes de publicar',409);
+  const v=await vehicle();
   if(!cities.includes(b.origin)||!cities.includes(b.destination)||b.origin===b.destination)throw failure('Selecciona ciudades distintas');
   const duration=integer(b.durationMinutes,1,1440,'Duración'),price=integer(b.priceCents,1,1000000,'Precio');if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(b.departLocal||'')||!Number.isFinite(Date.parse(b.departLocal+':00-05:00')))throw failure('Selecciona fecha y hora de Ecuador');
   const frequency=b.frequency||'once';if(!['once','daily','weekly','monthly'].includes(frequency))throw failure('Selecciona la frecuencia');const start=b.departLocal.slice(0,10),schedule={frequency,monthlyDay:Number(start.slice(8)),startDate:start,endDate:b.until,weekdays:frequency==='weekly'?b.weekdays:[0,1,2,3,4,5,6],times:[b.departLocal.slice(11)],durationMinutes:duration};

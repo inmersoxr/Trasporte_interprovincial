@@ -2,7 +2,7 @@ import {pageCursor,nextPage} from './standard-pagination.mjs';
 const available = "v.capacity-(SELECT COUNT(*) FROM seat_claims sc WHERE sc.departure_id=d.id AND sc.status IN('held','confirmed'))";
 export const operatorScope = (env,alias='o') => env.ALLOW_DEVELOPMENT_AUTH==='true' ? '1=1' : `${alias}.data_scope='alpha'`;
 export const pilotOperator=(op='o')=>`EXISTS(SELECT 1 FROM pilot_operators po WHERE po.operator_id=${op}.id AND po.enabled=1)`;
-export const pilotVehicle=(op='o',vehicle='v')=>`EXISTS(SELECT 1 FROM pilot_vehicles pv JOIN pilot_operators po ON po.operator_id=pv.operator_id JOIN premium_assignments pa ON pa.vehicle_id=pv.vehicle_id JOIN memberships pm ON pm.operator_id=po.operator_id AND pm.user_id=pa.driver_user_id AND pm.role='driver' JOIN users pu ON pu.id=pm.user_id WHERE pv.vehicle_id=${vehicle}.id AND pv.operator_id=${op}.id AND po.enabled=1 AND pu.status='active' AND ${vehicle}.plate IS NOT NULL)`;
+export const pilotVehicle=(op='o',vehicle='v')=>`EXISTS(SELECT 1 FROM pilot_vehicles pv JOIN pilot_operators po ON po.operator_id=pv.operator_id WHERE pv.vehicle_id=${vehicle}.id AND pv.operator_id=${op}.id AND po.enabled=1)`;
 export const operatorReady = (alias='o') => `(${alias}.data_scope='qa' OR ${pilotOperator(alias)} OR EXISTS(SELECT 1 FROM standard_operator_profiles p JOIN standard_documented_operators x ON x.operator_id=p.operator_id WHERE p.operator_id=${alias}.id AND p.review_state='approved'))`;
 export const vehicleReady = (op='o',vehicle='v') => `(${op}.data_scope='qa' OR ${pilotVehicle(op,vehicle)} OR EXISTS(SELECT 1 FROM standard_documented_vehicles WHERE id=${vehicle}.id))`;
 
