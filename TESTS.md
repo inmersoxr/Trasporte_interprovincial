@@ -19,3 +19,5 @@ Una compilación/captura por sí sola no valida funcionalidad. Registrar fallos 
 - 00.02: auditoría de lectura/contratos y evidencias existentes. Matriz docs/ENTERPRISE_PILOT.md, docs/PREMIUM_AUDIT_IDENTITY.md y módulos standard/premium; diferencias nuevas registradas. No implica pruebas físicas nuevas.
 
 - 00.03: auditoría de lectura/contratos y evidencias existentes. schema0028 remoto D1/R2true; 71 pruebas CI y seis navegadores; migraciones0001–0028 publicadas salvo0025 pospuesta. No implica pruebas físicas nuevas.
+
+- 00.04: auditoría de lectura/contratos y evidencias existentes. Google y correo reales bloqueados; acceso piloto sin código pendiente; pruebas físicas no validadas; código funcional separado de aceptación real. No implica pruebas físicas nuevas.
