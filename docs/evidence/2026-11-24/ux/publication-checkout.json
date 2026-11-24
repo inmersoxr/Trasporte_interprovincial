@@ -1,0 +1,49 @@
+{
+  "checkedAt": "2026-11-24T23:17:54.325Z",
+  "checks": [
+    {
+      "path": "/standard/seat-map.mjs",
+      "status": 200,
+      "matchesSource": true
+    },
+    {
+      "path": "/standard/standard.css",
+      "status": 200,
+      "matchesSource": true
+    },
+    {
+      "path": "/standard/payment-demo.mjs",
+      "status": 200,
+      "matchesSource": true
+    },
+    {
+      "path": "/standard/reservations.mjs",
+      "status": 200,
+      "matchesSource": true
+    },
+    {
+      "path": "/pilot/app.mjs",
+      "status": 200,
+      "matchesSource": true
+    },
+    {
+      "path": "health",
+      "status": 200,
+      "data": {
+        "service": "RutasEC development",
+        "environment": "development",
+        "revision": "ground-transport-v1",
+        "ok": true,
+        "d1": true,
+        "r2": true,
+        "schema": "0037_ground_operations",
+        "payments": "disabled"
+      }
+    },
+    {
+      "path": "Pages",
+      "status": 200,
+      "sha256": "c8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f"
+    }
+  ]
+}

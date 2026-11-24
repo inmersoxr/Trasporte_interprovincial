@@ -13,3 +13,13 @@ El piloto fue presentado según el propietario. No convertir ese recorte en prod
 9. Cierre13 exige cuentas, vehículos, conexiones y dispositivos reales, además de revisión UX y permisos. Google/correo real siguen dependiendo de configuración externa; el acceso de prueba no acredita posesión del contacto. Pagos siguen simulados; no activar Android/Premium Inteligente ni seguridad avanzada pendiente sin su fase.
 
 No cerrar fases por añadir enlaces o botones. Cada interfaz debe corresponder a datos/acciones/persistencia y permisos probados.
+
+## Preparación de fase04: permisos antes de exponer nuevos roles
+
+Hecho comprobado: memberships y premium_invites tienen restricciones paraowner/admin/dispatcher/driver. El administrador actual tiene acceso amplio; no equivale a administrador de operaciones limitado. Las fichas de conductor y el usuario de acceso son entidades separadas. premium_assignments es asignación por vehículo, mientras standard_departure_drivers conserva persona por salida; la relación entre ambas debe resolverse al aceptar la invitación y al calcular alcance por viaje.
+
+No mapear contabilidad, ventas, propietario o responsable de flota a administrador para que una pantalla funcione. No basar restricciones en ocultar botones. Diseñar/implementar la matriz de capacidades por tarea, múltiples roles por persona y alcance por recurso, incluyendo endpoints de manifiestos/documentos/GPS y acceso personal como pasajero. Conservar permisos de cuentas existentes y el administrador principal; no reconstruir autenticación ni sobrescribir datos.
+
+Pruebas mínimas de esa ampliación: dueño puede gestionar su organización; contabilidad no inicia viajes ni ve documentos de conductores innecesariamente; ventas no accede a nómina; propietario ve solo sus vehículos; conductor ve/opera solo sus salidas, incluso con conductor habitual distinto o reasignación; combinar roles no concede permisos fuera de sus recursos; revocación invalida acceso en backend; invitación vincula cuenta/ficha/organización y conduce a la interfaz correcta. Reutilizar joinTeam, command, memberships, identidades y D1 existentes mediante migraciones aditivas, con contratos revisables y pruebas antes de activar cada capacidad.
+
+Esta preparación es AUDITADA, no implementación ni validación de los nuevos roles. Los casos de acceso por salida requieren revisar tanto APIs como restricciones SQL existentes; no desactivar estas restricciones para facilitar el desarrollo.
