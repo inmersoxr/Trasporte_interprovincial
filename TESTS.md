@@ -42,3 +42,5 @@ Actions45333404724 SUCCESS:72/72 y siete flujos Chromium. H1 automatizado prueba
 - 01.03 VALIDADA: PILOT_REGISTRATION_ENABLED true en despliegue. Sin envío/código; contacto permanece no verificado. No concede admin global aun declarando correo preautorizado; rechazo fuera del host app y al apagar flag.
 
 - 01.04 VALIDADA: scrypt reutilizado, cookies Secure/HttpOnly, sesiones hash7d, origen, rate limiting y revocación. Probe negativo en Cloudflare devuelve401 ejecutando comparación; sin cuenta creada ni secretos expuestos.
+
+- 01.05 VALIDADA: Worker y Chromium: login en segundo contexto, recarga, cambio de contraseña revoca sesión anterior, logout revoca cookie; vía teléfono y correo preservada.
