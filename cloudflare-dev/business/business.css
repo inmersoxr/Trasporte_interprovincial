@@ -5,3 +5,5 @@ body.business-company main{background:var(--company-primary);color:var(--company
 h1,h2,h3{overflow-wrap:anywhere}article,header{min-width:0}
 
 body.business-company dialog{background:var(--company-secondary);color:var(--company-on-secondary)}body.business-company dialog input,body.business-company dialog select,body.business-company dialog textarea{background:var(--company-primary);color:var(--company-on-primary)}
+
+#seats .passenger-seat-grid{display:grid;gap:6px;max-width:420px}#seats .passenger-seat{padding:8px;text-align:center;border:1px solid #7e8d9c;border-radius:8px;margin:0}#seats .passenger-seat input{width:18px;min-height:18px;display:block;margin:auto}#seats .sold,#seats .reserved,#seats .blocked{opacity:.5;background:#443c44}#seats .seat-legend{font-size:12px}

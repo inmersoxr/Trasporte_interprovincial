@@ -1,3 +1,5 @@
+import {routeOperations} from './standard-route-stops.mjs';
+import {validVehicle,legacyVehicle} from './standard/transport.mjs';
 import {serviceChanges} from './standard-changes.mjs';
 import {manage,role} from './standard-permissions.mjs';
 import {notifications} from './standard-notifications.mjs';
@@ -137,9 +139,9 @@ export async function handleStandard(request, env) {
   } else {
     if(path==='/api/departures'){if(!['owner','admin','dispatcher'].includes(await role(env.DB,user.id,body.operatorId,failure)))throw failure('Sin permiso para publicar salidas',403);}else await manage(env.DB, user.id, body.operatorId,failure);
     if (path === '/api/vehicles') {
-      if (!['auto','suv','van','minivan'].includes(body.type)) throw failure('Tipo de vehículo no válido');
-      saved = await command(env.DB, user, body, 'vehicle', [stmt(env.DB, 'INSERT INTO vehicles(id,operator_id,type,model,capacity,status) VALUES(?,?,?,?,?,?)',
-        [id, body.operatorId, body.type, text(body.model, 'Modelo'), integer(body.capacity, 1, 30, 'Capacidad'),env.ALLOW_DEVELOPMENT_AUTH==='true'?'active':'pending'])], id);
+      if (!validVehicle(body.type)) throw failure('Tipo de vehículo no válido');
+      saved = await command(env.DB, user, body, 'vehicle', [stmt(env.DB, 'INSERT INTO vehicles(id,operator_id,type,model,capacity,status,vehicle_class,transport_type) VALUES(?,?,?,?,?,?,?,?)',
+        [id, body.operatorId, legacyVehicle(body.type), text(body.model, 'Modelo'), integer(body.capacity, 1, (await stmt(env.DB,'SELECT max_capacity FROM standard_transport_settings WHERE id=1').first()).max_capacity, 'Capacidad'),env.ALLOW_DEVELOPMENT_AUTH==='true'?'active':'pending',body.type,['public','private','commercial'].includes(body.transportType)?body.transportType:'private'])], id);
     }
     if (path === '/api/route-offers') {
       const origin = text(body.origin, 'Origen'), destination = text(body.destination, 'Destino');
@@ -151,7 +153,7 @@ export async function handleStandard(request, env) {
       if (!vehicle) throw failure('Vehículo ajeno o no disponible', 403);
       saved = await command(env.DB, user, body, 'offer', [stmt(env.DB, 'INSERT INTO route_offers(id,operator_id,origin,destination,service_type,vehicle_type,price_cents,pickup_point,dropoff_point) VALUES(?,?,?,?,?,?,?,?,?)',
         [id, body.operatorId, origin, destination, body.serviceType, vehicle.type, integer(body.priceCents, 1, 1000000, 'Precio en centavos'),pickup,dropoff]),
-        stmt(env.DB, 'INSERT INTO standard_route_vehicles(offer_id,vehicle_id,duration_minutes) VALUES(?,?,?)', [id, vehicle.id,integer(body.durationMinutes??240,1,2880,'Duración')])], id);
+        stmt(env.DB, 'INSERT INTO standard_route_vehicles(offer_id,vehicle_id,duration_minutes) VALUES(?,?,?)', [id, vehicle.id,integer(body.durationMinutes??240,1,2880,'Duración')]),...routeOperations(env.DB,id,body,{stmt,failure})], id);
     }
     if (path === '/api/departures') {
       const offer = await stmt(env.DB, `SELECT r.*,rv.vehicle_id FROM route_offers r JOIN standard_route_vehicles rv ON rv.offer_id=r.id
@@ -162,8 +164,8 @@ export async function handleStandard(request, env) {
       if (!Number.isFinite(at) || at <= Date.now() || at > Date.now() + 366 * 86400000) throw failure('Fecha futura no válida');
       const vehicleDefault=await stmt(env.DB,'SELECT default_driver_id FROM vehicles WHERE id=?',[offer.vehicle_id]).first(),driverId=body.driverId===null?null:body.driverId||vehicleDefault?.default_driver_id||null;if(driverId&&!await stmt(env.DB,"SELECT 1 FROM standard_drivers WHERE id=? AND operator_id=? AND status='active' AND license_expires_on>=?",[driverId,body.operatorId,new Date(at-18000000).toISOString().slice(0,10)]).first())throw failure('Selecciona un conductor de tu empresa con licencia vigente para la fecha del viaje',403);
       const duration = integer(body.durationMinutes ?? 240, 1, 2880, 'Duración');
-      saved = await command(env.DB, user, body, 'departure', [stmt(env.DB, 'INSERT INTO departures(id,offer_id,vehicle_id,depart_at) VALUES(?,?,?,?)', [id, offer.id, offer.vehicle_id, new Date(at).toISOString()]),
-        stmt(env.DB, 'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,departure_id) VALUES(?,?,?,?,?)', [crypto.randomUUID(), offer.vehicle_id, at, at + duration * 60000, id]),...(body.employeeId?[stmt(env.DB,`INSERT INTO standard_departure_staff(departure_id,operator_id,employee_id,responsible_name,assigned_by) VALUES(?,?,?,(SELECT full_name FROM premium_employees WHERE id=? AND operator_id=? AND status='active'),?)`,[id,body.operatorId,body.employeeId,body.employeeId,body.operatorId,user.id])]:[]),...(driverId?[stmt(env.DB,`INSERT INTO standard_departure_drivers(departure_id,operator_id,driver_id,driver_name,assigned_by) VALUES(?,?,?,(SELECT full_name FROM standard_drivers WHERE id=? AND operator_id=? AND status='active'),?)`,[id,body.operatorId,driverId,driverId,body.operatorId,user.id])]:[])], id);
+      saved = await command(env.DB, user, body, 'departure', [stmt(env.DB, 'INSERT INTO departures(id,offer_id,vehicle_id,depart_at,driver_override_id,suppress_default_driver) VALUES(?,?,?,?,?,?)', [id, offer.id, offer.vehicle_id, new Date(at).toISOString(),driverId,body.driverId===null?1:0]),
+        stmt(env.DB, 'INSERT INTO standard_vehicle_slots(id,vehicle_id,starts_at,ends_at,departure_id) VALUES(?,?,?,?,?)', [crypto.randomUUID(), offer.vehicle_id, at, at + duration * 60000, id]),...(body.employeeId?[stmt(env.DB,`INSERT INTO standard_departure_staff(departure_id,operator_id,employee_id,responsible_name,assigned_by) VALUES(?,?,?,(SELECT full_name FROM premium_employees WHERE id=? AND operator_id=? AND status='active'),?)`,[id,body.operatorId,body.employeeId,body.employeeId,body.operatorId,user.id])]:[])], id);
     }
   }
   return { id: saved, environment: 'development' };

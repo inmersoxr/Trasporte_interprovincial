@@ -1,6 +1,6 @@
 export const hasAccess=()=>document.documentElement.dataset.signedIn==='true'||new URLSearchParams(location.search).get('dev')==='1'&&document.documentElement.dataset.developmentAuth==='true'&&!!localStorage.getItem('rutasec-standard-session');
-export function signInToReserve(kind,id){
- const next=new URL('/standard/',location.origin);next.searchParams.set('reserve',kind+':'+id);
+export function signInToReserve(kind,id,segment={}){
+ const next=new URL('/standard/',location.origin);next.searchParams.set('reserve',kind+':'+id);for(const key of ['boardingStop','alightingStop'])if(segment[key]!=null)next.searchParams.set(key,segment[key]);
  location.assign('/account/?returnTo='+encodeURIComponent(next.pathname+next.search));
 }
 export function signInFor(query){location.assign('/account/?returnTo='+encodeURIComponent('/standard/?'+new URLSearchParams(query)));}

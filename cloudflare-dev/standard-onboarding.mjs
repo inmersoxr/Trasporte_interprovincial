@@ -159,7 +159,7 @@ export async function handleOnboarding(request,env,c){
   const vehicle=await stmt(db,'SELECT * FROM vehicles WHERE id=? AND operator_id=?',[body.vehicleId,op]).first();if(!vehicle)throw failure('Vehículo de otra operadora',403);
   if(!await stmt(db,'SELECT 1 FROM standard_drivers WHERE id=? AND operator_id=?',[body.driverId,op]).first())throw failure('Elige un conductor de tu operadora',403);
   const plate=String(body.plate||'').trim().toUpperCase().replaceAll(' ','');if(!/^[A-Z0-9-]{5,12}$/.test(plate))throw failure('Revisa la placa del vehículo');
-  const capacity=integer(body.capacity,1,30,'Capacidad'),year=integer(body.year,1980,new Date().getUTCFullYear()+1,'Año'),revision=integer(body.expectedRevision,0,10000000,'Revisión');
+  const capacity=integer(body.capacity,1,(await stmt(db,'SELECT max_capacity FROM standard_transport_settings WHERE id=1').first()).max_capacity,'Capacidad'),year=integer(body.year,1980,new Date().getUTCFullYear()+1,'Año'),revision=integer(body.expectedRevision,0,10000000,'Revisión');
   const occupied=await stmt(db,`SELECT MAX(s.seat_number) AS maximum FROM seat_claims s JOIN departures d ON d.id=s.departure_id WHERE d.vehicle_id=? AND d.status IN('published','boarding','running') AND s.status IN('held','confirmed')`,[vehicle.id]).first();
   if(occupied.maximum>capacity)throw failure('La capacidad no puede bajar de los asientos reservados',409);
   if(vehicle.plate&&vehicle.plate!==plate&&await stmt(db,"SELECT 1 FROM standard_booking_details m JOIN bookings b ON b.id=m.booking_id WHERE m.vehicle_id=? AND b.status='confirmed' AND b.service_at>?",[vehicle.id,new Date().toISOString()]).first())throw failure('El vehículo tiene reservas futuras; conserva su placa',409);

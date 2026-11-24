@@ -34,6 +34,7 @@ await cp(new URL('standard/', import.meta.url), new URL('public/standard/', outp
 await cp(new URL('node_modules/jsqr/dist/jsQR.js',import.meta.url),new URL('public/standard/vendor/jsQR.js',output));
 await cp(new URL('node_modules/jsqr/LICENSE',import.meta.url),new URL('public/standard/vendor/jsQR.LICENSE',output));
 // Cloudflare-only brand conversion; protected Pages assets are never rewritten.
+await cp(new URL('brand/vehicle-types.webp',import.meta.url),new URL('public/assets/vehicle-types.webp',output));
 const brand=JSON.parse(await readFile(new URL('brand/assets.json',import.meta.url),'utf8'));
 for(const [path,data] of Object.entries(brand))await writeFile(new URL('public/'+path,output),Buffer.from(data,'base64'));
 await writeFile(new URL('public/icon.svg',output),'<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><image width="512" height="512" href="data:image/png;base64,'+brand['assets/icon-512.png']+'"/></svg>');

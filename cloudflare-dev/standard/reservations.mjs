@@ -1,3 +1,4 @@
+import {renderSeatMap} from './seat-map.mjs';
 import {mountDemoPayment} from './payment-demo.mjs';
 import {ticketChanges} from './ticket-changes.mjs';
 import {hasAccess,signInToReserve,signInFor,session} from '../account/session.mjs';
@@ -39,9 +40,9 @@ $('privateReserveForm').onsubmit=async e=>{
  }catch(error){$('privateError').textContent=error.message;}finally{paymentSubmitting=false;button.disabled=false;button.textContent=originalLabel;}
 };
 function checkout(d){
- if(!hasAccess()){signInToReserve('shared',d.id);return;}
+ if(!hasAccess()){signInToReserve('shared',d.id,d);return;}
  selected=d;requestId=crypto.randomUUID();$('checkoutSummary').textContent=`${d.origin} → ${d.destination} · $${(d.priceCents/100).toFixed(2)} por asiento`;
- $('seatGrid').innerHTML=Array.from({length:d.capacity},(_,i)=>`<label>${i+1}<input type="checkbox" value="${i+1}" ${d.reservedSeats.includes(i+1)?'disabled':''}></label>`).join('');
+ renderSeatMap($('seatGrid'),d);
  $('passengerNames').innerHTML='';$('checkoutTotal').textContent='Selecciona al menos un asiento';
  $('reserveForm').querySelector('input[type="checkbox"][required]').checked=false;$('reserveForm').querySelector('button').disabled=false;$('checkout').showModal();fillContact($('reserveForm'));
 }
@@ -56,7 +57,7 @@ $('reserveForm').onsubmit=async e=>{
  e.preventDefault();if(paymentSubmitting)return;paymentSubmitting=true;const button=e.target.querySelector('button');button.disabled=true;const originalLabel=button.textContent;button.textContent='Generando tu boleto…';
  try{
   const inputs=[...$('passengerNames').querySelectorAll('input')];if(!inputs.length)throw new Error('Selecciona un asiento');
-  const result=await api('/bookings',{departureId:selected.id,seatNumbers:inputs.map(i=>Number(i.dataset.seat)),passengers:inputs.map(i=>i.value),contactPhone:e.target.elements.contactPhone.value,saveContact:e.target.elements.saveContact.checked,simulatedPaymentMethod:e.target.elements.simulatedPaymentMethod.value,quotedPriceCents:selected.priceCents,requestId});
+  const result=await api('/bookings',{departureId:selected.id,...(selected.boardingStop!=null?{boardingStop:selected.boardingStop,alightingStop:selected.alightingStop}:{}),seatNumbers:inputs.map(i=>Number(i.dataset.seat)),passengers:inputs.map(i=>i.value),contactPhone:e.target.elements.contactPhone.value,saveContact:e.target.elements.saveContact.checked,simulatedPaymentMethod:e.target.elements.simulatedPaymentMethod.value,quotedPriceCents:selected.priceCents,requestId});
   $('checkout').close();status('Pago SIMULADO confirmado; boleto emitido');await openConfirmedTicket(result.booking);
  }catch(error){status(error.message);$('checkoutSummary').textContent=error.message;}
  finally{paymentSubmitting=false;button.disabled=false;button.textContent=originalLabel;}
@@ -107,7 +108,7 @@ async function resumeCheckout(){
  url.searchParams.delete('reserve');history.replaceState(null,'',url.pathname+url.search+url.hash);
  if(!match){status('No se pudo recuperar el viaje. Vuelve a elegir una salida.');return;}
  if(match[1]==='shared'){
-  let departure=latestCatalog.departures.find(d=>d.id===match[2]);if(!departure){try{departure=(await api('/catalog?departureId='+match[2])).departures.find(d=>d.id===match[2]);}catch{}}
+  let departure=url.searchParams.has('boardingStop')?null:latestCatalog.departures.find(d=>d.id===match[2]);if(!departure){try{departure=(await api('/catalog?'+new URLSearchParams({departureId:match[2],...(url.searchParams.has('boardingStop')?{boardingStop:url.searchParams.get('boardingStop'),alightingStop:url.searchParams.get('alightingStop')}:{})}))).departures.find(d=>d.id===match[2]);}catch{}}
   if(!departure||departure.available<=0){status('La salida ya no está disponible. Elige otra salida.');return;}
   checkout(departure);
  }else{
@@ -126,10 +127,10 @@ document.addEventListener('rutasec:account',()=>{resumeCheckout();resumeTicket()
 setInterval(()=>{if(!document.hidden&&!$('myBookings').hidden)loadBookings({background:true,cursor:historyCursor,ticket:viewedTicket});},5000);
 setInterval(async()=>{
  if(document.hidden||paymentSubmitting||!$('checkout').open||!selected)return;const id=selected.id;
- try{const data=await api('/catalog?operatorId='+encodeURIComponent(selected.operatorId)),next=data.departures.find(d=>d.id===id);if(!$('checkout').open||selected.id!==id)return;
+ try{const data=await api('/catalog?'+new URLSearchParams({departureId:selected.id,...(selected.boardingStop!=null?{boardingStop:selected.boardingStop,alightingStop:selected.alightingStop}:{})})),next=data.departures.find(d=>d.id===id);if(!$('checkout').open||selected.id!==id)return;
   if(!next){$('checkoutSummary').textContent='La salida ya no tiene disponibilidad. Revisa Mis boletos si acabas de confirmar.';$('reserveForm').querySelector('button').disabled=true;return;}
   let changed=next.priceCents!==selected.priceCents;selected=next;
-  for(const input of $('seatGrid').querySelectorAll('input')){const taken=Number(input.value)>next.capacity||next.reservedSeats.includes(Number(input.value));if(taken&&input.checked){input.checked=false;changed=true;}input.disabled=taken;}
+  for(const input of $('seatGrid').querySelectorAll('input')){const taken=Number(input.value)>next.capacity||next.reservedSeats.includes(Number(input.value))||(next.blockedSeats||[]).includes(Number(input.value));if(taken&&input.checked){input.checked=false;changed=true;}input.disabled=taken;}
   if(changed){$('seatGrid').onchange();$('reserveForm').querySelector('input[type="checkbox"][required]').checked=false;$('checkoutSummary').textContent='Cambió la disponibilidad o el precio. Revisa los asientos y el total antes de confirmar.';}
  }catch(error){status(error.message);}
 },5000);

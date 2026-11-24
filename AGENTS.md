@@ -1,3 +1,7 @@
+# Alcance vigente — transporte terrestre de pasajeros
+
+RutasEC integra automóviles, SUV, vans, busetas, minibuses y buses de uno/dos pisos en la aplicación Cloudflare existente. Tipo de vehículo, autorización público/privado/comercial y modalidad son independientes. Máximo inicial100configurable en standard_transport_settings. Reutilizar layouts/snapshots, inventario por tramos, ventanilla, Premium/GPS/QR, roles y empresas. Referencias de tipo generadas no se presentan como fotos reales de la flota. No duplicar aplicaciones/infraestructura ni modificar Pages. Mantener pagos simulados y Premium Inteligente/Android pospuestos. Ver PLAN.md GROUND1–8 y docs/GROUND_TRANSPORT.md.
+
 # Prioridad inmediata R3 — fichas vinculadas y confirmación de compra
 
 Crear/listar/editar vehículos y conductores en pestañas de recursos; conductor habitual por vehículo, selección y cambio por salida, histórico persistente. Fichas no requieren cuentas/invitaciones. Conservar Standard/Premium y navegación inferior. Pago simulado debe abrir directamente el boleto/QR confirmado por backend, sin depender de otra lectura del historial. El usuario pide publicar inmediatamente ambos cambios, sin otra auditoría general. Mantener plan maestro, datos, permisos, Pages y pagos reales desactivados.

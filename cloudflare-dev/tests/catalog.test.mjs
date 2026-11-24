@@ -37,7 +37,7 @@ test('Alpha catalog quarantines QA without deleting it; filters use Ecuador date
   assert.equal((await normal('?date='+next)).data.departures.length,0);
   assert.equal((await normal('?date=1900-01-01')).data.departures.length,0);
   assert.equal((await normal('?date=2026-02-30')).status,400);
-  assert.equal((await normal('?passengers=99')).status,400);
+  assert.equal((await normal('?passengers=101')).status,400);
   assert.equal((await create('/bookings',{departureId:departure,seatNumbers:[1,2],passengers:['Uno','Dos'],quotedPriceCents:1500})).status,200);
   assert.equal((await normal()).data.departures.length,0); // Sold out is absent from available results.
  }finally{await mf.dispose();}

@@ -42,7 +42,7 @@ export async function handleMarket(request,env,core){
  let b;try{b=JSON.parse(raw);}catch{throw failure('JSON no válido');}if(!b||typeof b!=='object'||Array.isArray(b))throw failure('Solicitud no válida');
  if(path==='/api/private-requests'){
   const origin=text(b.origin,'Origen'),destination=text(b.destination,'Destino');if(origin.toLowerCase()===destination.toLowerCase())throw failure('Origen y destino deben ser distintos');
-  const people=integer(b.people,1,30,'Pasajeros'),duration=integer(b.durationMinutes,1,2880,'Duración');
+  const people=integer(b.people,1,(await stmt(db,'SELECT max_capacity FROM standard_transport_settings WHERE id=1').first()).max_capacity,'Pasajeros'),duration=integer(b.durationMinutes,1,2880,'Duración');
   if(!['any','auto','suv','van','minivan'].includes(b.vehicleType))throw failure('Tipo no válido');
   const at=b.immediate===true?Date.now()+7200000:Date.parse(b.serviceAt);
   if(!Number.isFinite(at)||at<=Date.now()||at>Date.now()+366*86400000)throw failure('Horario futuro no válido');
