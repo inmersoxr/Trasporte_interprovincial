@@ -1,7 +1,7 @@
 # RutasEC — Memoria persistente del repositorio
 
 ## Corrección de acceso — 2026-11-24
-Usuario solicita ojo de contraseña y diagnosticar correo no recibido. Implementado helper compartido accesible en cuenta/admin; registro/recuperación muestran bloqueo contextual y no prometen envío con emailfalse. Chromium correo completo PASS11.26s, con prueba de teclado/visibilidad y proveedor desactivado. Remoto confirma ausencia de AUTH_EMAIL_FROM y AUTH_EMAIL binding o RESEND_API_KEY; sin transporte no puede llegar código. No saltar verificación ni crear usuarios ficticios. Snapshot2026-11-24-zzz-account-password-mail.md contiene entrega y límites.
+Usuario solicita ojo de contraseña y diagnosticar correo no recibido. Implementado helper compartido accesible en cuenta/admin; registro/recuperación muestran bloqueo contextual y no prometen envío con emailfalse. Publicado712c49d y seguimiento1e07bbb, Actions45319595023 verify/deploy SUCCESS,69 pruebas y seis recorridos PASS. Chromium remoto comprueba ojo, teclado, aviso único/no promesa de envío y360/390/1280; activos cuenta/admin coinciden con fuente, Pages intacto. Chromium correo local PASS11.24s. Remoto confirma ausencia de AUTH_EMAIL_FROM y AUTH_EMAIL binding o RESEND_API_KEY; sin transporte no puede llegar código. No saltar verificación ni crear usuarios ficticios. Snapshot2026-11-24-zzz-account-password-mail.md contiene entrega y límites.
 
 
 ## Entrega empresarial autorizada — 2026-11-24

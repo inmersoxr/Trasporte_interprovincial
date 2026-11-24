@@ -18,3 +18,8 @@ Commit712c49d5f986321f22e8adce553ccaf042f77d0c, Actions45319001461 verify/deploy
 main0e893488 intacto; Pages conserva SHA256c8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f. Ningún correo real enviado ni registro ficticio creado.
 
 Se solicitó al propietario el dominio disponible para configurar el remitente. Documentación oficial consultada: https://developers.cloudflare.com/email-service/configuration/send-bindings/ y https://developers.cloudflare.com/email-service/ . El envío arbitrario requiere dominio incorporado y plan habilitado; no se activó servicio pagado ni se inventó remitente.
+
+## Cierre de entrega
+Seguimiento1e07bbb7970ea5cdf68371ec900920d4d854c66c: Actions45319595023 verify/deploy SUCCESS, sin migraciones nuevas. Local correo PASS11.24s; CI vuelve a completar69 pruebas y seis recorridos navegador. Comprobación remota final PASS: icono con ratón/teclado, ocultación/valor intacto, aviso único, ausencia de promesa de envío cuando emailfalse, sin paso falso de código,360/390/1280 sin desbordamiento/errores JS. Archivos compartidos de cuenta y admin coinciden byte a byte con código final. Pages conserva hash anterior.
+
+Correo real sigue emailfalse (faltan AUTH_EMAIL_FROM y AUTH_EMAIL binding o RESEND_API_KEY). No se recibió todavía respuesta sobre dominio al cerrar esta corrección; activación de transporte queda bloqueada por configuración externa, sin afirmar entrega de códigos.
