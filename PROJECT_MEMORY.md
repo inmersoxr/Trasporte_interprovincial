@@ -277,3 +277,6 @@ Health remoto operator-workspace-v1/schema0032_trip_responsible, D1/R2true, paym
 R1-UI/DATOS/COMPRA/GPS-software/DEPLOY VALIDADA en desarrollo. R1-FISICO PENDIENTE: cámara/GPS real, cuatro vehículos y teléfonos participantes. No se certifican conducción, producción ni contabilidad fiscal. SRI real permanece bloqueado por certificado/configuración/adaptador externo; sus datos/comprobantes de prueba sí funcionan. Pagos bancarios reales continúan desactivados. S1/0025 pospuesta.
 
 Guía e inventario: docs/OPERATOR_WORKSPACE.md. Evidencias: docs/evidence/2026-11-24/workspace/. URL https://rutasec-web-dev.drbrownlabs.workers.dev/pilot/ ; pasajero https://rutasec-web-dev.drbrownlabs.workers.dev/standard/ . Mantener plan171tareas, sin reiniciar ni marcar todas las fases como terminadas por esta entrega.
+
+## R2 — corrección solicitada por el propietario
+Premium también necesita Crear viaje como acción propia del menú inferior. Reutilizar el mismo flujo persistente, sin cambiar automáticamente a Standard al publicar ni ocultar vehículos, empleados o gestión. Verificación y despliegue en curso; no cambia D1 ni pagos.

@@ -39,3 +39,7 @@ No se copiaron listas ficticias, personas ni ubicaciones del demo al entorno pú
 ## Publicación comprobada
 
 Códigoa72479aa; Actions45393517383 SUCCESS:75pruebas+9recorridos navegador. schema0032, health operator-workspace-v1, D1/R2true y activos exactos comprobados. GPS/cámara físicos pendientes; no se han sembrado registros en público. Resultados completos en TESTS.md/PROGRESS.md y evidencia fechada.
+
+## Crear en Premium
+
+Crear viaje también aparece directamente en la barra inferior de Premium. Usa el mismo formulario y los recursos existentes. Al publicar conserva Premium y vuelve a En vivo, donde la salida queda Por iniciar; no es necesario cambiar a Standard.

@@ -16,3 +16,5 @@ html,body{margin:0;color:#edf2f7;font-family:Arial,sans-serif}main.shell{max-wid
 #navigation button:before{content:none!important}#navigation .nav-icon{font-size:22px;line-height:24px}
 
 .management-group>a:after,.management-group>button:after{content:none!important}.menu-chevron{color:#f6c928;margin-left:auto}
+
+#navigation[data-items="6"]{gap:0}#navigation[data-items="6"] button{min-width:0;padding:8px 2px}@media(max-width:350px){#navigation[data-items="6"] button{font-size:10px}}

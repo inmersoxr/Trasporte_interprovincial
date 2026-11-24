@@ -1,3 +1,7 @@
+# R2 — Crear viaje también en Premium
+
+EN PRUEBAS. Añadir Crear viaje al menú inferior de Premium sin retirar los accesos actuales. Reutilizar formulario/backend/inventario de Standard y mantener Premium al publicar; regresar a En vivo con la salida pendiente. Prueba de la cuarta publicación en Premium dentro del recorrido existente y adaptación móvil360/390. No hay cambios de esquema.
+
 # R1 — Recuperar módulos y completar relaciones/compartir
 
 R1-UI VALIDADA: selector Standard/Premium, navegación inferior adaptada, sin Avisos, acceso de pasajero/cuenta reubicado en Empresa; módulos existentes vuelven a ser navegables. R1-DATOS VALIDADA: vehículos/empleados CRUD reutilizados y vínculo de responsable por salida nuevo en0032, con aislamiento y conflictos atómicos. R1-COMPRA VALIDADA: métodos/fichas ficticios del demo, boleto completo y estados/QR persistentes. R1-GPS VALIDADA (software; sensores físicos pendientes): cuatro sesiones GPS y selección de unidad con persona/vehículo, mapa estable y enlaces compartidos que no desaparecen. R1-DEPLOY VALIDADA por Actions45393517383 y comprobación pública. Pruebas físicas siguen pendientes.
