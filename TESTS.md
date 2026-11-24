@@ -8,7 +8,7 @@ Cada entrada incluye ID/tarea, entorno, método, resultado, evidencia, límites 
 - Google preparado ded3bb70: Actions45322538944 verify/deploy SUCCESS. Pruebas locales de JWT/PKCE/callbacks/provisión y Alpha con desafío de correo pendiente; falta consentimiento real/credenciales.
 - No declarar validados: cuatro vehículos reales, cuatro conductores, GPS físico simultáneo, piloto entre teléfonos, envío real de correo o Google real.
 
-## Pruebas de la tarea en curso
+## Registro inicial de la tarea de Branding (histórico)
 G-BRANDING: build local PASS; falta HTTP200 anónimo, navegación/legibilidad/capturas móvil y escritorio después de publicación.
 
 ## Política
@@ -54,3 +54,6 @@ Actions45333404724 SUCCESS:72/72 y siete flujos Chromium. H1 automatizado prueba
 - 01.09 BLOQUEADA: Dos contextos independientes y recarga PASS en CI; falta que participante entre con la misma cuenta desde dos teléfonos/conexiones reales y confirme la misma empresa. No sustituir esta evidencia con fixtures.
 
 - 01.10 VALIDADA: 3186c93c/Actions45333404724 SUCCESS. schema0029 piloto/D1/R2true, flags true; activos coinciden, UI pública anónima móvil/escritorio PASS. Main/Pages intactos. Despliegue permite prueba física01.09, no cierra aún Fase01.
+
+## Evidencias visuales persistentes
+Capturas reales de integración, no teléfonos físicos: [móvil](docs/evidence/2026-11-24/h1-signup-mobile.png), [escritorio](docs/evidence/2026-11-24/h1-signup-desktop.png). Metodología y alcance en [README de evidencias](docs/evidence/2026-11-24/README.md). Estado actual por tarea en PROGRESS.md;01.09 BLOQUEADA hasta prueba humana.
