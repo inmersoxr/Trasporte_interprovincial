@@ -340,3 +340,5 @@ Alcance autorizado: misma aplicación/Workers/D1/R2/rama, automóviles/SUV/vans/
 | GROUND-8 | Validación/despliegue | GROUND-7 | Circuito4/12/20/50/70, regresión, migraciones no destructivas y deploy efectivo |
 
 El plan maestro171tareas continúa íntegro; estas fases amplían entidades existentes. Pruebas físicas no se sustituyen con emulación.
+
+GROUND2–7 software VALIDADA en6546da5c/Actions45437345514; GROUND8-DEPLOY VALIDADA, GROUND8-FISICO PENDIENTE. Mantener Fase8 global EN PRUEBAS hasta pruebas físicas. Ver PROGRESS y evidencia; sin reiniciar171tareas históricas.

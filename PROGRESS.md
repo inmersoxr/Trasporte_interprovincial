@@ -273,3 +273,13 @@ Migraciones0034–0037 compatibles: clasificación canónica sin reconstruir veh
 Atlas WebP generado específicamente para categorías de selección, siete referencias genéricas, no fotografías reales de las unidades. Solo assets de Cloudflare; Pages intacto. Campos bancarios siguen ficticios. Se reutilizan entidades, GPS, Premium, roles, cuentas, R2 y venta directa. No desarrollar Premium Inteligente ni Android.
 
 Errores encontrados/corregidos: prueba antigua esperaba rechazo99pasajeros, actualizada a101; ventanilla no seleccionaba automáticamente la única salida y el bloqueo busy impedía abrir el boleto confirmado, corregidos. Pruebas de interfaz en390/1280, selector, publicación con parada, compra asiento70 y ventanilla PASS16s. Evidencias docs/evidence/2026-11-24/ground/. S1/0025 sigue pospuesta.
+
+## GROUND publicado y comprobado — 2026-11-24T16:34Z
+
+Fuente6546da5c67a7120dbe657ee878b405b02dd1af2e; Actions45437345514 verify/deploy SUCCESS.81pruebas+10recorridos navegador. Migraciones0034/0035/0036/0037 aplicadas en D1 existente, sin borrado, duplicación de infraestructura ni0025. API687d3d73-501d-4613-95e3-2a1e44ed8733; web8d6b5142-7ef5-479a-9390-67b352ee4bb6; admin22187e44-f24e-4fdf-8778-d649c8f249c7. Recuperación nativa D1 comprobada por metadata, sin exportar/restaurar datos.
+
+HTTP200 y coincidencia byte a byte de resources/route-editor/vehicle-picker/seat-map/transport/reservations/business/atlasWebP. Healthground-transport-v1/schema0037_ground_operations/D1R2true/pagosdisabled. Main0e8934886b30ec9eec8db5a26886ba4bafcd6b4a intacta; PagesHTTP200/hashc8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f intacto. No se crearon personas, viajes ni GPS ficticios en público.
+
+GROUND-8-DEPLOY VALIDADA. Fase8 global EN PRUEBAS: GROUND-8-FISICO PENDIENTE con vehículos/teléfonos/cámara/GPS reales. Las fases2–7 están verificadas como software sobre fixtures aislados; no certifican conducción ni seguridad comercial. GPS web necesita navegador visible; pagos bancarios reales y Premium Inteligente/Android continúan desactivados. Google/correo real/SRI conservan sus bloqueos externos previos, sin frenar el acceso de piloto existente.
+
+URL: https://rutasec-web-dev.drbrownlabs.workers.dev/pilot/ ; pasajero https://rutasec-web-dev.drbrownlabs.workers.dev/standard/ . Crear vehículo muestra7imágenes genéricas de referencia; unidad y fotos propias se conservan aparte. Nuevo máximo100 se configura en standard_transport_settings, con controles SQL/API. Evidencias de publicación/verificación y capturas en docs/evidence/2026-11-24/ground/. Fuente válida es la rama activa y commit indicado; el trabajo S1 local anterior está diferido y no se publica con esta entrega.

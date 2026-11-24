@@ -1,0 +1,18 @@
+{
+  "source": "6546da5c67a7120dbe657ee878b405b02dd1af2e",
+  "actions": "https://github.com/inmersoxr/Trasporte_interprovincial/actions/runs/45437345514",
+  "verify": "success",
+  "deploy": "success",
+  "automatedTests": 81,
+  "browserFlows": 10,
+  "workerVersions": {
+    "api": "687d3d73-501d-4613-95e3-2a1e44ed8733",
+    "web": "8d6b5142-7ef5-479a-9390-67b352ee4bb6",
+    "admin": "22187e44-f24e-4fdf-8778-d649c8f249c7"
+  },
+  "schema": "0037_ground_operations",
+  "payments": "simulated",
+  "physicalGpsCameraValidation": "pending",
+  "publicTestRecordsCreated": false,
+  "mainUnchanged": "0e8934886b30ec9eec8db5a26886ba4bafcd6b4a"
+}
