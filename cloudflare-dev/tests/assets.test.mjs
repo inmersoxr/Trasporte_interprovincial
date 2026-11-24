@@ -9,7 +9,7 @@ const removed=[];
 vm.runInNewContext(sw, { self: { addEventListener: (name, fn) => { handlers[name] = fn; },clients:{claim:async()=>{}} },
   caches:{keys:async()=>['rutasec-cloudflare-dev-old','rutasec-standard-dev-keep'],delete:async key=>removed.push(key)},URL });
 test('same-origin APIs bypass offline cache and HTML fallback', () => {
-  for (const path of ['/api/catalog', '/standard-api/health']) {
+  for (const path of ['/api/catalog', '/standard-api/health', '/about/', '/privacy/', '/terms/']) {
     let intercepted = false;
     handlers.fetch({ request: { method: 'GET', url: 'https://dev.example' + path },
       respondWith() { intercepted = true; } });

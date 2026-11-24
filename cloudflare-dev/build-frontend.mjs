@@ -18,6 +18,12 @@ for (const file of await readdir(root)) {
 for (const dir of ['assets', 'vendor', 'shared']) {
   await cp(new URL(dir, root), new URL('public/' + dir, output), { recursive: true });
 }
+await mkdir(new URL('public/legal/', output), {recursive:true});
+await cp(new URL('legal/legal.css', import.meta.url), new URL('public/legal/legal.css', output));
+for(const page of ['about','privacy','terms']){
+ await mkdir(new URL('public/'+page+'/',output),{recursive:true});
+ await cp(new URL('legal/'+page+'.html',import.meta.url),new URL('public/'+page+'/index.html',output));
+}
 await cp(new URL('business/', import.meta.url), new URL('public/business/', output), { recursive: true });
 await cp(new URL('company/', import.meta.url), new URL('public/company/', output), { recursive: true });
 await cp(new URL('account/', import.meta.url), new URL('public/account/', output), { recursive: true });
@@ -59,7 +65,7 @@ let sw = await readFile(new URL('sw.js', root), 'utf8');
 sw = sw.replace("const CACHE = '", "const CACHE = 'rutasec-cloudflare-dev-"+revision+"-");
 sw = sw.replace("key.startsWith('rutasec-')", "key.startsWith('rutasec-cloudflare-dev-')");
 sw = sw.replace("self.addEventListener('fetch', event => {", `self.addEventListener('fetch', event => {
-  if (/^\\/(api|standard-api|standard|account|premium|miniapp|company|business)(?:\\/|$)/.test(new URL(event.request.url).pathname)) return;`);
+  if (/^\\/(api|standard-api|standard|account|premium|miniapp|company|business|about|privacy|terms|legal)(?:\\/|$)/.test(new URL(event.request.url).pathname)) return;`);
 await writeFile(new URL('public/sw.js', output), sw);
 let html = await readFile(new URL('index.html', root), 'utf8');
 html = html.replace('<title>', '<title>DEV · ');
