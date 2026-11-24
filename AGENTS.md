@@ -1,3 +1,15 @@
+# Protocolo vigente del agente — 2026-11-24
+
+Al iniciar: leer AGENTS.md, PLAN.md, PROGRESS.md y TESTS.md; identificar siguiente tarea, comprobar repositorio y despliegue, continuar sin reiniciar. Conservar también PROJECT_MEMORY.md y snapshots. Estos cuatro archivos son la fuente de continuidad; las instrucciones históricas siguientes se mantienen para trazabilidad, pero prevalece este bloque y el plan vigente.
+
+Ejecutar una tarea a la vez con objetivo, dependencias, auditoría/reutilización, diseño técnico/UX, implementación, pruebas e inspección visual real, corrección, evidencias, estado y commit identificable. No solicitar aprobación por decisiones reversibles ordinarias; reportar credenciales, acciones irreversibles o pruebas humanas bloqueadas. Estados: PENDIENTE/AUDITADA/EN DESARROLLO/EN PRUEBAS/BLOQUEADA/VALIDADA. No cerrar fase con tareas obligatorias sin validar. No declarar pruebas físicas realizadas por usar fixtures.
+
+Arquitectura: misma aplicación/código/backend/base compartida, relaciones por identificadores, permisos en backend, aislamiento multiempresa, preservar datos. Pagos simulados. Todas las capacidades Premium para operadora piloto mediante configuración autorizada; segmentación comercial pospuesta. Android, OTA y GPS nativo en segundo plano pospuestos. No modificar demo GitHub Pages ni duplicar infraestructura.
+
+H1 prioritario: registro por teléfono internacional o correo/contraseña sin verificación temporalmente en piloto, sesiones seguras, crear operadora y su administrador principal de organización. Una cuenta sin verificación NO prueba posesión de un contacto ni concede administración de la plataforma, ni permite apropiarse de cuentas existentes. Mantener Google/correo verificados y sus datos separados de esa condición del piloto. Esta instrucción sustituye el requisito histórico de verificar contacto antes de cualquier acceso durante el piloto.
+
+UX transversal: identidad RutasEC; una acción principal por contexto; secundarias contextuales; grupos coherentes sin saturación de tarjetas/botones; campos progresivos e información recuperada automáticamente; navegación por rol, móvil para conductor y escritorio para administración; errores/carga/guardado/sincronización/desconexión claros; conservar campos ante fallos. Interacción y capturas reales en móvil/escritorio, no marcar interfaz terminada solo por funcionar su código.
+
 # Instrucciones persistentes — RutasEC
 ## Correcciones Alpha autorizadas — 2026-11-18
 El usuario autorizó expresamente comenzar todas las correcciones de la auditoría y mejorar lo existente. No volver a pedir autorización por cada corrección dentro de este alcance. Trabajar por hitos implementados/probados/documentados sobre Workers/D1/R2 existentes. Cuenta verificada obligatoria al reservar, Google primero, Apple después; recurrencia básica Standard. Preservar demo/Pages y datos, no ampliar Premium ni activar cobros reales. Credenciales/contrataciones externas pendientes se reportan sin frenar trabajo independiente. No declarar v0.1.0 Alpha funcional hasta verificar el circuito completo y sus límites reales.
