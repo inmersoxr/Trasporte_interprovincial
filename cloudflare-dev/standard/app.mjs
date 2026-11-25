@@ -1,3 +1,4 @@
+import {can} from '../company/access.mjs';
 import {vehicleLabel} from './transport.mjs';
 import {categoryImage} from './vehicle-picker.mjs';
 import {showShare} from './share.mjs';
@@ -55,9 +56,10 @@ export async function refresh() {
   if (dashboard.operators.some(o => o.id === selected)) $('operatorSelect').value = selected;
   else if(dashboard.operators.some(o=>o.id===new URLSearchParams(location.search).get('operator')))$('operatorSelect').value=new URLSearchParams(location.search).get('operator');
   const operatorId = $('operatorSelect').value,memberRole=dashboard.operators.find(o=>o.id===operatorId)?.memberRole||'owner';document.querySelector('.standard-shell').dataset.memberRole=memberRole;
+  const memberAccess=operatorId?await api('/team/access?operatorId='+encodeURIComponent(operatorId)):null;if(revision!==refreshRevision)return;dashboard.memberAccess=memberAccess;document.querySelector('.standard-shell').dataset.capabilities=JSON.stringify(memberAccess?.capabilities||[]);
   const vehicles = dashboard.vehicles.filter(v => v.operator_id === operatorId);
   const offers = dashboard.routeOffers.filter(r => r.operator_id === operatorId);
-  $('vehicleForm').hidden = $('offerForm').hidden = !operatorId||!['owner','admin'].includes(memberRole);$('departureForm').hidden=!operatorId||!['owner','admin','dispatcher'].includes(memberRole);
+  $('vehicleForm').hidden=!operatorId||!can(memberAccess,'fleet.write');$('offerForm').hidden=$('departureForm').hidden=!operatorId||!can(memberAccess,'trips.write');
   $('offerForm').elements.vehicleId.innerHTML = options(vehicles.filter(v=>v.status==='active'), v => `${v.model} · ${v.capacity} plazas`);
   $('departureForm').elements.offerId.innerHTML = options(offers.filter(o => o.service_type === 'shared'), r => `${r.origin} → ${r.destination}`);
   const approved=dashboard.operators.find(o=>o.id===operatorId)?.status==='approved';

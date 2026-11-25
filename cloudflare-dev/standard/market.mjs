@@ -1,3 +1,4 @@
+import {standardCan} from '../company/access.mjs';
 import {hasAccess,signInFor} from '../account/session.mjs';
 import {api,status} from './app.mjs';
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -34,7 +35,7 @@ export async function loadPrivate(){
 }
 async function loadPrivateAfter(){loadingPrivate=false;await loadPrivate();}
 async function loadMarket(){
- const selectedOperator=$('operatorSelect').value;if(loadingMarket||!hasAccess()||!selectedOperator||document.querySelector('.standard-shell').dataset.memberRole==='driver')return;loadingMarket=true;
+ const selectedOperator=$('operatorSelect').value;if(loadingMarket||!hasAccess()||!selectedOperator||!standardCan('trips.write'))return;loadingMarket=true;
  try{
   const data=await api('/private-market?operatorId='+encodeURIComponent(selectedOperator));if(selectedOperator!==$('operatorSelect').value)return;queue=data.requests;
   $('marketConnection').textContent='Conectado · solicitudes disponibles';

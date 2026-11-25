@@ -29,7 +29,8 @@
     "test:pilot-local": "node tests/pilot-local.e2e.mjs",
     "test:alpha-local": "node tests/alpha-local.e2e.mjs",
     "test:operator-workspace-local": "node tests/operator-workspace-local.e2e.mjs",
-    "test:ground-local": "node tests/ground-local.e2e.mjs"
+    "test:ground-local": "node tests/ground-local.e2e.mjs",
+    "test:organization-team-local": "node tests/organization-team-local.e2e.mjs"
   },
   "devDependencies": {
     "jsqr": "1.4.0",

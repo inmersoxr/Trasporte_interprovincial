@@ -30,7 +30,7 @@ export async function serviceChanges(request,env,c){
   operations.push(stmt(db,`INSERT OR IGNORE INTO standard_notifications(id,user_id,operator_id,kind,title,body,target) SELECT ?||':'||customer_id,customer_id,?,'change','Tu servicio tiene un cambio',?,? FROM ${table} WHERE id=? AND ${guard}`,[b.requestId,op,reason,custom?'/standard/?private=1':'/standard/?ticket='+row.id,row.id,...args]));
  }else if(path==='/api/booking-change'){
   const booking=await stmt(db,'SELECT b.*,m.operator_id,m.vehicle_id,v.capacity FROM bookings b JOIN standard_booking_details m ON m.booking_id=b.id JOIN vehicles v ON v.id=m.vehicle_id WHERE b.id=?',[b.id]).first();if(!booking)throw failure('Boleto no encontrado',404);op=booking.operator_id;entity=booking.id;
-  if(booking.customer_id!==user.id)await requireCapability(db,user.id,op,'bookings.write',failure);
+  if(booking.customer_id!==user.id||booking.sales_channel==='office')await requireCapability(db,user.id,op,'bookings.write',failure);
   const d=await stmt(db,'SELECT * FROM departures WHERE id=?',[booking.departure_id]).first();if(!d||d.status!=='published'||Date.parse(d.depart_at)<=Date.now()||booking.status!=='confirmed')throw failure('Este boleto ya no admite cambios',409);
   const passengers=await rows(db,'SELECT * FROM standard_passengers WHERE booking_id=? AND cancelled_at IS NULL ORDER BY position',[booking.id]);if(passengers.some(p=>p.boarded_at))throw failure('El boleto ya tiene pasajeros embarcados',409);
   kind=b.action==='cancel_seats'?'partial_cancel':'seats';

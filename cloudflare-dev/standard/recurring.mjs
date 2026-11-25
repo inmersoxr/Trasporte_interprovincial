@@ -1,3 +1,4 @@
+import {standardCan} from '../company/access.mjs';
 import {api,status,refresh,catalog} from './app.mjs';
 const $ = id => document.getElementById(id);
 const esc = value => String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -35,7 +36,7 @@ function syncForm(){
  const old=form.elements.offerId.value;
  form.elements.offerId.replaceChildren(...[...$('departureForm').elements.offerId.options].map(option=>option.cloneNode(true)));
  if([...form.elements.offerId.options].some(o=>o.value===old))form.elements.offerId.value=old;
- section.hidden=!$('operatorSelect').value||!['owner','admin','dispatcher'].includes(document.querySelector('.standard-shell').dataset.memberRole||'owner');clearPreview();if(!section.hidden)load();
+ section.hidden=!$('operatorSelect').value||!standardCan('trips.write');clearPreview();if(!section.hidden)load();
 }
 function setBusy(value){busy=value;$('previewRecurring').disabled=value;$('publishRecurring').disabled=value||!previewBody;}
 $('previewRecurring').onclick=async()=>{

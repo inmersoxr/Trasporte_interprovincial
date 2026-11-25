@@ -34,7 +34,7 @@ export async function handlePremium(request,env,c) {
    vehicles:await rows(db,`SELECT v.*,p.odometer_km,p.next_service_km,p.updated_at FROM vehicles v
     LEFT JOIN premium_vehicle_profiles p ON p.vehicle_id=v.id WHERE v.operator_id=? AND v.id IN(SELECT vehicle_id FROM organization_vehicle_access WHERE user_id=?) ORDER BY v.model`,[operatorId,user.id]),
    branches:!can('sales.write')&&!can('fleet.write')&&!can('trips.write')?[]:await rows(db,'SELECT * FROM premium_branches WHERE operator_id=?',[operatorId]),
-   members:can('team.manage')||can('employees.write')?await rows(db,'SELECT m.user_id,m.role,u.display_name FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.operator_id=?',[operatorId]):[],
+   members:can('team.manage')||can('employees.write')?await rows(db,`SELECT m.user_id,m.role,u.display_name,(SELECT group_concat(d.label,' · ') FROM organization_effective_roles e JOIN organization_role_definitions d ON d.role=e.role WHERE e.user_id=m.user_id AND e.operator_id=m.operator_id) AS role_label,EXISTS(SELECT 1 FROM organization_effective_roles e WHERE e.user_id=m.user_id AND e.operator_id=m.operator_id AND e.role='driver') AS is_driver FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.operator_id=?`,[operatorId]):[],
    assignments:can('fleet.read')?await rows(db,"SELECT * FROM premium_assignments WHERE operator_id=? AND vehicle_id IN(SELECT vehicle_id FROM organization_vehicle_access WHERE user_id=?)",[operatorId,user.id]):[],
    maintenance:!can('maintenance.write')?[]:await rows(db,'SELECT * FROM premium_maintenance WHERE operator_id=? ORDER BY starts_at DESC LIMIT 200',[operatorId])};
  }

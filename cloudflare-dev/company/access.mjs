@@ -1,0 +1,7 @@
+export const can=(access,capability)=>!!access?.capabilities?.some(c=>c==='*'||c===capability);
+export const businessSections=access=>{
+ const definitions={operations:[['fleet','Flota GPS','fleet.track'],['maintenance','Mantenimiento','maintenance.write'],['sales','Venta de oficina','sales.write']],team:[['employees','Personas','employees.read'],['shifts','Turnos','shifts.write'],['payroll','Remuneraciones','payroll.write']],partners:[['customer','Clientes','customers.write'],['supplier','Proveedores','suppliers.write']],finance:[['receivable','Por cobrar','finance.read'],['payable','Por pagar','finance.read'],['expenses','Gastos','finance.read'],['settlements','Liquidaciones','finance.read'],['fiscal','Facturación','finance.read']],reports:[['results','Resultados','reports.read']]};
+ const groups=Object.fromEntries(Object.entries(definitions).map(([group,items])=>[group,items.filter(([, ,permission])=>can(access,permission)).map(([id,label])=>[id,label])]).filter(([,items])=>items.length));
+ if(can(access,'finance.read')&&!can(access,'fleet.track')&&!can(access,'sales.write'))return{finance:groups.finance,...Object.fromEntries(Object.entries(groups).filter(([key])=>key!=='finance'))};return groups;
+};
+export function standardCan(permission){try{return can({capabilities:JSON.parse(document.querySelector('.standard-shell')?.dataset.capabilities||'[]')},permission);}catch{return false;}}

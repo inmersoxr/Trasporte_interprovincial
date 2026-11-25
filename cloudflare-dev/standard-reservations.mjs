@@ -18,16 +18,17 @@ export async function handleReservations(request, env, core) {
       LEFT JOIN standard_booking_segments seg ON seg.booking_id=b.id LEFT JOIN standard_booking_contacts c ON c.booking_id=b.id LEFT JOIN standard_operator_profiles pf ON pf.operator_id=o.id
       LEFT JOIN standard_tracking t ON t.booking_id=b.id OR t.departure_id=b.departure_id WHERE b.id=?`, [id]).first();
     if (!b) throw failure('Boleto no encontrado',404);
-    if (b.customer_id!==user.id && !await stmt(db,"SELECT 1 FROM organization_capabilities WHERE user_id=? AND operator_id=? AND capability IN('*','bookings.all')",[user.id,b.operatorId]).first()) throw failure('Boleto privado',403);
+    if ((b.customer_id!==user.id||b.sales_channel==='office') && !await stmt(db,"SELECT 1 FROM organization_capabilities WHERE user_id=? AND operator_id=? AND capability IN('*','bookings.all')",[user.id,b.operatorId]).first()) throw failure('Boleto privado',403);
     b.passengers=await rows(db,'SELECT position,name,seat_number AS seatNumber,boarded_at AS boardedAt FROM standard_passengers WHERE booking_id=? AND cancelled_at IS NULL ORDER BY position',[id]);
     return {...b,simulated:true,paymentMethodLabel:({credit:'Tarjeta de crédito',debit:'Tarjeta de débito',transfer:'Transferencia bancaria'})[b.simulatedPaymentMethod]||'Pago de prueba',paymentLabel:b.paymentStatus==='refunded'?'Reembolso SIMULADO':'Pago SIMULADO confirmado',
       qrCodes:b.passengers.map(p=>`RUTASEC-STANDARD:${b.id}:${p.position}`)};
   }
   if(request.method==='GET'&&!fixed) {
     if(match[1])return {booking:await view(match[1])};
+    const officeScope=" AND (sales_channel<>'office' OR EXISTS(SELECT 1 FROM standard_booking_details x JOIN organization_capabilities c ON c.operator_id=x.operator_id WHERE x.booking_id=bookings.id AND c.user_id=? AND c.capability IN('*','bookings.all')))";
     const cursor=new URL(request.url).searchParams.get('cursor');let before=null;
-    if(cursor){before=await stmt(db,'SELECT created_at,id FROM bookings WHERE id=? AND customer_id=?',[cursor,user.id]).first();if(!before)throw failure('Página de historial no disponible',404);}
-    const ids=await rows(db,`SELECT id FROM bookings WHERE customer_id=?${before?' AND (created_at<? OR (created_at=? AND id<?))':''} ORDER BY created_at DESC,id DESC LIMIT 21`,[user.id,...(before?[before.created_at,before.created_at,before.id]:[])]);
+    if(cursor){before=await stmt(db,'SELECT created_at,id FROM bookings WHERE id=? AND customer_id=?'+officeScope,[cursor,user.id,user.id]).first();if(!before)throw failure('Página de historial no disponible',404);}
+    const ids=await rows(db,`SELECT id FROM bookings WHERE customer_id=?${officeScope}${before?' AND (created_at<? OR (created_at=? AND id<?))':''} ORDER BY created_at DESC,id DESC LIMIT 21`,[user.id,user.id,...(before?[before.created_at,before.created_at,before.id]:[])]);
     return {bookings:await Promise.all(ids.slice(0,20).map(b=>view(b.id))),nextCursor:ids.length>20?ids[19].id:null};
   }
   if(request.method!=='POST')throw failure('Método no permitido',405);

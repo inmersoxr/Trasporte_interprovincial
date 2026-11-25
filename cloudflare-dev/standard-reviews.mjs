@@ -39,7 +39,7 @@ export async function handleReviews(request,env,c){
    return{reviews:reviews.slice(0,50).map(({user_id,booking_id,service_key,last_nonce,...r})=>({...r,reports:reports.filter(q=>q.reviewId===r.id)})),nextCursor:reviews.length>50?reviews[49].id:null};
   }
   if(path==='/api/reviews/operator'){
-   const op=url.searchParams.get('operatorId');if(!await c.stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role IN('owner','admin')",[user.id,op]).first())throw c.failure('Sin permiso para esta operadora',403);
+   const op=url.searchParams.get('operatorId');if(!await c.stmt(db,"SELECT 1 FROM organization_capabilities WHERE user_id=? AND operator_id=? AND capability IN('*','company.edit')",[user.id,op]).first())throw c.failure('Sin permiso para esta operadora',403);
    return{reviews:await c.rows(db,"SELECT id,rating,comment,author_label AS authorLabel,reply,revision,created_at AS createdAt FROM standard_reviews WHERE operator_id=? AND status='visible' ORDER BY created_at DESC,id DESC LIMIT 100",[op])};
   }
   throw c.failure('Ruta no encontrada',404);
@@ -60,7 +60,7 @@ export async function handleReviews(request,env,c){
  const r=await c.stmt(db,'SELECT * FROM standard_reviews WHERE id=?',[match[1]]).first();if(!r)throw c.failure('Opinión no encontrada',404);
  if(platform){if(match[2]!=='moderate')throw c.failure('Ruta no encontrada',404);if(!['visible','hidden'].includes(b.status))throw c.failure('Estado no válido');const reason=bodyText(b.reason,1000,5,c);return updateReview(env,user,b,r.id,'review_moderated',{sql:'status=?,moderation_reason=?',args:[b.status,reason],audit:{status:b.status,reason}},c);}
  if(match[2]==='reply'){
-  if(r.status!=='visible'||!await c.stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role IN('owner','admin')",[user.id,r.operator_id]).first())throw c.failure('Sin permiso para responder',403);
+  if(r.status!=='visible'||!await c.stmt(db,"SELECT 1 FROM organization_capabilities WHERE user_id=? AND operator_id=? AND capability IN('*','company.edit')",[user.id,r.operator_id]).first())throw c.failure('Sin permiso para responder',403);
   return updateReview(env,user,b,r.id,'review_replied',{sql:'reply=?,reply_at=CURRENT_TIMESTAMP',args:[bodyText(b.reply,1000,2,c)]},c);
  }
  if(match[2]==='report'){

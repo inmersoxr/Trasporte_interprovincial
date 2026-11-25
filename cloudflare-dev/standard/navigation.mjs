@@ -1,3 +1,4 @@
+import {standardCan} from '../company/access.mjs';
 // Organize existing controls without duplicating forms, identities or data.
 export function mountNavigation({refresh,catalog,status}){
  const $=id=>document.getElementById(id),root=$('operator'),shell=document.querySelector('.standard-shell'),header=shell.querySelector('header'),publicNav=shell.querySelector('nav');
@@ -28,11 +29,15 @@ export function mountNavigation({refresh,catalog,status}){
  for(const [page,items]of Object.entries(groups)){const n=document.createElement('nav');n.className='context-navigation';n.setAttribute('aria-label','Secciones de '+tabs.find(t=>t[0]===page)[1]);pages[page].append(n);subnav[page]=n;
   for(const [id,label]of items){const b=document.createElement('button');b.type='button';b.textContent=label;b.dataset.operatorSection=id;b.onclick=()=>go(page,id,true);n.append(b);const s=document.createElement('div');s.id='operatorSection-'+id;pages[page].append(s);sections[id]=s;}}
  sections.account.innerHTML='<p>Tu cuenta es la misma para viajar y trabajar. Los permisos de cada empresa se comprueban por separado.</p><a class="account-action" href="/account/">Abrir mi cuenta</a>';
- let tab='home',section=null,managing=false;
+ let tab='home',section=null,managing=false,accessReady=false;
+ const permissions={routes:'trips.write',departures:'trips.write',changes:'trips.write',recurring:'trips.write','custom-service':'trips.write',manifest:'bookings.read',boarding:'trips.operate',history:'bookings.read',requests:'trips.write',vehicles:'fleet.write',drivers:'drivers.write',company:'company.edit',documents:'fleet.write','public-profile':'company.edit',opinions:'company.edit'};
+ const allowedSection=id=>!accessReady||id==='account'||id==='company'&&!$('operatorSelect').value||standardCan(permissions[id]);
+ const allowedTab=id=>id==='home'||groups[id]?.some(([section])=>allowedSection(section));
  function go(next,sub,write=false){tab=tabs.some(t=>t[0]===next)?next:'home';section=groups[tab]?.some(([id])=>id===sub)?sub:groups[tab]?.[0][0];
+  if(!allowedTab(tab))tab='home';if(section&&!allowedSection(section))section=groups[tab]?.find(([id])=>allowedSection(id))?.[0];
   for(const [id,p]of Object.entries(pages))p.hidden=id!==tab;
   for(const [page,items]of Object.entries(groups))for(const [id]of items){sections[id].hidden=id!==section;const b=subnav[page].querySelector('[data-operator-section="'+id+'"]');b.setAttribute('aria-current',id===section?'page':'false');}
-  for(const b of nav.querySelectorAll('button'))b.setAttribute('aria-current',b.dataset.operatorTab===tab?'page':'false');
+  for(const b of nav.querySelectorAll('button')){b.hidden=!allowedTab(b.dataset.operatorTab);b.setAttribute('aria-current',b.dataset.operatorTab===tab?'page':'false');}
   if(write){const u=new URL(location.href);u.searchParams.set('manage','1');u.searchParams.set('panel',tab);if($('operatorSelect').value)u.searchParams.set('operator',$('operatorSelect').value);section?u.searchParams.set('section',section):u.searchParams.delete('section');history.pushState(null,'',u);status('');pages[tab].querySelector('h2').setAttribute('tabindex','-1');pages[tab].querySelector('h2').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
   document.dispatchEvent(new CustomEvent('standard:navigation',{detail:{managing,tab,section}}));
  }
@@ -52,7 +57,7 @@ export function mountNavigation({refresh,catalog,status}){
   for(const el of ['operationsHistory']){const n=$(el);if(n){for(const b of ['Operaciones anteriores','Volver a recientes']){const button=[...root.querySelectorAll('button')].find(x=>x.textContent===b);if(button&&button.parentElement!==sections.history)sections.history.append(button);}}}
  }
  let queued=false;new MutationObserver(()=>{if(!queued){queued=true;queueMicrotask(()=>{queued=false;organize();});}}).observe(root,{childList:true,subtree:true});organize();
- document.addEventListener('standard:dashboard',e=>{const d=e.detail;label.hidden=!d.operators.length;if(managing&&!d.operators.length&&(tab!=='more'||section!=='company'))go('more','company',true);const op=d.operators.find(o=>o.id===select.value);$('operatorOverview').textContent=op?op.display_name+' · '+({pending:'Completa tu expediente para solicitar revisión',approved:'Operadora habilitada',suspended:'Operadora suspendida'}[op.status]||op.status):'Registra tu empresa en Más para comenzar.';organize();});
+ document.addEventListener('standard:dashboard',e=>{accessReady=true;for(const b of root.querySelectorAll('[data-operator-section]'))b.hidden=!allowedSection(b.dataset.operatorSection);for(const b of home.querySelectorAll('[data-shortcut]'))b.hidden=b.dataset.shortcut==='trips'?!standardCan('trips.write'):b.dataset.shortcut==='reservations'?!standardCan('bookings.read'):!standardCan('company.edit');const q=new URLSearchParams(location.search);go(q.get('panel')||tab,q.get('section')||section);const d=e.detail;label.hidden=!d.operators.length;if(managing&&!d.operators.length&&(tab!=='more'||section!=='company'))go('more','company',true);const op=d.operators.find(o=>o.id===select.value);$('operatorOverview').textContent=op?op.display_name+' · '+({pending:'Completa tu expediente para solicitar revisión',approved:'Operadora habilitada',suspended:'Operadora suspendida'}[op.status]||op.status):'Registra tu empresa en Más para comenzar.';organize();});
  // Private passenger flows retain their existing handlers and receipt return paths.
  new MutationObserver(()=>{if(!root.hidden)return;if(managing)mode(false);}).observe(root,{attributes:true,attributeFilter:['hidden']});
  const passengerViews=[['catalog',document.querySelector('[data-view="catalog"]')],['myBookings',$('openBookings')],['privateRequests',$('openPrivateMarket')]];

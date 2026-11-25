@@ -20,7 +20,7 @@ async function signedIn() {
   for (const op of data.operators) {
     const p = document.createElement('p'), link = document.createElement('a');
     link.href = '/pilot/?operator='+op.id;
-    link.textContent = op.display_name + ' · ' + ({owner:'Administrador principal',admin:'Administrador',dispatcher:'Despachador',driver:'Conductor'}[op.role] || 'Miembro');
+    link.textContent = op.display_name + ' · ' + (op.roleLabel||{owner:'Administrador principal',admin:'Administrador',dispatcher:'Despachador',driver:'Conductor'}[op.role]||'Miembro');
     p.append(link); $('teams').append(p);
   }
   if (!data.operators.length) $('teams').textContent = 'Tu cuenta guarda tus boletos. También puedes registrar tu operadora desde Standard.';

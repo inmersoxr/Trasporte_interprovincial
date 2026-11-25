@@ -13,8 +13,8 @@ export async function handleGps(request,env,c){
  const member=user?await stmt(db,'SELECT role FROM memberships WHERE operator_id=? AND user_id=?',[t.operator_id,user.id]).first():null;
  const canSend=!!member&&await canOperate(db,user.id,t.operator_id,t.vehicle_id,t.departure_id);
  const staff=!!member&&!!await stmt(db,"SELECT 1 FROM organization_capabilities WHERE user_id=? AND operator_id=? AND capability IN('*','trips.operate_all')",[user.id,t.operator_id]).first();
- const fleetViewer=!!member&&!!await stmt(db,"SELECT 1 FROM organization_vehicle_access a JOIN organization_capabilities c ON c.user_id=a.user_id AND c.operator_id=a.operator_id WHERE a.user_id=? AND a.vehicle_id=? AND c.capability IN('*','fleet.track')",[user.id,t.vehicle_id]).first();
- const passenger=user&&!!await stmt(db,`SELECT 1 FROM bookings WHERE customer_id=? AND status='confirmed' AND (id=? OR departure_id=?) UNION SELECT 1 FROM standard_custom_bookings WHERE customer_id=? AND id=? AND status IN('confirmed','running','completed')`,[user.id,t.booking_id,t.departure_id,user.id,t.custom_booking_id]).first();
+ const fleetViewer=!!member&&!!await stmt(db,"SELECT 1 FROM organization_fleet_access a JOIN organization_capabilities c ON c.user_id=a.user_id AND c.operator_id=a.operator_id WHERE a.user_id=? AND a.vehicle_id=? AND c.capability IN('*','fleet.track')",[user.id,t.vehicle_id]).first();
+ const passenger=user&&!!await stmt(db,`SELECT 1 FROM bookings WHERE customer_id=? AND sales_channel<>'office' AND status='confirmed' AND (id=? OR departure_id=?) UNION SELECT 1 FROM standard_custom_bookings WHERE customer_id=? AND id=? AND status IN('confirmed','running','completed')`,[user.id,t.booking_id,t.departure_id,user.id,t.custom_booking_id]).first();
  if(!publicToken&&!canSend&&!fleetViewer&&!passenger)throw failure('Viaje no disponible',404);
  if(request.method==='GET'&&parts[4]==='history'){
   if(!canSend&&!fleetViewer||publicToken)throw failure('Historial privado',403);

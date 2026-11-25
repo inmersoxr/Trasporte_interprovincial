@@ -363,3 +363,5 @@ UX-03 publicada a87c850/Actions45507871842. UX-04/05 completan interacción y na
 UX-01–05 publicados y validados en su alcance, fuente d980e47/Actions45511383734. Continuidad y límites en PROGRESS/TESTS; plan completo sigue abierto.
 
 04.01 retomada2026-11-25: base aditiva0038 y contrato de permisos, aún sin activar roles nuevos. Continuar integración backend/SQL y UI de Equipo; no cerrar fase04 por esta base.
+
+04.01–04.18 EN PRUEBAS de publicación: miembros, funciones, alcance, invitaciones/WhatsApp, aceptación, vistas por función, vista previa y revocación. No cerrar fase por compilación; esperar CI/despliegue y conservar aceptación física pendiente. Próximo gap03 tema piloto/conductor, después fases05–13.

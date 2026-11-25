@@ -6,6 +6,10 @@ La especificación consolidada de las nueve tareas está en [docs/NEXT_PHASE_SPE
 
 # Registro anterior (histórico cuando contradiga la instrucción vigente)
 
+# Continuidad de ejecución — 2026-11-25
+
+El usuario ordena no detenerse entre fases hasta completar el plan. Checkout limpio de rama activa en /workspace/rutasec-active si existe; verificar siempre HEAD remoto. No mezclar diffs S1/0025 del checkout histórico /workspace/Trasporte_interprovincial. Hito04 de equipo/capacidades/invitaciones está en integración; seguir PROGRESS/TESTS y snapshot más reciente. Publicar hitos comprobados sin pedir aprobación ordinaria y después priorizar el bloque1 de docs/NEXT_PHASE_SPEC.md antes de otros bloques nuevos. No fingir validación física, SRI ni pagos reales. Git CLI recibió403 con otra identidad; la conexión GitHub autorizada confirma push/admin y es la vía de publicación, con expected_sha y sin tocar main/Pages. No reintentar el push CLI denegado sin confirmación del proveedor.
+
 # Prioridad vigente — plan completo después de la presentación
 
 El usuario informó que el piloto ya fue presentado y ordenó retomar íntegramente PLAN.md (fases00–13 y ampliaciónGROUND), con UX/UI como criterio obligatorio. Los recortes históricos de presentación no son un criterio para cerrar el producto. Reutilizar lo implementado; recuperar claridad del demo sin modificar Pages ni copiar sus datos ficticios. No pedir aprobaciones ordinarias entre fases. No confundir recorridos automatizados ni funciones visibles con aceptación de todo el plan. Mantener pagos simulados, datos, permisos y arquitectura única. La siguiente tarea es Fase02: coherencia de navegación y flujos en todas las superficies; después continuar dependencias y tareas abiertas del plan.
