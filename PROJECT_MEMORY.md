@@ -1,3 +1,11 @@
+# Instrucción vigente del propietario — 2026-11-25
+
+La especificación consolidada de las nueve tareas está en [docs/NEXT_PHASE_SPEC.md](docs/NEXT_PHASE_SPEC.md). Leerla obligatoriamente. El propietario solo ha asignado el bloque 1 a Codex; finalizarlo antes de iniciar los siguientes bloques. No reiniciar ni duplicar el plan maestro: al finalizar el bloque actual, mapear las nueve tareas a los IDs existentes y completar diferencias. Para la siguiente fase prevalece dicha especificación sobre instrucciones históricas incompatibles, en particular conservar la interfaz anterior o prohibir datos ficticios: se exige demo funcional con datos nuevos aislados y rediseño de tres interfaces, sin tocar Pages. Las referencias gráficas definitivas están pendientes del propietario. No marcar tareas como implementadas por esta actualización documental.
+
+---
+
+# Registro anterior (histórico cuando contradiga la instrucción vigente)
+
 # Prioridad vigente — plan completo después de la presentación
 
 El usuario informó que el piloto ya fue presentado y ordenó retomar íntegramente PLAN.md (fases00–13 y ampliaciónGROUND), con UX/UI como criterio obligatorio. Los recortes históricos de presentación no son un criterio para cerrar el producto. Reutilizar lo implementado; recuperar claridad del demo sin modificar Pages ni copiar sus datos ficticios. No pedir aprobaciones ordinarias entre fases. No confundir recorridos automatizados ni funciones visibles con aceptación de todo el plan. Mantener pagos simulados, datos, permisos y arquitectura única. La siguiente tarea es Fase02: coherencia de navegación y flujos en todas las superficies; después continuar dependencias y tareas abiertas del plan.
