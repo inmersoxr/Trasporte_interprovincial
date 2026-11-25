@@ -1,0 +1,7 @@
+# Android / Capacitor integration contract (not a native application build)
+
+Existing PWA is the pilot implementation. Do not claim screen-off tracking. No new paid provider or duplicate app/backend is created.
+
+Future Capacitor wrapper: use HTTPS existing app origin, allow navigation only to trusted RutasEC origin; never place credentials in config. Native plugin must expose start(tripId), stop(), location listener with the same GPS sample fields and permission-state listener. Use a foreground location service with persistent notification and stop action; request coarse/fine then background permission separately as required by Android/version; Android14+ foregroundServiceType location and foreground service permission; notification permission Android13+. Merge AndroidManifest.gps.xml only after implementing that service, not as a placeholder service registration.
+
+Reuse authenticated /api/gps/:trip/positions batches and account-separated durable queue; obtain a deliberate permission from the driver, verify trip assignment on server, clear transmission on logout or completion, handle restart only for explicitly active trip. No long-lived development keys or tokens in deep links. Native adapter must preserve acquisition timestamp, accuracy, speed(m/s), heading(degrees), sample UUID and original capture source. No browser-generated fallback coordinates. Build/signing/device/OS background tests required before activation. The plugin/service and APK are not implemented or certified by this preparation.

@@ -1,0 +1,58 @@
+import {showShare} from './share.mjs';
+import {api,apiHeaders,status} from './app.mjs';
+import {session} from '../account/session.mjs';
+import {gpsQueue,gpsSample} from './gps-queue.mjs';
+const $=id=>document.getElementById(id);let watch=null,capture=null,account=null,flushing=false,lastSample=0,lastFix=0,view=null,mapTrip=null,map,marker,accuracy,routeLayer,routeKey='',routeNext=0,road=null,renderTurn=0,lastSeen=null;
+const captureState=document.createElement('p');captureState.id='gpsCaptureState';captureState.hidden=true;document.querySelector('.standard-shell>header').append(captureState);
+const say=s=>{captureState.hidden=false;captureState.textContent=s;};
+export function stopGps(){if(watch!==null)navigator.geolocation?.clearWatch(watch);watch=null;capture=null;account=null;say('Seguimiento detenido');}
+export async function flushGps(){
+ if(!capture||flushing||!navigator.onLine)return;flushing=true;const trip=capture,user=account,key=user+':'+trip;
+ try{const current=await session();if(!current.authenticated||current.user.id!==user){stopGps();return;}
+  const points=(await gpsQueue(key)).slice(0,50);if(!points.length)return;
+  const response=await fetch('/standard-api/api/gps/'+trip+'/positions',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json',...apiHeaders()},body:JSON.stringify({positions:points}),signal:AbortSignal.timeout(15000)});
+  if(response.status===409){await gpsQueue(key,()=>[]);stopGps();return;}
+  if(response.status===401||response.status===403||response.status===404){stopGps();return;}
+  if(!response.ok)throw Error('Sin confirmación del servidor');const data=await response.json(),accepted=new Set(data.accepted);await gpsQueue(key,q=>q.filter(p=>!accepted.has(p.id)));say('GPS activo · última sincronización '+new Date(data.receivedAt).toLocaleTimeString());
+ }catch{say('Sin internet o sin confirmación · posiciones pendientes en este dispositivo');}finally{flushing=false;}
+}
+export async function startGps(trip){
+ try{const current=await session();if(!current.authenticated)throw Error('Inicia sesión para transmitir GPS');const access=await api('/gps/'+trip);if(!access.canSend||access.status!=='running')throw Error('No tienes un viaje activo asignado');if(!navigator.geolocation)throw Error('Este navegador no permite GPS');
+ stopGps();capture=trip;account=current.user.id;lastSample=0;lastFix=Date.now();say('Solicitando permiso GPS · mantén la aplicación abierta');
+ watch=navigator.geolocation.watchPosition(async position=>{if(capture!==trip)return;lastFix=Date.now();const interval=(position.coords.speed||0)>1?5000:10000;if(Date.now()-lastSample<interval)return;lastSample=Date.now();try{await gpsQueue(account+':'+trip,q=>[...q,gpsSample(position)]);if(navigator.onLine){say('GPS activo');flushGps();}else say('Sin internet · GPS guardado temporalmente');}catch{say('No se pudo guardar el GPS en este dispositivo');}},error=>{say(error.code===1?'Permiso GPS denegado · seguimiento detenido':'Sin señal GPS · esperando una posición real');if(error.code===1){stopGps();say('Permiso GPS denegado · seguimiento detenido');}},{enableHighAccuracy:true,maximumAge:0,timeout:20000});flushGps();
+ }catch(e){status(e.message);say(e.message);}
+}
+window.addEventListener('online',flushGps);window.addEventListener('offline',()=>{if(capture)say('Sin internet · GPS guardado temporalmente');});document.addEventListener('rutasec:account',e=>{if(capture&&(!e.detail?.authenticated||e.detail.user?.id!==account))stopGps();});
+setInterval(()=>{if(capture){flushGps();if(Date.now()-lastFix>30000)say(navigator.onLine?'Sin señal GPS · última ubicación no actualizada':'Sin internet · posiciones pendientes');}},10000);
+const cities={Cuenca:[-79.0059,-2.9001],Guayaquil:[-79.8891,-2.1894],Quito:[-78.4678,-0.1807],Loja:[-79.2042,-3.9931],Machala:[-79.9554,-3.2581],Manta:[-80.7089,-0.9677],Portoviejo:[-80.4545,-1.0546],Riobamba:[-78.6471,-1.6636],Ambato:[-78.6191,-1.2491],Babahoyo:[-79.5344,-1.8019],Latacunga:[-78.6155,-0.9333],'Santo Domingo':[-79.1754,-0.253],Salinas:[-80.9826,-2.2145],Milagro:[-79.5889,-2.134],Azogues:[-78.8486,-2.7397],Esmeraldas:[-79.6539,0.9592]};
+async function loadRoute(data,turn){const a=cities[data.origin],b=cities[data.destination],key=data.origin+'|'+data.destination;if(key===routeKey&&(road||Date.now()<routeNext))return;routeKey=key;routeNext=Date.now()+60000;road=null;if(routeLayer){map.removeLayer(routeLayer);routeLayer=null;}if(!a||!b)return;
+ try{const r=await fetch('https://routing.openstreetmap.de/routed-car/route/v1/driving/'+a.join(',')+';'+b.join(',')+'?overview=full&geometries=geojson',{credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error();const json=await r.json(),route=json.routes?.[0];if(!route?.geometry?.coordinates||routeKey!==key||turn!==renderTurn)return;road=route;routeLayer=L.polyline(route.geometry.coordinates.map(([lng,lat])=>[lat,lng]),{color:'#e9bc44',weight:4}).addTo(map);if(!data.position)map.fitBounds(routeLayer.getBounds());
+ }catch{/* No fake straight-line road or ETA. */}
+}
+function estimate(p){if(!road||!p||Date.now()-p.captured_at>30000||p.accuracy>100)return 'Distancia y ETA no disponibles';const points=road.geometry.coordinates;let nearest=Infinity,index=0,total=0,before=0;const distance=(a,b)=>map.distance([a[1],a[0]],[b[1],b[0]]);
+ for(let i=0;i<points.length;i++){const d=distance(points[i],[p.lng,p.lat]);if(d<nearest){nearest=d;index=i;}}
+ for(let i=1;i<points.length;i++){const d=distance(points[i-1],points[i]);total+=d;if(i<=index)before+=d;}
+ if(nearest>500||!total)return 'Fuera de la ruta estimada · ETA no disponible';const remaining=total-before,eta=p.speed>=2?' · ETA aproximada '+Math.ceil(remaining/p.speed/60)+' min':' · ETA no disponible';return 'Ruta entre centros de ciudades · '+(remaining/1000).toFixed(1)+' km restantes · '+Math.round(before/total*100)+'%'+eta;
+}
+export async function renderGps(trip,token=null){
+ const changed=view?.trip!==trip||view?.token!==token,turn=++renderTurn;view={trip,token};$('standardMap').hidden=true;let div=$('gpsMap');if(!div){div=document.createElement('div');div.id='gpsMap';div.style.cssText='height:360px;max-width:100%;';$('standardMap').after(div);}if(changed)div.hidden=true;
+ const data=await api(token?'/gps/public/'+token:'/gps/'+trip);if(turn!==renderTurn)return;div.hidden=false;
+ if(mapTrip!==data.tripId){mapTrip=data.tripId;routeKey='';road=null;if(marker){map.removeLayer(marker);map.removeLayer(accuracy);marker=accuracy=null;}if(routeLayer){map.removeLayer(routeLayer);routeLayer=null;}}
+ $('tracking').querySelector('h2').textContent='Ubicación del viaje';let context=$('gpsTripContext');if(!context){context=document.createElement('p');context.id='gpsTripContext';$('trackingConnection').before(context);}context.textContent=[data.origin+' → '+data.destination,data.vehicle,data.responsibleName?'Responsable: '+data.responsibleName:''].filter(Boolean).join(' · ');$('tracking').querySelector('h2+p').textContent='GPS del dispositivo del conductor. La PWA puede interrumpirse con la pantalla apagada.';
+ if(!map){map=L.map(div).setView([-1.7,-78.7],6);L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap · OSM France HOT',maxZoom:19}).addTo(map);}setTimeout(()=>map.invalidateSize(),0);
+ const p=data.position;lastSeen=p?{position:p,offset:data.serverNow-Date.now()}:null;if(p){const point=[p.lat,p.lng],arrow=L.divIcon({className:'gps-vehicle',html:'<span style="display:block;font-size:30px;color:#171b22;text-shadow:0 0 3px #ffe12a;transform:rotate('+Number(p.heading||0)+'deg)">'+(p.heading==null?'●':'▲')+'</span>',iconSize:[30,30],iconAnchor:[15,15]});if(!marker){marker=L.marker(point,{icon:arrow}).addTo(map);accuracy=L.circle(point,{radius:p.accuracy,color:'#e9bc44',weight:1}).addTo(map);map.setView(point,13);}else{marker.setLatLng(point).setIcon(arrow);accuracy.setLatLng(point).setRadius(p.accuracy);if(!map.getBounds().contains(point))map.panTo(point,{animate:false});}const age=Math.max(0,Math.round((data.serverNow-p.captured_at)/1000));$('trackingConnection').textContent=(age>30?'Sin posición reciente':'GPS actualizado')+' · hace '+age+' s · captura '+new Date(p.captured_at).toLocaleTimeString()+' · recepción '+new Date(p.received_at).toLocaleTimeString()+' · precisión ±'+Math.round(p.accuracy)+' m';}else{$('trackingConnection').textContent='Esperando la primera posición GPS real';if(marker){map.removeLayer(marker);map.removeLayer(accuracy);marker=accuracy=null;}}
+ await loadRoute(data,turn);if(turn!==renderTurn)return;$('trackingProgress').textContent=data.status==='completed'?'Viaje finalizado · seguimiento detenido':estimate(p);
+ $('trackingControls').replaceChildren();if(changed||data.status!=='running')$('trackingAlerts').replaceChildren();const add=(text,fn)=>{const b=document.createElement('button');b.textContent=text;b.onclick=fn;$('trackingControls').append(b);return b;};
+ if(data.canSend&&data.status==='running'){add(capture===trip?'Detener mi GPS':'Activar GPS en este dispositivo',()=>capture===trip?stopGps():startGps(trip));add('Sincronizar posiciones pendientes',()=>startGps(trip));}
+ const pilot=new URLSearchParams(location.search);if(!token&&data.canSend&&data.status==='running'&&pilot.get('pilotOperator')&&pilot.get('pilotDeparture'))add('Finalizar viaje y volver a mi jornada',async()=>{if(!confirm('¿Finalizar el viaje y cerrar el seguimiento?'))return;try{await api('/operations',{operatorId:pilot.get('pilotOperator'),id:pilot.get('pilotDeparture'),kind:'departure',action:'finish',requestId:crypto.randomUUID()});stopGps();location.replace('/pilot/?operator='+encodeURIComponent(pilot.get('pilotOperator')));}catch(e){status(e.message);}}).classList.add('yellow');
+ if(data.status!=='running'&&capture===trip)stopGps();
+ if(!token&&data.canShare)add('Revocar mis enlaces compartidos',async()=>{await api('/gps/'+trip+'/share',{action:'revoke'});status('Enlaces revocados');});
+ $('copyTracking').hidden=!!token||data.status!=='running';$('copyTracking').textContent='Compartir seguimiento';$('copyTracking').onclick=async()=>{const button=$('copyTracking');button.disabled=true;try{const share=await api('/gps/'+trip+'/share',{}),url=location.origin+'/standard/#gps/'+share.token;showShare($('trackingAlerts'),{url,title:'Seguimiento RutasEC',label:'Enlace temporal de seguimiento',onStatus:status});}catch(e){status(e.message);}finally{button.disabled=false;}};
+}
+export function markGpsUnavailable(){
+ const p=lastSeen?.position,age=p?Math.max(0,Math.round((Date.now()+lastSeen.offset-p.captured_at)/1000)):null;
+ $('trackingConnection').textContent=p?'Sin conexión · última captura '+new Date(p.captured_at).toLocaleTimeString()+' · hace '+age+' s':'Sin conexión · sin posición GPS confirmada';$('trackingProgress').textContent='Distancia y ETA sin actualizar';
+}
+export function hideGps(){renderTurn++;view=null;if($('gpsMap'))$('gpsMap').hidden=true;}
+async function publicView(){const token=location.hash.match(/^#gps\/([-_a-zA-Z0-9]{43})$/)?.[1];if(!token)return;for(const id of ['catalog','operator','myBookings','privateRequests'])$(id).hidden=true;$('tracking').hidden=false;try{await renderGps(null,token);}catch(e){if(/Enlace no disponible|Viaje no disponible/.test(e.message)){$('trackingConnection').textContent='Enlace caducado, revocado o viaje finalizado';$('copyTracking').hidden=true;hideGps();}else markGpsUnavailable();}}
+window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#gps/'))publicView();else if(!location.hash.startsWith('#track/'))hideGps();});setInterval(()=>{if(view?.token&&!document.hidden&&!$('tracking').hidden)publicView();},7000);queueMicrotask(publicView);

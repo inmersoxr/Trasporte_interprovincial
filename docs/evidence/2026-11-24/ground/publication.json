@@ -1,0 +1,72 @@
+{
+  "checkedAt": "2026-11-24T16:33:42.901Z",
+  "checks": [
+    {
+      "path": "/pilot/resources.mjs",
+      "status": 200,
+      "matchesSource": true,
+      "bytes": 12555
+    },
+    {
+      "path": "/pilot/route-editor.mjs",
+      "status": 200,
+      "matchesSource": true,
+      "bytes": 2883
+    },
+    {
+      "path": "/standard/vehicle-picker.mjs",
+      "status": 200,
+      "matchesSource": true,
+      "bytes": 1449
+    },
+    {
+      "path": "/standard/seat-map.mjs",
+      "status": 200,
+      "matchesSource": true,
+      "bytes": 1442
+    },
+    {
+      "path": "/standard/transport.mjs",
+      "status": 200,
+      "matchesSource": true,
+      "bytes": 1175
+    },
+    {
+      "path": "/standard/reservations.mjs",
+      "status": 200,
+      "matchesSource": true,
+      "bytes": 15241
+    },
+    {
+      "path": "/business/app.mjs",
+      "status": 200,
+      "matchesSource": true,
+      "bytes": 40608
+    },
+    {
+      "path": "/assets/vehicle-types.webp",
+      "status": 200,
+      "matchesSource": true,
+      "bytes": 267420
+    },
+    {
+      "path": "/standard-api/health",
+      "status": 200,
+      "body": {
+        "service": "RutasEC development",
+        "environment": "development",
+        "revision": "ground-transport-v1",
+        "ok": true,
+        "d1": true,
+        "r2": true,
+        "schema": "0037_ground_operations",
+        "payments": "disabled"
+      }
+    },
+    {
+      "path": "GitHub Pages",
+      "status": 200,
+      "sha256": "c8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f"
+    }
+  ]
+}

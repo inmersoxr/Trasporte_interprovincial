@@ -1,0 +1,21 @@
+{
+  "source": "a72479aab0c35ea657bae9d27ea359c9d26fa9e0",
+  "actions": 45393517383,
+  "verify": "success",
+  "deploy": "success",
+  "unitTests": 75,
+  "browserFlows": 9,
+  "workerVersions": {
+    "api": "a8e6f008-bbc6-4a50-8a2a-419d5911a0af",
+    "web": "6980630f-2345-4263-ba5e-80d335d57e1c",
+    "admin": "50b1c75e-d0a9-4360-9d56-ccf8f4cc4dc7"
+  },
+  "schema": "0032_trip_responsible",
+  "payments": "simulated",
+  "realBankingFieldsSent": false,
+  "liveStreamsInIsolatedBrowserTest": 4,
+  "physicalDeviceValidation": "pending",
+  "publicFixtureRecordsCreated": 0,
+  "pagesSha256": "c8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f",
+  "mainUnchanged": "0e8934886b30ec9eec8db5a26886ba4bafcd6b4a"
+}

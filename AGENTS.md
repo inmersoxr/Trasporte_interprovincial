@@ -1,4 +1,64 @@
+# Instrucción vigente del propietario — 2026-11-25
+
+La especificación consolidada de las nueve tareas está en [docs/NEXT_PHASE_SPEC.md](docs/NEXT_PHASE_SPEC.md). Leerla obligatoriamente. El propietario solo ha asignado el bloque 1 a Codex; finalizarlo antes de iniciar los siguientes bloques. No reiniciar ni duplicar el plan maestro: al finalizar el bloque actual, mapear las nueve tareas a los IDs existentes y completar diferencias. Para la siguiente fase prevalece dicha especificación sobre instrucciones históricas incompatibles, en particular conservar la interfaz anterior o prohibir datos ficticios: se exige demo funcional con datos nuevos aislados y rediseño de tres interfaces, sin tocar Pages. Las referencias gráficas definitivas están pendientes del propietario. No marcar tareas como implementadas por esta actualización documental.
+
+---
+
+# Registro anterior (histórico cuando contradiga la instrucción vigente)
+
+# Continuidad de ejecución — 2026-11-25
+
+El usuario ordena no detenerse entre fases hasta completar el plan. Checkout limpio de rama activa en /workspace/rutasec-active si existe; verificar siempre HEAD remoto. No mezclar diffs S1/0025 del checkout histórico /workspace/Trasporte_interprovincial. Hito04 de equipo/capacidades/invitaciones está en integración; seguir PROGRESS/TESTS y snapshot más reciente. Publicar hitos comprobados sin pedir aprobación ordinaria y después priorizar el bloque1 de docs/NEXT_PHASE_SPEC.md antes de otros bloques nuevos. No fingir validación física, SRI ni pagos reales. Git CLI recibió403 con otra identidad; la conexión GitHub autorizada confirma push/admin y es la vía de publicación, con expected_sha y sin tocar main/Pages. No reintentar el push CLI denegado sin confirmación del proveedor.
+
+# Prioridad vigente — plan completo después de la presentación
+
+El usuario informó que el piloto ya fue presentado y ordenó retomar íntegramente PLAN.md (fases00–13 y ampliaciónGROUND), con UX/UI como criterio obligatorio. Los recortes históricos de presentación no son un criterio para cerrar el producto. Reutilizar lo implementado; recuperar claridad del demo sin modificar Pages ni copiar sus datos ficticios. No pedir aprobaciones ordinarias entre fases. No confundir recorridos automatizados ni funciones visibles con aceptación de todo el plan. Mantener pagos simulados, datos, permisos y arquitectura única. La siguiente tarea es Fase02: coherencia de navegación y flujos en todas las superficies; después continuar dependencias y tareas abiertas del plan.
+
+# Alcance vigente — transporte terrestre de pasajeros
+
+RutasEC integra automóviles, SUV, vans, busetas, minibuses y buses de uno/dos pisos en la aplicación Cloudflare existente. Tipo de vehículo, autorización público/privado/comercial y modalidad son independientes. Máximo inicial100configurable en standard_transport_settings. Reutilizar layouts/snapshots, inventario por tramos, ventanilla, Premium/GPS/QR, roles y empresas. Referencias de tipo generadas no se presentan como fotos reales de la flota. No duplicar aplicaciones/infraestructura ni modificar Pages. Mantener pagos simulados y Premium Inteligente/Android pospuestos. Ver PLAN.md GROUND1–8 y docs/GROUND_TRANSPORT.md.
+
+# Prioridad inmediata R3 — fichas vinculadas y confirmación de compra
+
+Crear/listar/editar vehículos y conductores en pestañas de recursos; conductor habitual por vehículo, selección y cambio por salida, histórico persistente. Fichas no requieren cuentas/invitaciones. Conservar Standard/Premium y navegación inferior. Pago simulado debe abrir directamente el boleto/QR confirmado por backend, sin depender de otra lectura del historial. El usuario pide publicar inmediatamente ambos cambios, sin otra auditoría general. Mantener plan maestro, datos, permisos, Pages y pagos reales desactivados.
+
+# Prioridad vigente — funcionalidad completa accesible, interfaz nueva
+
+La simplificación anterior NO autoriza ocultar módulos Standard/Premium. Mantener interfaz actual y navegación inferior; entrar en Operadores cambia al espacio de operadora con secciones Standard y Premium. Standard: viajes, creación, vehículos, reservas y empresa. Premium: en vivo, crear viaje, vehículos, empleados, gestión empresarial y empresa. Sin destino Avisos. Reubicar Vista de pasajero y Mi cuenta dentro de Empresa del menú inferior; no eliminarlos ni mantener accesos textuales arriba. El demo histórico es referencia de funciones y campos, no una pantalla que deba sustituir a la interfaz actual.
+
+Las listas de vehículos y empleados se generan con registros propios persistentes. Un viaje puede vincular vehículo y persona responsable de la ficha laboral, sin hacer obligatoria una cuenta/invitación para esa persona. En vivo debe mostrar viajes activos de la empresa con persona, vehículo y GPS recibido, incluidos cuatro simultáneos; nunca posiciones de demo. El pasajero elige viaje/asiento, pago ficticio crédito/débito/transferencia, boleto completo/QR; operador escanea, embarca, inicia, transmite GPS y finaliza; compartir publicación y seguimiento por WhatsApp/menú nativo. Pagos siguen simulados; no pedir ni enviar datos bancarios reales. Preservar demo Pages, datos y plan maestro.
+
+# Prioridad simplificada del propietario — 2026-11-24
+
+La instrucción más reciente reemplaza los prerrequisitos de conductores/invitaciones para esta entrega. Circuito único: crear empresa → crear/publicar viaje con el formulario del demo (vehículo y plazas incluidos) → compra persistente desde otra sesión → QR → operador escanea/inicia/GPS/finaliza. Navegación inferior de app. No exigir alta de conductores, aceptar invitaciones, registrar previamente flota ni verificar contactos para publicar en el piloto. Mantener cuentas/permisos básicos existentes, pagos simulados y demo Pages intacto. Plan completo conservado para después; no borrar datos ni funciones históricas.
+
+# Prioridad inmediata de presentación — 2026-11-24
+
+Prioridad vigente: circuito de presentación mañana. Continuar tareas implementables sin esperar01.09; mantener pruebas físicas pendientes. Secuencia P0 preparar operadora/vehículo piloto -> P1 invitación vinculada a vehículo -> P2 publicar/agenda -> P3 reserva/QR/embarque/GPS entre sesiones -> P4 desplegar y comprobar. Plan171tareas preservado; no declarar fases amplias terminadas por este recorte.
+
+
+# Protocolo vigente del agente — 2026-11-24
+
+Al iniciar: leer AGENTS.md, PLAN.md, PROGRESS.md y TESTS.md; identificar siguiente tarea, comprobar repositorio y despliegue, continuar sin reiniciar. Conservar también PROJECT_MEMORY.md y snapshots. Estos cuatro archivos son la fuente de continuidad; las instrucciones históricas siguientes se mantienen para trazabilidad, pero prevalece este bloque y el plan vigente.
+
+Ejecutar una tarea a la vez con objetivo, dependencias, auditoría/reutilización, diseño técnico/UX, implementación, pruebas e inspección visual real, corrección, evidencias, estado y commit identificable. No solicitar aprobación por decisiones reversibles ordinarias; reportar credenciales, acciones irreversibles o pruebas humanas bloqueadas. Estados: PENDIENTE/AUDITADA/EN DESARROLLO/EN PRUEBAS/BLOQUEADA/VALIDADA. No cerrar fase con tareas obligatorias sin validar. No declarar pruebas físicas realizadas por usar fixtures.
+
+Arquitectura: misma aplicación/código/backend/base compartida, relaciones por identificadores, permisos en backend, aislamiento multiempresa, preservar datos. Pagos simulados. Todas las capacidades Premium para operadora piloto mediante configuración autorizada; segmentación comercial pospuesta. Android, OTA y GPS nativo en segundo plano pospuestos. No modificar demo GitHub Pages ni duplicar infraestructura.
+
+H1 prioritario: registro por teléfono internacional o correo/contraseña sin verificación temporalmente en piloto, sesiones seguras, crear operadora y su administrador principal de organización. Una cuenta sin verificación NO prueba posesión de un contacto ni concede administración de la plataforma, ni permite apropiarse de cuentas existentes. Mantener Google/correo verificados y sus datos separados de esa condición del piloto. Esta instrucción sustituye el requisito histórico de verificar contacto antes de cualquier acceso durante el piloto.
+
+UX transversal: identidad RutasEC; una acción principal por contexto; secundarias contextuales; grupos coherentes sin saturación de tarjetas/botones; campos progresivos e información recuperada automáticamente; navegación por rol, móvil para conductor y escritorio para administración; errores/carga/guardado/sincronización/desconexión claros; conservar campos ante fallos. Interacción y capturas reales en móvil/escritorio, no marcar interfaz terminada solo por funcionar su código.
+
 # Instrucciones persistentes — RutasEC
+## Correcciones Alpha autorizadas — 2026-11-18
+El usuario autorizó expresamente comenzar todas las correcciones de la auditoría y mejorar lo existente. No volver a pedir autorización por cada corrección dentro de este alcance. Trabajar por hitos implementados/probados/documentados sobre Workers/D1/R2 existentes. Cuenta verificada obligatoria al reservar, Google primero, Apple después; recurrencia básica Standard. Preservar demo/Pages y datos, no ampliar Premium ni activar cobros reales. Credenciales/contrataciones externas pendientes se reportan sin frenar trabajo independiente. No declarar v0.1.0 Alpha funcional hasta verificar el circuito completo y sus límites reales.
+
+## Acceso normal obligatorio (instrucción expresa 2026-11-18)
+El usuario rechazó el acceso mediante IDs, UUIDs o claves de desarrollo. Usar correo/contraseña, verificación del correo, cambio y recuperación de contraseña en cuenta y panel administrativo. No volver a pedir identificadores internos ni secretos de desarrollo para iniciar sesión. El intento de habilitación por UUID quedó cancelado; no ejecutar bootstrap sobre ese UUID. Primera autoridad por correo previamente autorizado solo después de comprobar posesión del buzón; no asignar roles a correos sin verificar ni presentar envíos simulados como reales. Herramientas de prueba pueden mantenerse aisladas y explícitas, nunca como flujo normal.
+
+## Orden vigente por instrucción expresa del usuario
+Tras J1–J8 funcionales, el usuario indicó «Salta esa parte y comienza con la parte premium»: posponer la revisión Senior y comenzar Premium empresarial por hitos verificables. Esta instrucción reemplaza únicamente el orden previo que exigía revisión Senior antes de Premium; no elimina controles mínimos de autorización, aislamiento, integridad, pruebas ni preservación de Standard/demo. Pagos reales siguen fuera de alcance. Consultar docs/PREMIUM_ROADMAP.md. No afirmar que la revisión Senior se realizó ni que el entorno es comercial.
+
 Antes de cualquier tarea leer `PROJECT_MEMORY.md` y el snapshot más reciente de `docs/snapshots/`. Consultar `README.md`, `LIVE-DEMO.md`, `BOOKINGS-DEMO.md` y código fuente relevante. Priorizar costo total, fiabilidad, no regresiones y migración gradual de demo a producción. No inventar pruebas ni despliegues. No asumir que GitHub actualiza Cloudflare. Mantener tres modalidades distintas (compartido por asiento; privado por ruta con precio fijo; privado personalizado por cotización). Split payment es opcional, no requisito. Tarifas de pasarelas son referenciales hasta cotización escrita. No exponer secretos ni datos personales. Documentar cada hito en snapshot fechado, preservar anteriores y actualizar `PROJECT_MEMORY.md` al tomar decisiones.
 
 
@@ -32,3 +92,6 @@ J7 operaciones básicas: panel, manifiesto, abordaje, estados, historial, seguim
 J8 regresión integral Standard, dos sesiones/dispositivos, persistencia, errores y documentación de lo que es demo versus funcional. Revisión Senior posterior sobre evidencia y código.
 
 Premium empresarial, controles avanzados de planes, pagos reales, liquidaciones, y auditoría/refactorización Senior quedan después del Standard funcional; el demo Premium existente se conserva íntegro. La pasarela real se aborda únicamente en la fase final autorizada, según el roadmap. Si la infraestructura J1 no está lista, no fingir su disponibilidad ni conectar Standard a endpoints inexistentes.
+
+### Elección de programación del piloto
+El propietario decide datos, vehículos, conductores, horarios y publicaciones. No sembrar viajes ni crear siete salidas por defecto. Solo este viaje es inicial; recurrencia diaria/semanal/mensual optativa con fecha final y vista previa sin escrituras, publicación explícita. Administración ve toda su organización; conductor solo sus asignaciones. Mantener plan completo sin exigir cerrar fases empresariales para entregar circuito de presentación.

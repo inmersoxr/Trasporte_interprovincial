@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "295bd0b26cbe8f3782ca4a1f2e2a16da8e3df87f",
+  "actionsRun": 45340992233,
+  "verify": "success",
+  "deploy": "success",
+  "workers": {
+    "api": "2ceaf44e-6f94-4e5c-b185-3b874f4b5f47",
+    "web": "29ecaf5c-9a04-4023-a20e-1ab6ef583d96",
+    "admin": "a9fbc7f1-6163-4f63-8d9a-de6110b2c600"
+  },
+  "schema": "0030_pilot_operations",
+  "url": "https://rutasec-web-dev.drbrownlabs.workers.dev/pilot/",
+  "mainUnchanged": "0e8934886b30ec9eec8db5a26886ba4bafcd6b4a",
+  "pagesHtmlSha256": "c8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f",
+  "publicFixtureRecordsCreated": 0,
+  "realPayments": false,
+  "physicalDriverCameraGpsValidation": "pending"
+}

@@ -1,0 +1,13 @@
+✔ health verifies both bindings without cache (28.089476ms)
+✔ missing bindings or schema fail closed without leaking internal error (1.977042ms)
+✔ unknown routes and health writes are rejected (1.153482ms)
+✔ Alpha onboarding: verified identity is not approval; private R2 documents, reviewed fleet and expiry guard real publication (7222.549526ms)
+✔ Pilot circuit: own vehicle invitation, isolated driver agenda, seven persistent trips, atomic seats/QR and real-GPS protocol (9792.146019ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 18189.452955

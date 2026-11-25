@@ -1,0 +1,22 @@
+{
+  "source": "45ed4b3d1ffa768de1eca995cb58cd7216560e10",
+  "run": 45372210818,
+  "verify": "success",
+  "deploy": "success",
+  "unitTests": 74,
+  "browserJourneys": 8,
+  "workerVersions": {
+    "api": "3f8456a1-ac3a-45f6-84d9-209e9fe2bffb",
+    "web": "682d6e21-63d1-4bc6-ab90-0ff5f3370604",
+    "admin": "a910e256-68d9-4787-9976-4ace29837ea3"
+  },
+  "schema": "0031_simple_pilot",
+  "payments": "simulated",
+  "driverRequired": false,
+  "invitationRequired": false,
+  "plateRequiredForPilot": false,
+  "publicSyntheticRecordsCreated": 0,
+  "physicalSensorsValidation": "pending",
+  "mainUnchanged": "0e8934886b30ec9eec8db5a26886ba4bafcd6b4a",
+  "pagesSha256": "c8f347d3bc0431c5b77aa75a6588e1ae4c5152a5960acb88b7f97480c0cb8f6f"
+}

@@ -1,0 +1,58 @@
+Source: 295bd0b26cbe8f3782ca4a1f2e2a16da8e3df87f
+Actions push run: 45340992233
+Verify job: 138264329393 SUCCESS
+Browser GPS and camera inputs are emulated/local fixtures; physical validation pending.
+
+2026-11-24T06:30:57.8593275Z ✔ Alpha boarding binds ticket to its service/time and records once; ordinary cookie sessions control tracking (4358.811147ms)
+2026-11-24T06:31:01.9421955Z ✔ Alpha catalog quarantines QA without deleting it; filters use Ecuador dates and remaining seats (4256.992181ms)
+2026-11-24T06:31:02.8451345Z ✔ Alpha defaults reject unverified legacy access; Google accounts retain tickets across independent sessions (4559.093418ms)
+2026-11-24T06:31:13.8956714Z ✔ Alpha email code: pending password is hashed; mailbox proof activates once and legacy-token bypass fails (6086.81134ms)
+2026-11-24T06:31:13.8959280Z ✔ Alpha email code: five guesses, resend invalidation, expiry and preauthorized mailbox owner (4693.321382ms)
+2026-11-24T06:31:18.1803541Z ✔ Alpha email code: unavailable transport and failed resend never activate or falsely report delivery (4283.948453ms)
+2026-11-24T06:31:24.0653786Z ✔ Alpha journey: contact and meeting snapshots, saved profile, private receipt and complete cursor histories (5817.619033ms)
+2026-11-24T06:31:24.1155137Z ✔ Alpha onboarding: verified identity is not approval; private R2 documents, reviewed fleet and expiry guard real publication (4335.454857ms)
+2026-11-24T06:31:58.7375717Z ℹ tests 74
+2026-11-24T06:31:58.7377926Z ℹ pass 74
+2026-11-24T06:31:58.7378777Z ℹ fail 0
+2026-11-24T06:31:58.7382490Z ℹ duration_ms 66166.259909
+2026-11-24T06:32:54.3798208Z ✔ Alpha local browser: recurring operator schedule, Google at checkout and persistent tickets across independent sessions (54466.922536ms)
+2026-11-24T06:32:54.3805051Z ℹ tests 1
+2026-11-24T06:32:54.3805933Z ℹ pass 1
+2026-11-24T06:32:54.3806320Z ℹ fail 0
+2026-11-24T06:32:54.3808056Z ℹ duration_ms 54471.678422
+2026-11-24T06:33:02.0304494Z ✔ A2 local browser: email signup, mailbox code, password, admin entry, change and recovery without IDs (6803.513651ms)
+2026-11-24T06:33:02.0309869Z ℹ tests 1
+2026-11-24T06:33:02.0311381Z ℹ pass 1
+2026-11-24T06:33:02.0312102Z ℹ fail 0
+2026-11-24T06:33:02.0315169Z ℹ duration_ms 6808.155963
+2026-11-24T06:33:09.3523853Z ✔ G1 local browser: separate login, plan dates, manual ledger, auditor, denial and mobile (6504.92722ms)
+2026-11-24T06:33:09.3529606Z ℹ tests 1
+2026-11-24T06:33:09.3530431Z ℹ pass 1
+2026-11-24T06:33:09.3530997Z ℹ fail 0
+2026-11-24T06:33:09.3545995Z ℹ duration_ms 6516.326244
+2026-11-24T06:33:36.2209120Z ✔ GPS browser with emulated device: map movement, durable offline queue and independent public view (26036.619303ms)
+2026-11-24T06:33:36.2214533Z ℹ tests 1
+2026-11-24T06:33:36.2218994Z ℹ pass 1
+2026-11-24T06:33:36.2219812Z ℹ fail 0
+2026-11-24T06:33:36.2221337Z ℹ duration_ms 26041.256266
+2026-11-24T06:33:41.0989170Z ✔ Identity editor: mobile/desktop, draft, publish, crop and public themed profile (4087.675559ms)
+2026-11-24T06:33:41.0996357Z ℹ tests 1
+2026-11-24T06:33:41.0996971Z ℹ pass 1
+2026-11-24T06:33:41.0997183Z ℹ fail 0
+2026-11-24T06:33:41.0998100Z ℹ duration_ms 4092.626634
+2026-11-24T06:33:46.8507175Z ✔ Enterprise UX: contacts, receivables, partial payments, payroll and maintenance on mobile/desktop (4963.621956ms)
+2026-11-24T06:33:46.8513173Z ℹ tests 1
+2026-11-24T06:33:46.8515120Z ℹ pass 1
+2026-11-24T06:33:46.8515944Z ℹ fail 0
+2026-11-24T06:33:46.8518796Z ℹ duration_ms 4968.28277
+2026-11-24T06:33:55.0415983Z ✔ H1 browser: phone-first signup without code, own Premium operator, independent session and password revocation (7392.185432ms)
+2026-11-24T06:33:55.0425906Z ℹ tests 1
+2026-11-24T06:33:55.0432323Z ℹ pass 1
+2026-11-24T06:33:55.0433173Z ℹ fail 0
+2026-11-24T06:33:55.0434536Z ℹ duration_ms 7397.864185
+2026-11-24T06:34:13.0734305Z ✔ Presentation pilot: company, vehicle invitation, driver week, sale, camera QR, automatic GPS and guest tracking (17245.601753ms)
+2026-11-24T06:34:13.0750155Z ℹ tests 1
+2026-11-24T06:34:13.0750786Z ℹ pass 1
+2026-11-24T06:34:13.0750998Z ℹ fail 0
+2026-11-24T06:34:13.0752530Z ℹ duration_ms 17251.251107
+

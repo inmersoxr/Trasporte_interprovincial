@@ -1,0 +1,16 @@
+✔ recurrence uses Ecuador dates, weekdays and independent UTC instants, including leap days (2.118429ms)
+✔ recurrence rejects invalid calendars, oversized periods, duplicate times and vehicle overlaps (1.155358ms)
+✔ recurring publication is persistent, idempotent and tenant-scoped; seats and single-date cancellation remain independent (6698.198273ms)
+✔ overlapping publications are all-or-nothing and do not leave orphan schedules or vehicle slots (6032.925791ms)
+✔ 90 departures publish in one bounded transaction; stopping and booking concurrently never cancel a confirmed ticket (3004.573456ms)
+✔ chosen daily and monthly frequencies preserve calendar days and skip nonexistent month dates (0.522698ms)
+✔ D1 Standard catalog: authorization, persistence, idempotency and vehicle scheduling (6815.068637ms)
+✔ Trip staff: own employee snapshot, atomic conflict, foreign employee rejection and four active GPS trips (3887.766322ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27894.767828

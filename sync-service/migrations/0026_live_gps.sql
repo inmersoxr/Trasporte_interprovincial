@@ -1,0 +1,9 @@
+CREATE TABLE standard_gps_positions(trip_id TEXT NOT NULL REFERENCES standard_tracking(id),sample_id TEXT NOT NULL,actor_id TEXT NOT NULL REFERENCES users(id),vehicle_id TEXT NOT NULL REFERENCES vehicles(id),lat REAL NOT NULL CHECK(lat BETWEEN -90 AND 90),lng REAL NOT NULL CHECK(lng BETWEEN -180 AND 180),accuracy REAL NOT NULL CHECK(accuracy BETWEEN 0 AND 5000),speed REAL,heading REAL,captured_at INTEGER NOT NULL,received_at INTEGER NOT NULL,PRIMARY KEY(trip_id,sample_id));
+CREATE INDEX standard_gps_latest ON standard_gps_positions(trip_id,captured_at DESC,sample_id);
+CREATE TABLE standard_gps_shares(token_hash TEXT PRIMARY KEY,trip_id TEXT NOT NULL REFERENCES standard_tracking(id),created_by TEXT NOT NULL REFERENCES users(id),expires_at INTEGER NOT NULL,revoked_at INTEGER);
+CREATE INDEX standard_gps_shares_trip ON standard_gps_shares(trip_id);
+CREATE TRIGGER standard_gps_active BEFORE INSERT ON standard_gps_positions WHEN NOT EXISTS(SELECT 1 FROM standard_tracking t JOIN memberships m ON m.operator_id=t.operator_id AND m.user_id=NEW.actor_id WHERE t.id=NEW.trip_id AND t.mode='operations' AND t.service_status='running' AND (m.role IN('owner','admin','dispatcher') OR m.role='driver' AND EXISTS(SELECT 1 FROM premium_assignments a WHERE a.vehicle_id=NEW.vehicle_id AND a.driver_user_id=m.user_id)) AND NEW.vehicle_id=COALESCE((SELECT vehicle_id FROM departures WHERE id=t.departure_id),(SELECT vehicle_id FROM standard_booking_details WHERE booking_id=t.booking_id),(SELECT vehicle_id FROM standard_custom_bookings WHERE id=t.custom_booking_id)))
+BEGIN SELECT RAISE(ABORT,'gps_access_changed'); END;
+CREATE TRIGGER standard_gps_finish AFTER UPDATE OF service_status ON standard_tracking WHEN NEW.service_status='completed'
+BEGIN UPDATE standard_gps_shares SET revoked_at=unixepoch('now')*1000 WHERE trip_id=NEW.id AND revoked_at IS NULL; END;
+INSERT OR IGNORE INTO schema_migrations(version) VALUES('0026_live_gps');
