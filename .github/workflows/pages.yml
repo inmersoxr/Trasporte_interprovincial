@@ -14,24 +14,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Read mockup source
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
-          path: mockup-source
-          persist-credentials: false
-      - name: Read current main without changing it
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          path: legacy-source
-          persist-credentials: false
-      - name: Prepare additive Pages artifact
-        env:
-          MOCKUP_COMMIT: ${{ github.sha }}
+      - uses: actions/checkout@v4
+      - name: Prepare V2 site and compatibility route
         run: |
-          export LEGACY_COMMIT="$(git -C legacy-source rev-parse HEAD)"
-          node mockup-source/mockup-v2/scripts/prepare-pages.mjs legacy-source _site
+          mkdir -p _site
+          cp -a mockup-v2/dist/. _site/
+          touch _site/.nojekyll
+          mkdir -p _site/mockup-v2
+          printf '%s\n' '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=../"><a href="../">RutasEC V2</a>' > _site/mockup-v2/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -40,7 +30,7 @@ jobs:
     needs: build
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}mockup-v2/
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - id: deployment
