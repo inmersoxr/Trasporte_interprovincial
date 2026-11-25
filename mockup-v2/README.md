@@ -1,6 +1,6 @@
 # RutasEC · Mockup funcional V2
 
-Entrega del código: https://github.com/inmersoxr/Trasporte_interprovincial/tree/mockup-v2/mockup-v2 . La rama de trabajo y entrega es exclusivamente `mockup-v2`. No requiere GitHub Pages.
+Entrega del código: https://github.com/inmersoxr/Trasporte_interprovincial/tree/mockup-v2/mockup-v2 . La rama de trabajo y entrega es exclusivamente `mockup-v2`. La publicación solicitada en GitHub Pages se configura en el workflow de esta rama.
 
 Instancia independiente; solo datos ficticios. JavaScript sin build. Servir `dist/` con cualquier servidor estático. Todos los perfiles comparten un mundo persistido en este navegador y pestañas del mismo origen; otros dispositivos tienen demos independientes. No hay pagos, GPS ni afiliaciones reales.
 
@@ -33,3 +33,5 @@ Ruta de publicación del mockup: https://inmersoxr.github.io/Trasporte_interprov
 El workflow de esta rama lee `main` sin modificarla y conserva la demo original en la raíz del artefacto. Añade `dist/` únicamente bajo `/mockup-v2/`. El script `scripts/prepare-pages.mjs` comprueba que el HTML original no cambió. `deployment.json` dentro del mockup identifica las revisiones publicadas.
 
 GitHub Pages tiene una sola publicación por repositorio: una publicación futura desde el workflow independiente de `main` puede reemplazar el artefacto completo y retirar esta subruta. No se altera el workflow de main; en ese caso vuelve a ejecutar el de mockup-v2 o coordina posteriormente una publicación conjunta permanente.
+
+Estado de Pages: el empaquetado remoto pasó, pero GitHub rechazó el despliegue porque el entorno github-pages no permite aún la rama mockup-v2. Es necesario añadir esa rama a las permitidas, manteniendo main. No se considera publicado hasta comprobar el despliegue y la URL.

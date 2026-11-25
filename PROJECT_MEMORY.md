@@ -105,3 +105,5 @@ Sitio independiente: https://rutasec-mockup-v2-inversionistas.cebx3001.chatgpt.s
 Aclaración de entrega V2: el usuario requiere el código en GitHub, no GitHub Pages. Fuente canónica: rama `mockup-v2`, carpeta `mockup-v2/`. Se usa la conexión GitHub del propietario para entregar el árbol final, manteniendo main y los despliegues originales intactos.
 
 El usuario aclara que también requiere publicar V2 en GitHub Pages. Se prepara un despliegue aditivo desde mockup-v2: conserva main en la raíz del artefacto y añade el mockup bajo /mockup-v2/. El workflow de main queda intacto; una futura publicación principal puede retirar esa subruta. Snapshot de publicación: docs/snapshots/2026-11-24-mockup-v2-pages-publication.md. Publicación remota pendiente de comprobar.
+
+Pages V2: build remoto correcto en ejecución 45653860859; deploy rechazado por la protección de github-pages que no permite mockup-v2. Pendiente autorizar explícitamente esa rama junto a main y volver a ejecutar el despliegue. El sitio original no se reemplazó.
