@@ -25,3 +25,11 @@ Fuentes: `REFERENCES.md`, `dist/sources.json`, `dist/CREDITS.md`. Avances por fa
 https://rutasec-mockup-v2-inversionistas.cebx3001.chatgpt.site
 
 Se publica únicamente esta carpeta como artefacto estático independiente. No cambia GitHub Pages, Workers, R2, D1 ni otra configuración del repositorio original. Los permisos del enlace se administran aparte; se creó privado por defecto.
+
+## GitHub Pages
+
+Ruta de publicación del mockup: https://inmersoxr.github.io/Trasporte_interprovincial/mockup-v2/ . Esta URL solo se considera publicada después de una ejecución correcta de Actions y comprobación HTTP.
+
+El workflow de esta rama lee `main` sin modificarla y conserva la demo original en la raíz del artefacto. Añade `dist/` únicamente bajo `/mockup-v2/`. El script `scripts/prepare-pages.mjs` comprueba que el HTML original no cambió. `deployment.json` dentro del mockup identifica las revisiones publicadas.
+
+GitHub Pages tiene una sola publicación por repositorio: una publicación futura desde el workflow independiente de `main` puede reemplazar el artefacto completo y retirar esta subruta. No se altera el workflow de main; en ese caso vuelve a ejecutar el de mockup-v2 o coordina posteriormente una publicación conjunta permanente.
