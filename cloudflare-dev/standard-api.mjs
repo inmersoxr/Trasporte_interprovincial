@@ -1,3 +1,4 @@
+import {organizationAccessEndpoint} from './standard-organization-access.mjs';
 import {routeOperations} from './standard-route-stops.mjs';
 import {validVehicle,legacyVehicle} from './standard/transport.mjs';
 import {serviceChanges} from './standard-changes.mjs';
@@ -86,6 +87,7 @@ export async function command(db, user, body, kind, operations, entityId) {
 export async function handleStandard(request, env) {
   const path = new URL(request.url).pathname, method = request.method;
   const authenticate = request => verifiedIdentity(request, env);
+  if(path==='/api/team/access')return organizationAccessEndpoint(request,env,{identity:authenticate,failure});
   if(['/api/route-change','/api/departure-change','/api/booking-change','/api/private-service-change'].includes(path))return serviceChanges(request,env,{identity:authenticate,stmt,rows,failure,integer,text,command});
   if(path.startsWith('/api/notifications'))return notifications(request,env,{identity:authenticate,stmt,rows,failure});
   if(path==='/api/custom-settings')return customSettings(request,env,{identity:authenticate,stmt,rows,failure,command});

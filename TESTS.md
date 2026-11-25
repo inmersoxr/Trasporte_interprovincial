@@ -238,3 +238,12 @@ Evidencias en docs/evidence/2026-11-24/ux/ (creación390, viajes1280, mantenimie
 Continuidad: plan171tareas yGROUND vigentes. Fase02 global EN DESARROLLO/02.07 EN PRUEBAS, no confundir estos hitos con cierre de todas las superficies o de todo el plan. Fase03 registra evidencia de identidad existente como AUDITADA para reutilizarla. Después continuar Equipo/roles con autorización granular y alcance en backend; propietarios, asignaciones temporales, programación multivehículo/ida-retorno y calendario completo siguen abiertos. Ver FULL_PLAN_EXECUTION.md. No mapear nuevos roles a administrador ni cerrar tareas con enlaces.
 
 URL de operadora https://rutasec-web-dev.drbrownlabs.workers.dev/pilot/ ; pasajeros https://rutasec-web-dev.drbrownlabs.workers.dev/standard/ . Fuente remota de rama activa prevalece sobre diffs locales antiguos/S1 diferidos: no publicar0025 ni mezclar ese trabajo.
+
+
+## 2026-11-25 — continuidad sin pausa / 04.01 base de permisos
+
+El usuario ordena continuar hasta terminar. Checkout limpio de rama activa en /workspace/rutasec-active, base a33e199; no mezclar diffs S1/0025 del checkout histórico. Se conserva plan171tareas y evidencia física pendiente.
+
+04.01 EN DESARROLLO: se reutilizan memberships, cuentas, sesiones y empresas. Migración aditiva0038 incorpora catálogo de funciones, concesiones explícitas múltiples, revisión de membresía y alcance vehicular. No modifica cuentas ni permisos existentes. Nuevos roles usarán un ancla heredada de mínimo privilegio (driver), nunca admin; las concesiones explícitas sustituyen el rol heredado en la resolución de capacidades. No activar escrituras/invitaciones de roles nuevos antes de completar guardas de todos los endpoints y SQL de operación. Owner protegido siempre conserva autoridad; roles heredados conservan su comportamiento hasta modificación autorizada.
+
+Contrato GET/api/team/access autentica y devuelve roles/capacidades/revisión de la empresa solicitada. Prueba Worker real local PASS: propietario conservado, cuenta ajena403, anónimo401, POST405, finanzas explícito sin operación de viajes, alcance vehicular ajeno rechazado en SQL y revocación que elimina concesiones. Sin UI nueva ni despliegue todavía; continuar integración de guardas antes de exponer los roles.

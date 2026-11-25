@@ -361,3 +361,5 @@ UX-01/UX-02 publicados986224b/Actions45505867765; Fase02 continúa EN DESARROLLO
 UX-03 publicada a87c850/Actions45507871842. UX-04/05 completan interacción y navegación de roles actuales y boleto; en pruebas de publicación. Fase02 global permanece EN DESARROLLO; no validar roles granulares ni el plan completo por estos cambios.
 
 UX-01–05 publicados y validados en su alcance, fuente d980e47/Actions45511383734. Continuidad y límites en PROGRESS/TESTS; plan completo sigue abierto.
+
+04.01 retomada2026-11-25: base aditiva0038 y contrato de permisos, aún sin activar roles nuevos. Continuar integración backend/SQL y UI de Equipo; no cerrar fase04 por esta base.
