@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#171d20" />
+    <title>RutasEC · El viaje es solo el comienzo</title>
+    <meta
+      name="description"
+      content="Descubre Ecuador. Transporte, hospedaje y experiencias en un mismo viaje. Mockup funcional V2."
+    />
+    <link rel="icon" href="assets/icon-192.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="splash">
+      <img src="assets/icon-192.png" alt="" /><strong
+        >Rutas<span>EC</span></strong
+      >
+      <p>CONECTA ECUADOR</p>
+    </div>
+    <div id="app"></div>
+    <dialog id="modal"></dialog>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="vendor/leaflet/leaflet.js"></script>
+    <script src="vendor/xlsx.full.min.js"></script>
+    <script src="vendor/qrcode.min.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

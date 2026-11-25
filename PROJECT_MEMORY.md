@@ -95,3 +95,11 @@ Cada operadora tiene una **página pública propia** dentro de RutasEC, con URL 
 **Flujo:** viaje completado → invitación a calificar → selección obligatoria de 1–5 estrellas → comentario opcional → publicación/moderación según política → actualización del promedio y visualización pública. Definir reglas de edición, disputas, elegibilidad y publicación al implementar; no inventar reseñas ni estadísticas reales.
 
 **Estado:** decisión funcional y arquitectura conceptual documentadas; no se acredita implementación, prueba ni despliegue. Mantener prioridad Standard primero, con perfil básico y reputación verificable; ampliar personalización Premium después. Snapshot: `docs/snapshots/2026-11-18-perfiles-reputacion-operadoras.md`.
+
+## Mockup V2 aislado — 2026-11-24
+
+Implementación exclusiva de `mockup-v2` en `mockup-v2/dist/`. El usuario simplificó explícitamente el alcance técnico: muestra para inversionistas con operaciones simuladas/controladas, JavaScript/JSON/almacenamiento local; sin exigencia de API, FastAPI, SQLite o Scorpio desplegados ni sincronización entre dispositivos. Se mantienen los módulos de las 12 fases con fichas, catálogo territorial, transporte, reservas/QR de demostración, paquetes, negocios, reputación, campañas, GAD y Admin; modo de presentación de 12 escenas y reset. No es un producto comercial.
+
+Sitio independiente: https://rutasec-mockup-v2-inversionistas.cebx3001.chatgpt.site . Publicación Sites confirmada. Acceso privado por defecto; no se modifican demo público original, servicios ni despliegues de producción. Entity/Scorpio solo como referencias fijadas en `mockup-v2/REFERENCES.md`. Prueba de humo del modelo y renderizado DOM de las escenas pasan; revisión visual en navegador bloqueada por infraestructura. Snapshot: `docs/snapshots/2026-11-24-mockup-v2-investor-delivery.md`.
+
+Aclaración de entrega V2: el usuario requiere el código en GitHub, no GitHub Pages. Fuente canónica: rama `mockup-v2`, carpeta `mockup-v2/`. Se usa la conexión GitHub del propietario para entregar el árbol final, manteniendo main y los despliegues originales intactos.
