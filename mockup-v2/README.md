@@ -34,4 +34,4 @@ El workflow de esta rama lee `main` sin modificarla y conserva la demo original 
 
 GitHub Pages tiene una sola publicación por repositorio: una publicación futura desde el workflow independiente de `main` puede reemplazar el artefacto completo y retirar esta subruta. No se altera el workflow de main; en ese caso vuelve a ejecutar el de mockup-v2 o coordina posteriormente una publicación conjunta permanente.
 
-Estado de Pages: el empaquetado remoto pasó, pero GitHub rechazó el despliegue porque el entorno github-pages no permite aún la rama mockup-v2. Es necesario añadir esa rama a las permitidas, manteniendo main. No se considera publicado hasta comprobar el despliegue y la URL.
+Estado de Pages: publicado y comprobado en https://inmersoxr.github.io/Trasporte_interprovincial/mockup-v2/ . Ejecución 45653860859, intento 2: success. Se verificaron HTTP 200, metadatos del despliegue, portada en navegador y apertura del modo inversionista. La página original conserva el mismo SHA-256 que la copia de main incluida en el artefacto.
