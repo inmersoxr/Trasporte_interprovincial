@@ -27,3 +27,6 @@ export function enterpriseCapability(path,method,kind){
  }
  return undefined;
 }
+export const transactionCapability=(db,userId,operatorId,capability)=>db.prepare('INSERT INTO organization_capability_assertions(id,actor_id,operator_id,capability) VALUES(?,?,?,?)').bind(crypto.randomUUID(),userId,operatorId,capability);
+export const transactionService=(db,userId,operatorId,vehicleId,departureId)=>db.prepare('INSERT INTO organization_service_assertions(id,actor_id,operator_id,vehicle_id,departure_id) VALUES(?,?,?,?,?)').bind(crypto.randomUUID(),userId,operatorId,vehicleId,departureId||null);
+export function commandCapability(kind){return({vehicle:'fleet.write',offer:'trips.write',departure:'trips.write',recurring_schedule:'trips.write',operator_profile:'company.edit',operator_driver:'drivers.write',vehicle_details:'fleet.write',onboarding_submit:'company.edit',custom_settings:'trips.write',pilot_vehicle:'fleet.write',pilot_vehicle_update:'fleet.write',pilot_prepare:'company.edit',pilot_publish:'trips.write',pilot_assign:'trips.assign',pilot_driver_revoke:'team.manage',pilot_invite:'team.manage',pilot_invite_revoke:'team.manage',premium_vehicle_profile:'maintenance.write',premium_maintenance:'maintenance.write',premium_expense:'finance.write'})[kind];}

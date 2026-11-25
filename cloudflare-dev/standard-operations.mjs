@@ -1,4 +1,4 @@
-import {requireCapability} from './standard-organization-access.mjs';
+import {requireCapability,transactionService} from './standard-organization-access.mjs';
 import {pageCursor,nextPage,cursorClause} from './standard-pagination.mjs';
 import {role,operate,visibleService} from './standard-permissions.mjs';
 import {prepareRoad,tripSnapshot,applyTripCommand,ROUTE_ID} from '../shared/trip-core.mjs';
@@ -75,14 +75,16 @@ export async function handleOperations(request,env,core){
  if(b.kind==='booking')target=await stmt(db,'SELECT b.*,m.operator_id FROM bookings b JOIN standard_booking_details m ON m.booking_id=b.id WHERE b.id=?',[b.id]).first();
  if(b.kind==='custom')target=await stmt(db,'SELECT * FROM standard_custom_bookings WHERE id=?',[b.id]).first();
  if(!target||target.operator_id!==b.operatorId)throw failure('Servicio de otra operadora',403);
- const actorRole=await operate(db,user.id,b.operatorId,target.vehicle_id|| (b.kind==='booking'?(await stmt(db,'SELECT vehicle_id FROM standard_booking_details WHERE booking_id=?',[b.id]).first())?.vehicle_id:null),failure,b.kind==='departure'?b.id:target.departure_id);
+ const operationVehicle=target.vehicle_id||(b.kind==='booking'?(await stmt(db,'SELECT vehicle_id FROM standard_booking_details WHERE booking_id=?',[b.id]).first())?.vehicle_id:null);
+ const actorRole=await operate(db,user.id,b.operatorId,operationVehicle,failure,b.kind==='departure'?b.id:target.departure_id);
+ const transactionGuard=()=>transactionService(db,user.id,b.operatorId,target.vehicle_id||operationVehicle,b.kind==='departure'?b.id:target.departure_id);
  if(b.action==='cancel'){
   if(actorRole==='driver')throw failure('La administración de la operadora gestiona las cancelaciones',403);
   if(b.kind==='booking')return core.cancelBooking(b.id);
   if(b.kind==='custom')return core.cancelCustom(target.request_id);
   if(target.status==='cancelled')return {status:'cancelled'};
   if(target.status!=='published')throw failure('Solo se cancela una salida no iniciada',409);
-  try{await db.batch([
+  try{await db.batch([transactionGuard(),
    stmt(db,"UPDATE departures SET status='cancelled' WHERE id=? AND status='published'",[target.id]),
    stmt(db,"UPDATE bookings SET status='cancelled' WHERE departure_id=? AND status='confirmed' AND EXISTS(SELECT 1 FROM departures WHERE id=? AND status='cancelled')",[target.id,target.id]),
    stmt(db,"UPDATE seat_claims SET status='released' WHERE departure_id=? AND EXISTS(SELECT 1 FROM departures WHERE id=? AND status='cancelled')",[target.id,target.id]),

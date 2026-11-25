@@ -1,4 +1,5 @@
-import {organizationAccessEndpoint,requireCapability} from './standard-organization-access.mjs';
+import {organizationTeam} from './standard-organization-team.mjs';
+import {organizationAccessEndpoint,requireCapability,transactionCapability,commandCapability} from './standard-organization-access.mjs';
 import {routeOperations} from './standard-route-stops.mjs';
 import {validVehicle,legacyVehicle} from './standard/transport.mjs';
 import {serviceChanges} from './standard-changes.mjs';
@@ -67,13 +68,14 @@ export async function command(db, user, body, kind, operations, entityId) {
     return prior.entity_id;
   }
   try {
-    await db.batch([...operations,
+    await db.batch([...(body.operatorId&&commandCapability(kind)?[transactionCapability(db,user.id,body.operatorId,commandCapability(kind))]:[]),...operations,
       stmt(db, 'INSERT INTO standard_commands(user_id,request_id,kind,fingerprint,entity_id) VALUES(?,?,?,?,?)', [user.id, body.requestId, kind, fingerprint, entityId]),
       stmt(db, 'INSERT INTO audit_events(id,actor_user_id,entity_type,entity_id,action) VALUES(?,?,?,?,?)', [crypto.randomUUID(), user.id, kind, entityId, 'created'])]);
     return entityId;
   } catch (error) {
     const saved = await stmt(db, 'SELECT * FROM standard_commands WHERE user_id=? AND request_id=?', [user.id, body.requestId]).first();
     if (saved?.kind === kind && saved.fingerprint === fingerprint) return saved.entity_id;
+    if(String(error.message).includes('organization_permission_changed'))throw failure('Tu acceso cambió antes de guardar. Actualiza tu sesión.',403);
     if(String(error.message).includes('trip_driver_conflict'))throw failure('El conductor ya tiene otro viaje en ese horario',409);
     if(String(error.message).includes('driver_scope'))throw failure('Selecciona un conductor activo de tu empresa',403);
     if(String(error.message).includes('trip_staff_conflict'))throw failure('La persona responsable ya tiene otro viaje en ese horario',409);
@@ -88,6 +90,7 @@ export async function handleStandard(request, env) {
   const path = new URL(request.url).pathname, method = request.method;
   const authenticate = request => verifiedIdentity(request, env);
   if(path==='/api/team/access')return organizationAccessEndpoint(request,env,{identity:authenticate,failure});
+  if(path==='/api/team'||path.startsWith('/api/team/'))return organizationTeam(request,env,{identity:authenticate,failure,stmt,rows,hash,command,text,integer});
   if(['/api/route-change','/api/departure-change','/api/booking-change','/api/private-service-change'].includes(path))return serviceChanges(request,env,{identity:authenticate,stmt,rows,failure,integer,text,command});
   if(path.startsWith('/api/notifications'))return notifications(request,env,{identity:authenticate,stmt,rows,failure});
   if(path==='/api/custom-settings')return customSettings(request,env,{identity:authenticate,stmt,rows,failure,command});

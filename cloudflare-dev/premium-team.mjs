@@ -1,8 +1,10 @@
+import {acceptOrganizationInvite} from './standard-organization-team.mjs';
 export async function joinTeam(body,user,db,c){
  const {stmt,failure,hash}=c;
  if(typeof body.token!=='string'||!/^[0-9a-f]{64}$/i.test(body.token))throw failure('Invitación no válida');
  const invite=await stmt(db,'SELECT * FROM premium_invites WHERE token_hash=?',[await hash(body.token)]).first();
  if(!invite||invite.revoked_at||invite.expires_at<Date.now())throw failure('Invitación inexistente o vencida',403);
+ const organizationJoin=await acceptOrganizationInvite(body,user,db,c,invite);if(organizationJoin)return organizationJoin;
  const existing=await stmt(db,'SELECT role FROM memberships WHERE operator_id=? AND user_id=?',[invite.operator_id,user.id]).first();
  if(invite.used_by){if(invite.used_by===user.id&&existing)return{operatorId:invite.operator_id,role:existing.role};throw failure('Invitación ya utilizada',409);}
  if(invite.vehicle_id&&!await stmt(db,'SELECT 1 FROM pilot_operators WHERE operator_id=? AND enabled=1',[invite.operator_id]).first())throw failure('El piloto de esta empresa está deshabilitado',403);

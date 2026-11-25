@@ -1,4 +1,4 @@
-import {organizationAccess,requireCapability,hasCapability} from './standard-organization-access.mjs';
+import {organizationAccess,requireCapability,hasCapability,transactionCapability} from './standard-organization-access.mjs';
 import {enterprise} from './premium-enterprise.mjs';
 import {commercialPremium} from './standard-permissions.mjs';
 import {uploadMedia,profile} from './premium-profiles.mjs';
@@ -78,7 +78,7 @@ export async function handlePremium(request,env,c) {
   if(!['completed','cancelled'].includes(body.status))throw failure('Estado no válido');
   const job=await stmt(db,'SELECT * FROM premium_maintenance WHERE id=? AND operator_id=?',[match[1],operatorId]).first();
   if(!job)throw failure('Mantenimiento ajeno o inexistente',403);
-  await db.batch([
+  await db.batch([transactionCapability(db,user.id,operatorId,'maintenance.write'),
    stmt(db,"UPDATE premium_maintenance SET status=?,closed_at=CURRENT_TIMESTAMP WHERE id=? AND status='open'",[body.status,job.id]),
    stmt(db,'UPDATE standard_vehicle_slots SET active=0 WHERE maintenance_id=? AND EXISTS(SELECT 1 FROM premium_maintenance WHERE id=? AND status=?)',[job.id,job.id,body.status]),
    stmt(db,`INSERT OR IGNORE INTO audit_events(id,actor_user_id,entity_type,entity_id,action)
