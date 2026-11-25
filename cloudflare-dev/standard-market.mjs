@@ -26,13 +26,13 @@ export async function handleMarket(request,env,core){
    const op=new URL(request.url).searchParams.get('operatorId');if(op){if(!/^[0-9a-f-]{36}$/i.test(op))throw failure('Operadora no válida');await owner(db,user.id,op);}
    const requests=await rows(db,`SELECT DISTINCT r.id,r.origin,r.destination,r.requested_at,s.people,s.vehicle_type,s.duration_minutes,s.expires_at
     FROM private_requests r JOIN standard_private_specs s ON s.request_id=r.id JOIN vehicles v ON v.capacity>=s.people AND v.status='active'
-    JOIN memberships m ON m.operator_id=v.operator_id AND m.user_id=? AND m.role IN('owner','admin','dispatcher')
+    JOIN organization_capabilities m ON m.operator_id=v.operator_id AND m.user_id=? AND m.capability IN('*','trips.write')
     JOIN operators o ON o.id=v.operator_id AND o.status='approved'
     WHERE ${operatorScope(env)}${op?' AND o.id=?':''} AND r.status IN('requested','receiving_offers') AND s.expires_at>? AND (s.vehicle_type='any' OR s.vehicle_type=v.type)
     AND ${enrolled()} AND ${operatorReady()} AND ${vehicleReady()}
     AND ${pickupAvailable()}
     ORDER BY r.requested_at LIMIT 100`,[user.id,...(op?[op]:[]),now]);
-   const offers=await rows(db,`SELECT f.* FROM standard_private_offers f JOIN memberships m ON m.operator_id=f.operator_id WHERE m.user_id=? AND m.role IN('owner','admin','dispatcher')${op?' AND f.operator_id=?':''} ORDER BY f.created_at DESC LIMIT 100`,[user.id,...(op?[op]:[])]);
+   const offers=await rows(db,`SELECT f.* FROM standard_private_offers f JOIN organization_capabilities m ON m.operator_id=f.operator_id WHERE m.user_id=? AND m.capability IN('*','trips.write')${op?' AND f.operator_id=?':''} ORDER BY f.created_at DESC LIMIT 100`,[user.id,...(op?[op]:[])]);
    return {requests,offers,notifications:'Alertas DEMO dentro de la app; sin envío externo'};
   }
   throw failure('Recurso no encontrado',404);

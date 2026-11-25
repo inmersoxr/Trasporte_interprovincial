@@ -4,7 +4,7 @@ export async function customSettings(request,env,c){
  const {identity,stmt,rows,failure,command}=c,user=await identity(request,env.DB),url=new URL(request.url),db=env.DB;
  let b={};if(request.method==='POST'){const raw=await request.text();if(raw.length>8192)throw failure('Solicitud demasiado grande',413);try{b=JSON.parse(raw);}catch{throw failure('Solicitud no válida');}if(!b||typeof b!=='object'||Array.isArray(b))throw failure('Solicitud no válida');}
  const op=request.method==='GET'?url.searchParams.get('operatorId'):b.operatorId;
- if(!await stmt(db,"SELECT 1 FROM memberships WHERE operator_id=? AND user_id=? AND role IN('owner','admin')",[op,user.id]).first())throw failure('Solo la administración de tu operadora puede configurar este servicio',403);
+ if(!await stmt(db,"SELECT 1 FROM organization_capabilities WHERE operator_id=? AND user_id=? AND capability IN('*','trips.write')",[op,user.id]).first())throw failure('Solo la administración de tu operadora puede configurar este servicio',403);
  const read=async()=>({settings:await stmt(db,'SELECT * FROM standard_custom_enrollments WHERE operator_id=?',[op]).first()});
  if(request.method==='GET')return read();if(request.method!=='POST')throw failure('Método no permitido',405);
  if(typeof b.enabled!=='boolean'||typeof b.available!=='boolean'||!Array.isArray(b.origins)||!Array.isArray(b.vehicleIds)||b.origins.length>cities.length||b.vehicleIds.length>100||b.origins.some(x=>!cities.includes(x))||new Set(b.origins).size!==b.origins.length||new Set(b.vehicleIds).size!==b.vehicleIds.length)throw failure('Selecciona las ciudades y vehículos que atenderán solicitudes');

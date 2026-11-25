@@ -1,3 +1,4 @@
+import {canOperate} from './standard-permissions.mjs';
 const uuid=x=>typeof x==='string'&&/^[a-f0-9-]{36}$/i.test(x);
 export async function handleGps(request,env,c){
  const {stmt,rows,failure,identity,hash}=c,db=env.DB,url=new URL(request.url),parts=url.pathname.split('/'),publicToken=parts[3]==='public'?parts[4]:null,now=Date.now();let user,t;
@@ -10,19 +11,20 @@ export async function handleGps(request,env,c){
  }
  if(!t||t.mode!=='operations')throw failure('Viaje no disponible',404);
  const member=user?await stmt(db,'SELECT role FROM memberships WHERE operator_id=? AND user_id=?',[t.operator_id,user.id]).first():null;
- const assigned=member?.role==='driver'&&!!await stmt(db,'SELECT 1 FROM premium_assignments WHERE vehicle_id=? AND driver_user_id=?',[t.vehicle_id,user.id]).first();
- const staff=['owner','admin','dispatcher'].includes(member?.role),canSend=staff||assigned;
+ const canSend=!!member&&await canOperate(db,user.id,t.operator_id,t.vehicle_id,t.departure_id);
+ const staff=!!member&&!!await stmt(db,"SELECT 1 FROM organization_capabilities WHERE user_id=? AND operator_id=? AND capability IN('*','trips.operate_all')",[user.id,t.operator_id]).first();
+ const fleetViewer=!!member&&!!await stmt(db,"SELECT 1 FROM organization_vehicle_access a JOIN organization_capabilities c ON c.user_id=a.user_id AND c.operator_id=a.operator_id WHERE a.user_id=? AND a.vehicle_id=? AND c.capability IN('*','fleet.track')",[user.id,t.vehicle_id]).first();
  const passenger=user&&!!await stmt(db,`SELECT 1 FROM bookings WHERE customer_id=? AND status='confirmed' AND (id=? OR departure_id=?) UNION SELECT 1 FROM standard_custom_bookings WHERE customer_id=? AND id=? AND status IN('confirmed','running','completed')`,[user.id,t.booking_id,t.departure_id,user.id,t.custom_booking_id]).first();
- if(!publicToken&&!canSend&&!passenger)throw failure('Viaje no disponible',404);
+ if(!publicToken&&!canSend&&!fleetViewer&&!passenger)throw failure('Viaje no disponible',404);
  if(request.method==='GET'&&parts[4]==='history'){
-  if(!canSend||publicToken)throw failure('Historial privado',403);
+  if(!canSend&&!fleetViewer||publicToken)throw failure('Historial privado',403);
   const before=Number(url.searchParams.get('before')||now+60001);if(!Number.isSafeInteger(before))throw failure('Página no válida');
   const positions=await rows(db,'SELECT sample_id,lat,lng,accuracy,speed,heading,captured_at,received_at FROM standard_gps_positions WHERE trip_id=? AND captured_at<? ORDER BY captured_at DESC,sample_id DESC LIMIT 101',[t.id,before]);
   return{positions:positions.slice(0,100),nextBefore:positions.length>100?positions[99].captured_at:null};
  }
  if(request.method==='GET'){
   const latest=await stmt(db,'SELECT lat,lng,accuracy,speed,heading,captured_at,received_at FROM standard_gps_positions WHERE trip_id=? ORDER BY captured_at DESC,sample_id DESC LIMIT 1',[t.id]).first();
-  const vehicle=await stmt(db,'SELECT model,plate FROM vehicles WHERE id=?',[t.vehicle_id]).first();const responsible=canSend?await stmt(db,'SELECT driver_name AS responsible_name FROM standard_departure_drivers WHERE departure_id=? UNION ALL SELECT responsible_name FROM standard_departure_staff WHERE departure_id=?',[t.departure_id,t.departure_id]).first():null;return{vehicle:vehicle?.model||null,responsibleName:responsible?.responsible_name||null,tripId:t.id,status:t.service_status,origin:t.origin,destination:t.destination,position:latest,serverNow:now,canSend:!!canSend,canShare:!publicToken,source:'gps',simulated:false};
+  const vehicle=await stmt(db,'SELECT model,plate FROM vehicles WHERE id=?',[t.vehicle_id]).first();const responsible=canSend||fleetViewer?await stmt(db,'SELECT driver_name AS responsible_name FROM standard_departure_drivers WHERE departure_id=? UNION ALL SELECT responsible_name FROM standard_departure_staff WHERE departure_id=?',[t.departure_id,t.departure_id]).first():null;return{vehicle:vehicle?.model||null,responsibleName:responsible?.responsible_name||null,tripId:t.id,status:t.service_status,origin:t.origin,destination:t.destination,position:latest,serverNow:now,canSend:!!canSend,canShare:!publicToken,source:'gps',simulated:false};
  }
  if(publicToken||request.method!=='POST')throw failure('Método no permitido',405);
  const raw=await request.text();if(raw.length>32768)throw failure('Solicitud demasiado grande',413);let b;try{b=JSON.parse(raw);}catch{throw failure('Solicitud no válida');}if(!b||typeof b!=='object')throw failure('Solicitud no válida');

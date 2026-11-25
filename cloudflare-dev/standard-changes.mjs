@@ -1,13 +1,14 @@
+import {requireCapability} from './standard-organization-access.mjs';
 import {manage} from './standard-permissions.mjs';
 export async function serviceChanges(request,env,c){
  const {identity,stmt,rows,failure,integer,text,command}=c,user=await identity(request,env.DB),db=env.DB;
  if(request.method!=='POST')throw failure('Método no permitido',405);const raw=await request.text();if(raw.length>4096)throw failure('Solicitud demasiado grande',413);let b;try{b=JSON.parse(raw);}catch{throw failure('Solicitud no válida');}if(!b||typeof b!=='object'||Array.isArray(b))throw failure('Solicitud no válida');
  const path=new URL(request.url).pathname,revision=integer(b.expectedRevision,1,100000000,'Revisión'),reason=text(b.reason,'Motivo',250),operations=[];let op,entity,kind;
  if(path==='/api/route-change'){
-  const r=await stmt(db,'SELECT * FROM route_offers WHERE id=?',[b.id]).first();if(!r)throw failure('Ruta no encontrada',404);op=r.operator_id;entity=r.id;kind='route';await manage(db,user.id,op,failure);
+  const r=await stmt(db,'SELECT * FROM route_offers WHERE id=?',[b.id]).first();if(!r)throw failure('Ruta no encontrada',404);op=r.operator_id;entity=r.id;kind='route';await requireCapability(db,user.id,op,kind==='booking'?'bookings.write':'trips.write',failure);
   operations.push(stmt(db,'UPDATE route_offers SET price_cents=?,active=?,revision=revision+1,last_change=? WHERE id=? AND revision=?',[integer(b.priceCents,1,1000000,'Precio'),b.active===false?0:1,b.requestId,r.id,revision]));
  }else if(path==='/api/departure-change'){
-  const d=await stmt(db,'SELECT d.*,r.operator_id FROM departures d JOIN route_offers r ON r.id=d.offer_id WHERE d.id=?',[b.id]).first();if(!d)throw failure('Salida no encontrada',404);op=d.operator_id;entity=d.id;kind='departure';await manage(db,user.id,op,failure);
+  const d=await stmt(db,'SELECT d.*,r.operator_id FROM departures d JOIN route_offers r ON r.id=d.offer_id WHERE d.id=?',[b.id]).first();if(!d)throw failure('Salida no encontrada',404);op=d.operator_id;entity=d.id;kind='departure';await requireCapability(db,user.id,op,kind==='booking'?'bookings.write':'trips.write',failure);
   const at=Date.parse(b.departAt),duration=integer(b.durationMinutes,1,2880,'Duración');if(!Number.isFinite(at)||at<=Date.now()||at>Date.now()+366*86400000)throw failure('Selecciona una fecha futura');
   const vehicle=await stmt(db,'SELECT * FROM vehicles WHERE id=? AND operator_id=?',[b.vehicleId,op]).first();if(!vehicle)throw failure('Vehículo ajeno',403);
   operations.push(stmt(db,"UPDATE departures SET depart_at=?,vehicle_id=?,revision=revision+1,last_change=? WHERE id=? AND revision=? AND status='published'",[new Date(at).toISOString(),vehicle.id,b.requestId,d.id,revision]),
@@ -19,7 +20,7 @@ export async function serviceChanges(request,env,c){
  }else if(path==='/api/private-service-change'){
   const custom=b.kind==='custom',table=custom?'standard_custom_bookings':'bookings',column=custom?'custom_booking_id':'booking_id';
   const row=await stmt(db,custom?'SELECT * FROM standard_custom_bookings WHERE id=?':'SELECT b.*,m.operator_id FROM bookings b JOIN standard_booking_details m ON m.booking_id=b.id WHERE b.id=? AND b.departure_id IS NULL',[b.id]).first();
-  if(!row)throw failure('Servicio no encontrado',404);op=row.operator_id;entity=row.id;kind=custom?'private_custom':'private_fixed';await manage(db,user.id,op,failure);
+  if(!row)throw failure('Servicio no encontrado',404);op=row.operator_id;entity=row.id;kind=custom?'private_custom':'private_fixed';await requireCapability(db,user.id,op,kind==='booking'?'bookings.write':'trips.write',failure);
   const at=Date.parse(b.departAt),duration=integer(b.durationMinutes,1,2880,'Duración');if(!Number.isFinite(at)||at<=Date.now()||at>Date.now()+366*86400000)throw failure('Selecciona una fecha futura');
   const vehicle=await stmt(db,`SELECT v.* FROM vehicles v JOIN operators o ON o.id=v.operator_id WHERE v.id=? AND v.operator_id=? AND v.status='active' AND o.status='approved' AND (o.data_scope='qa' OR EXISTS(SELECT 1 FROM standard_documented_vehicles WHERE id=v.id))`,[b.vehicleId,op]).first();if(!vehicle)throw failure('El vehículo debe pertenecer a tu operadora y estar habilitado',403);
   const count=custom?JSON.parse(row.passengers_json).length:row.passenger_count;if(vehicle.capacity<count)throw failure('El vehículo no tiene capacidad para el grupo',409);
@@ -29,7 +30,7 @@ export async function serviceChanges(request,env,c){
   operations.push(stmt(db,`INSERT OR IGNORE INTO standard_notifications(id,user_id,operator_id,kind,title,body,target) SELECT ?||':'||customer_id,customer_id,?,'change','Tu servicio tiene un cambio',?,? FROM ${table} WHERE id=? AND ${guard}`,[b.requestId,op,reason,custom?'/standard/?private=1':'/standard/?ticket='+row.id,row.id,...args]));
  }else if(path==='/api/booking-change'){
   const booking=await stmt(db,'SELECT b.*,m.operator_id,m.vehicle_id,v.capacity FROM bookings b JOIN standard_booking_details m ON m.booking_id=b.id JOIN vehicles v ON v.id=m.vehicle_id WHERE b.id=?',[b.id]).first();if(!booking)throw failure('Boleto no encontrado',404);op=booking.operator_id;entity=booking.id;
-  if(booking.customer_id!==user.id)await manage(db,user.id,op,failure);
+  if(booking.customer_id!==user.id)await requireCapability(db,user.id,op,'bookings.write',failure);
   const d=await stmt(db,'SELECT * FROM departures WHERE id=?',[booking.departure_id]).first();if(!d||d.status!=='published'||Date.parse(d.depart_at)<=Date.now()||booking.status!=='confirmed')throw failure('Este boleto ya no admite cambios',409);
   const passengers=await rows(db,'SELECT * FROM standard_passengers WHERE booking_id=? AND cancelled_at IS NULL ORDER BY position',[booking.id]);if(passengers.some(p=>p.boarded_at))throw failure('El boleto ya tiene pasajeros embarcados',409);
   kind=b.action==='cancel_seats'?'partial_cancel':'seats';

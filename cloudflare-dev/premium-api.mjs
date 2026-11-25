@@ -1,3 +1,4 @@
+import {organizationAccess,requireCapability,hasCapability} from './standard-organization-access.mjs';
 import {enterprise} from './premium-enterprise.mjs';
 import {commercialPremium} from './standard-permissions.mjs';
 import {uploadMedia,profile} from './premium-profiles.mjs';
@@ -21,30 +22,30 @@ export async function handlePremium(request,env,c) {
  const operatorId=request.method==='GET'?url.searchParams.get('operatorId'):body.operatorId;
  const membership=await stmt(db,'SELECT role FROM memberships WHERE operator_id=? AND user_id=?',[operatorId,user.id]).first();
  if(!membership)throw failure('Sin permiso para esta operadora',403);
- const role=membership.role;
+ const role=membership.role,access=await organizationAccess(db,user.id,operatorId,failure),can=cap=>hasCapability(access,cap);
  const teamPaths=['/api/premium/branches','/api/premium/invites','/api/premium/revoke','/api/premium/assignments'];
  if(path==='/api/premium/activate'||teamPaths.includes(path))await owner(db,user.id,operatorId);
- else if(request.method==='POST'&&!['owner','admin'].includes(role)&&!(path==='/api/premium/enterprise/direct-sale'&&role==='dispatcher'))throw failure('El rol no permite esta operación',403);
+ else if(request.method==='POST'&&!path.startsWith('/api/premium/enterprise'))await requireCapability(db,user.id,operatorId,path==='/api/premium/profile'?'company.edit':path.startsWith('/api/premium/expenses')||path.startsWith('/api/premium/documents/')?'finance.write':'maintenance.write',failure);
  const entitlement=await stmt(db,`SELECT t.plan,t.active,t.activated_at FROM premium_tenants t JOIN operators o ON o.id=t.operator_id WHERE t.operator_id=? AND (o.data_scope='qa' OR ${commercialPremium})`,[operatorId]).first();
  if(path.startsWith('/api/premium/enterprise')){if(!entitlement?.active)throw failure('Premium no habilitado',403);return enterprise(request,env,c,user,operatorId,role,body);}
  if(path==='/api/premium'&&request.method==='GET') {
   if(!entitlement?.active)return {enabled:false,canActivate:env.ALLOW_DEVELOPMENT_AUTH==='true',notice:'Solicita la habilitación del plan a la administración de RutasEC.',environment:'development',payments:'disabled'};
-  return {enabled:true,role,entitlement,environment:'development',payments:'disabled',
+  return {enabled:true,role,access,entitlement,environment:'development',payments:'disabled',
    vehicles:await rows(db,`SELECT v.*,p.odometer_km,p.next_service_km,p.updated_at FROM vehicles v
-    LEFT JOIN premium_vehicle_profiles p ON p.vehicle_id=v.id WHERE v.operator_id=? AND (?<>'driver' OR EXISTS(SELECT 1 FROM premium_assignments a WHERE a.vehicle_id=v.id AND a.driver_user_id=?)) ORDER BY v.model`,[operatorId,role,user.id]),
-   branches:role==='driver'?[]:await rows(db,'SELECT * FROM premium_branches WHERE operator_id=?',[operatorId]),
-   members:['owner','admin'].includes(role)?await rows(db,'SELECT m.user_id,m.role,u.display_name FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.operator_id=?',[operatorId]):[],
-   assignments:await rows(db,"SELECT * FROM premium_assignments WHERE operator_id=? AND (?<>'driver' OR driver_user_id=?)",[operatorId,role,user.id]),
-   maintenance:role==='driver'?[]:await rows(db,'SELECT * FROM premium_maintenance WHERE operator_id=? ORDER BY starts_at DESC LIMIT 200',[operatorId])};
+    LEFT JOIN premium_vehicle_profiles p ON p.vehicle_id=v.id WHERE v.operator_id=? AND v.id IN(SELECT vehicle_id FROM organization_vehicle_access WHERE user_id=?) ORDER BY v.model`,[operatorId,user.id]),
+   branches:!can('sales.write')&&!can('fleet.write')&&!can('trips.write')?[]:await rows(db,'SELECT * FROM premium_branches WHERE operator_id=?',[operatorId]),
+   members:can('team.manage')||can('employees.write')?await rows(db,'SELECT m.user_id,m.role,u.display_name FROM memberships m JOIN users u ON u.id=m.user_id WHERE m.operator_id=?',[operatorId]):[],
+   assignments:can('fleet.read')?await rows(db,"SELECT * FROM premium_assignments WHERE operator_id=? AND vehicle_id IN(SELECT vehicle_id FROM organization_vehicle_access WHERE user_id=?)",[operatorId,user.id]):[],
+   maintenance:!can('maintenance.write')?[]:await rows(db,'SELECT * FROM premium_maintenance WHERE operator_id=? ORDER BY starts_at DESC LIMIT 200',[operatorId])};
  }
- if(path==='/api/premium/analytics'&&request.method==='GET'){if(!entitlement?.active||role==='driver')throw failure('Sin permiso para analítica',403);return analytics(url,operatorId,db,c);}
+ if(path==='/api/premium/analytics'&&request.method==='GET'){if(!entitlement?.active||!can('reports.read'))throw failure('Sin permiso para analítica',403);return analytics(url,operatorId,db,c);}
  if(path.startsWith('/api/premium/finance')||path.startsWith('/api/premium/expenses')||path.startsWith('/api/premium/documents/')){
-  if(!entitlement?.active||!['owner','admin'].includes(role))throw failure('Sin permiso para finanzas',403);
+  if(!entitlement?.active||!can(request.method==='GET'?'finance.read':'finance.write'))throw failure('Sin permiso para finanzas',403);
   if(path==='/api/premium/finance'&&request.method==='GET')return finance(url,operatorId,db,c);
   const doc=path.match(/^\/api\/premium\/documents\/([0-9a-f-]{36})$/i);if(doc&&request.method==='GET')return document(doc[1],operatorId,db,c);
   if(request.method==='POST'){const result=await expense(path,body,user,operatorId,db,c);if(result)return result;}
  }
- if(path==='/api/premium/profile'){if(!entitlement?.active||!['owner','admin'].includes(role))throw failure('Sin permiso para personalización',403);return profile(url,request.method==='POST'?body:null,user,operatorId,db,c);}
+ if(path==='/api/premium/profile'){if(!entitlement?.active||!can('company.edit'))throw failure('Sin permiso para personalización',403);return profile(url,request.method==='POST'?body:null,user,operatorId,db,c);}
  if(request.method!=='POST')throw failure('Ruta no encontrada',404);
  if(path==='/api/premium/activate') {
   if(env.ALLOW_DEVELOPMENT_AUTH!=='true'&&!await stmt(db,`SELECT 1 FROM operators o WHERE o.id=? AND ${commercialPremium}`,[operatorId]).first())throw failure('La administración de RutasEC debe habilitar tu plan Premium',403);

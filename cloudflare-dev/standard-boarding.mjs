@@ -15,7 +15,7 @@ export async function boardPassenger(env,core,b){
  const {stmt,failure,integer}=core,db=env.DB,code=String(b.code||'').match(/^RUTASEC-(STANDARD|CUSTOM):([0-9a-f-]{36}):(\d+)$/i);
  if(!code)throw failure('El código no corresponde a un boleto de RutasEC');
  const id=code[2],position=integer(Number(code[3]),0,29,'Pasajero'),at=Date.now();let kind,serviceId;
- const actor=core.actorUserId,access=actor?" AND EXISTS(SELECT 1 FROM memberships z WHERE z.user_id=? AND z.operator_id=o.id AND (z.role IN('owner','admin','dispatcher') OR z.role='driver' AND EXISTS(SELECT 1 FROM premium_assignments a WHERE a.driver_user_id=z.user_id AND a.vehicle_id=v.id)))":'',accessArgs=actor?[actor]:[];
+ const actor=core.actorUserId,access=actor?" AND (EXISTS(SELECT 1 FROM organization_capabilities z WHERE z.user_id=? AND z.operator_id=o.id AND z.capability IN('*','trips.operate_all')) OR EXISTS(SELECT 1 FROM organization_departure_operation z WHERE z.user_id=? AND z.departure_id=(SELECT departure_id FROM bookings WHERE id=?)) OR NOT EXISTS(SELECT 1 FROM bookings WHERE id=? AND departure_id IS NOT NULL) AND EXISTS(SELECT 1 FROM organization_vehicle_operation z WHERE z.user_id=? AND z.vehicle_id=v.id))":'',accessArgs=actor?[actor,actor,id,id,actor]:[];
  const allowed=`o.status='approved' AND v.status='active' AND ${operatorScope(env)} AND ${operatorReady()} AND ${vehicleReady()}${access}`;
  if(code[1].toUpperCase()==='STANDARD'){
   const booking=await stmt(db,'SELECT b.* FROM bookings b JOIN standard_booking_details m ON m.booking_id=b.id WHERE b.id=? AND m.operator_id=?',[id,b.operatorId]).first();

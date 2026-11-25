@@ -32,7 +32,7 @@ export async function handleTeam(path,body,user,operatorId,db,c){
  if(path==='/api/premium/assignments'){
   if(!await stmt(db,'SELECT 1 FROM vehicles v JOIN premium_branches b ON b.operator_id=v.operator_id WHERE v.id=? AND b.id=? AND v.operator_id=?',[body.vehicleId,body.branchId,operatorId]).first())throw failure('Sucursal o vehículo ajeno',403);
   const driver=body.driverUserId||null;
-  if(driver&&!await stmt(db,"SELECT 1 FROM memberships WHERE user_id=? AND operator_id=? AND role='driver'",[driver,operatorId]).first())throw failure('Conductor ajeno o rol no válido',403);
+  if(driver&&!await stmt(db,"SELECT 1 FROM organization_effective_roles WHERE user_id=? AND operator_id=? AND role='driver'",[driver,operatorId]).first())throw failure('Conductor ajeno o rol no válido',403);
   return{id:await command(db,user,body,'premium_assignment',[stmt(db,`INSERT INTO premium_assignments(vehicle_id,operator_id,branch_id,driver_user_id) VALUES(?,?,?,?) ON CONFLICT(vehicle_id) DO UPDATE SET branch_id=excluded.branch_id,driver_user_id=excluded.driver_user_id`,[body.vehicleId,operatorId,body.branchId,driver])],body.vehicleId)};
  }
  return null;
