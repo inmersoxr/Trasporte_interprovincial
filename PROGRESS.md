@@ -388,3 +388,8 @@ Pruebas locales PASS: roles, invitaciones concurrentes/idempotentes, propietario
 EN PRUEBAS de integración/publicación: workflow conserva todas las pruebas y añade test:organization-team-local como undécimo recorrido; health objetivo0040_organization_invitations. Migraciones0038–0040 aditivas, sustituyen solo vistas/triggers de autorización; no eliminan datos ni cambian membresías durante despliegue. No se ha publicado aún esta entrega.
 
 Continuidad: publicar y comprobar este hito; completar el tema empresarial en pilot/conductor (gap03 detectado), después propietarios/fichas05, asignaciones06, programación07–08, calendario09 y restantes tareas10–13. No cerrar el plan completo ni certificar sensores físicos. Google/correo/SRI reales requieren su configuración/validación independiente; pagos siguen simulados.
+
+
+## Compatibilidad de revocación — 2026-11-25
+
+Actions45658681226 bloqueó correctamente el despliegue:83/84PASS, fallo del circuito piloto heredado al intentar borrar de una vista de roles. Corregido el endpoint anterior para revocar membresía con guarda SQL de revisión y autoridad, reintento idempotente y rechazo409 de personas con funciones adicionales: deben editarse desde Equipo y accesos para preservar sus otros permisos. Asignación heredada consulta el rol efectivo. Sin cambios de datos o migraciones adicionales. Nueva validación local de circuito/equipo y nueva ejecución de CI requeridas antes de declarar publicación.
