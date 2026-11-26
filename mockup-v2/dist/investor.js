@@ -48,7 +48,7 @@ const steps=[
  ["Vivir el destino",async()=>{await scan("room-0-0","hotel");await page("itinerary","pasajero");await page("entity/rest-0");await buy("table-0-0");await scan("table-0-0","restaurante");}],
  ["Vivir el destino",async()=>{await page("directory/tour?destination=banos","pasajero");const id=rafting();await page("entity/"+id);await buy(id);await scan(id,"agencia");await page("itinerary","pasajero");}],
  ["Explorar Ecuador",async()=>{await page("discover","pasajero");for(const id of ["Pacífico","Andes","Amazonía"]){const b=[...document.querySelectorAll('[data-action="region"]')].find(x=>x.dataset.id===id);if(b)await click(b);await wait(1200);}}],
- ["Planificar",async()=>{await page("packages","pasajero");await wait(4000);}],
+ ["Planificar",async()=>{await page("planner/pacifico","pasajero");await wait(3500);await page("planner/andes");await wait(2500);await page("planner/amazonia");await wait(2500);await page("planner/pacifico");await click(document.querySelector("#circuit-form button[type=submit]"));await wait(2500);}],
  ["Operar",async()=>{await page("business/dashboard","operador","op-rutas");await page("business/bookings");await page("business/pos");await page("business/finance");}],
  ["Operar",async()=>{await page("business/operations","hotel","hotel-0");await page("business/operations","restaurante","rest-0");await page("business/operations","agencia","agency-0");}],
  ["Activar el territorio",async()=>{await page("gad","gad","gad-banos");await wait(2500);await page("admin","admin","admin-rutas");await wait(2500);await page("home","pasajero");}]
