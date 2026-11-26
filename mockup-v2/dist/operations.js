@@ -1,3 +1,4 @@
+import { passengerPass } from "./world.js";
 import {
   world,
   entity,
@@ -266,7 +267,7 @@ document.addEventListener("submit", (e) => {
   e.preventDefault();
   try {
     const token = new FormData(e.target).get("token"),
-      b = bookings().find((b) => b.token === token);
+      b = bookings().find((b) => b.owner === view.tenant && b.state === "confirmada" && (b.token === token || passengerPass(b) === token));
     if (!b) throw Error("QR de demostración no reconocido");
     validateBooking(b.id);
   } catch (err) {
