@@ -292,3 +292,5 @@ if (typeof window !== "undefined")
       window.dispatchEvent(new CustomEvent("worldchange", { detail: "sync" }));
     }
   });
+
+export function passengerPass(b){return b.channel==="pos"?b.token:"rutasec-pass:"+b.passenger;}
