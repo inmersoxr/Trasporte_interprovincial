@@ -42,10 +42,10 @@ const rafting=()=>entities("tour").find(e=>/rafting/i.test(e.name)&&e.bookable)?
 const steps=[
  ["Viajar",async()=>{profile();Object.assign(view.search,{origin:"Quito",destination:"Baños de Agua Santa",date:today(),qty:2,modality:"compartido"});await page("home");const f=document.querySelector('form');if(f){await wait(1000);}await page("transport");}],
  ["Viajar",async()=>{await buy("ride-0");await page("ticket/"+booking("ride-0").id);}],
- ["Vivir el destino",async()=>{await page("entity/banos","pasajero");await page("entity/hotel-0");await buy("room-0-0",1);}],
+ ["Vivir el destino",async()=>{await page("entity/banos","pasajero");const ad=document.querySelector('[data-action="sponsoredVisit"][data-id="context-hotel"]');if(ad)await click(ad);else await page("entity/hotel-0");await buy("room-0-0",1);}],
  ["Viajar",async()=>{await scan("ride-0","operador");await page("tracking","pasajero");if(world.trip.status==="arrived")await command("reset");await command("start");await command("speed");await wait(4500);}],
  ["Viajar",async()=>{await page("safety");const b=document.querySelector('[data-action="shareTracking"]');if(b){await click(b);await wait(2200);close();}await command("finish");}],
- ["Vivir el destino",async()=>{await scan("room-0-0","hotel");await page("itinerary","pasajero");await page("entity/rest-0");await buy("table-0-0");await scan("table-0-0","restaurante");}],
+ ["Vivir el destino",async()=>{await scan("room-0-0","hotel");await page("itinerary","pasajero");const ad=document.querySelector('[data-action="sponsoredVisit"][data-id="context-food"]');if(ad)await click(ad);else await page("entity/rest-0");await buy("table-0-0");await scan("table-0-0","restaurante");}],
  ["Vivir el destino",async()=>{await page("directory/tour?destination=banos","pasajero");const id=rafting();await page("entity/"+id);await buy(id);await scan(id,"agencia");await page("itinerary","pasajero");}],
  ["Explorar Ecuador",async()=>{await page("discover","pasajero");for(const id of ["Pacífico","Andes","Amazonía"]){const b=[...document.querySelectorAll('[data-action="region"]')].find(x=>x.dataset.id===id);if(b)await click(b);await wait(1200);}}],
  ["Planificar",async()=>{await page("planner/pacifico","pasajero");await wait(3500);await page("planner/andes");await wait(2500);await page("planner/amazonia");await wait(2500);await page("planner/pacifico");await click(document.querySelector("#circuit-form button[type=submit]"));await wait(2500);}],
