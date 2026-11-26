@@ -14,7 +14,7 @@ const steps=[
  ["Viajar","Confirma tu compra","Elige el medio de pago y confirma tu reserva. No se realizará ningún cargo."],
  ["Viajar","Tu boleto está listo","Revisa el boleto y el pase QR. Cuando estés listo, continúa al abordaje.",null,"Presentar QR"],
  ["Viajar","Presenta tu pase al conductor","Valida el boleto desde el lector de la operadora. Puedes pulsar Leer QR."],
- ["Viajar","Comienza tu viaje","Inicia el trayecto en el mapa y observa el seguimiento.",null],
+ ["Viajar","Comienza tu viaje","Inicia el trayecto y observa el seguimiento.",null,"Iniciar viaje"],
  ["Viajar","Comparte tu recorrido","Pulsa Compartir seguimiento. Puedes copiar el enlace o compartirlo.",null,"Continuar al destino"],
  ["Vivir el destino","Descubre tu destino","Explora recomendaciones de alojamiento, gastronomía y experiencias.",null,"Buscar alojamiento"],
  ["Vivir el destino","Elige tu alojamiento","Selecciona un hotel y abre la habitación que prefieras."],
@@ -22,9 +22,9 @@ const steps=[
  ["Vivir el destino","Llegada al hotel","Revisa tu pase digital. Al llegar, preséntalo en recepción.",null,"Presentar QR"],
  ["Vivir el destino","Registra tu ingreso","Valida la reserva desde la recepción del hotel."],
  ["Vivir el destino","Descubre la gastronomía","Elige un restaurante, selecciona una mesa y confirma tu reserva."],
- ["Vivir el destino","Disfruta tu reserva","Presenta tu pase QR en el restaurante y valida el acceso."],
+ ["Vivir el destino","Disfruta tu reserva","Presenta tu pase QR en el restaurante y valida el acceso.",null,"Abrir lector QR"],
  ["Vivir el destino","Es hora de aventura","Elige rafting, trekking u otra experiencia y confirma la reserva."],
- ["Vivir el destino","Valida tu experiencia","Presenta el mismo pase QR a la agencia turística."],
+ ["Vivir el destino","Valida tu experiencia","Presenta el mismo pase QR a la agencia turística.",null,"Abrir lector QR"],
  ["Explorar Ecuador","Descubre los circuitos nacionales","Explora Pacífico, Andes y Amazonía. Abre el circuito que prefieras."],
  ["Planificar","Diseña tu itinerario","Elige fechas, viajeros y servicios. Confirma cuando tengas tu ruta lista."],
  ["Planificar","Tu itinerario está listo","Revisa todas las reservas y servicios de tu viaje.",null,"Finalizar recorrido"]
@@ -35,9 +35,9 @@ async function scannerFor(key,role){const b=get(key);if(!b)return toast("Primero
 function passenger(route){close();profile();go(route);}
 function directory(type){passenger("directory/"+type+"?destination="+destination());}
 function start(){if(active){active=false;bar();return;}baseline=new Set(bookings().map(b=>b.id));refs={};pending=null;active=true;step=0;profile();close();go("home");bar();}
-function check(){if(!active)return;const b=step===3||step===2||step===1?latest("viaje"):step===10?latest("habitacion"):step===13?latest("mesa"):step===15?latest("tour"):null;if(b){if(step<=3){refs.ride=b.id;advance(4);}else if(step===10){refs.hotel=b.id;advance(11);}else if(step===13){refs.food=b.id;advance(14);setTimeout(()=>scannerFor("food","restaurante"),350);}else if(step===15){refs.tour=b.id;advance(16);setTimeout(()=>scannerFor("tour","agencia"),350);}return;}
+function check(){if(!active)return;const b=step===3||step===2||step===1?latest("viaje"):step===10?latest("habitacion"):step===13?latest("mesa"):step===15?latest("tour"):null;if(b){if(step<=3){refs.ride=b.id;advance(4);}else if(step===10){refs.hotel=b.id;advance(11);}else if(step===13){refs.food=b.id;advance(14);}else if(step===15){refs.tour=b.id;advance(16);}return;}
 if(step===5&&get("ride")?.state==="abordada"){advance(6);passenger("tracking");}
-else if(step===6&&["running","arrived"].includes(world.trip.status))advance(7);
+else if(step===6&&world.trip.status==="running")advance(7);
 else if(step===12&&get("hotel")?.state==="alojado"){advance(13);directory("restaurante");}
 else if(step===14&&get("food")?.state==="utilizada"){advance(15);directory("tour");}
 else if(step===16&&get("tour")?.state==="utilizada"){advance(17);passenger("discover");}
@@ -49,7 +49,7 @@ document.addEventListener("click",e=>{if(!active)return;const b=e.target.closest
 Object.assign(actions,{
  presentation:start,presentationBar:bar,guideStop:()=>{active=false;bar();},guideMin:()=>document.getElementById("guided-tour")?.classList.toggle("minimized"),
  guideShowShare:()=>passenger("tracking"),
- guideNext:async()=>{if(!active)return;if(step===2){advance(3);return;}if(step===4){advance(5);await scannerFor("ride","operador");}else if(step===7){advance(8);passenger("entity/"+destination());}else if(step===8){advance(9);directory("hotel");}else if(step===11){const {command}=await import("./operations.js");if(world.trip.status!=="arrived")await command("finish");advance(12);await scannerFor("hotel","hotel");}else if(step===19){active=false;bar();toast("Recorrido completado");}},
+ guideNext:async()=>{if(!active)return;if(step===2){const f=document.querySelector("#booking-form");if(!f||f.querySelectorAll(".seat.selected").length<Number(f.elements.qty.value))return toast("Selecciona todos tus asientos");advance(3);return;}if(step===4){advance(5);await scannerFor("ride","operador");}else if(step===6){const {command}=await import("./operations.js");await command("start");advance(7);}else if(step===7){advance(8);passenger("entity/"+destination());}else if(step===8){advance(9);directory("hotel");}else if(step===11){const {command}=await import("./operations.js");if(world.trip.status!=="arrived")await command("finish");advance(12);await scannerFor("hotel","hotel");}else if(step===14){await scannerFor("food","restaurante");}else if(step===16){await scannerFor("tour","agencia");}else if(step===19){active=false;bar();toast("Recorrido completado");}},
   resetDialog: () =>
     modal(
       `<h2>Una historia nueva, desde el comienzo.</h2><p>Esto restablece únicamente las reservas, ventas, contenidos y eventos ficticios de este mockup en el navegador. Conserva el catálogo inicial.</p><div class="form-actions">${btn("close", "Conservar demo", "", "secondary")}${btn("resetWorld", "Restablecer escenario demo", "", "primary")}</div>`,
