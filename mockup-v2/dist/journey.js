@@ -13,10 +13,11 @@ export function recommendations() {
       : world.context.stage === "llegada" || hasStay
         ? ["restaurante", "tour", "atraccion"]
         : ["hotel", "tour", "restaurante"];
-  return entities()
+  const candidates = entities()
     .filter((e) => e.destination === destination && types.includes(e.type))
     .sort((a, b) => Number(b.sponsored) - Number(a.sponsored))
-    .slice(0, 3);
+    ;
+  return types.map(type=>candidates.find(e=>e.type===type)).filter(Boolean);
 }
 export function setStage(stage) {
   transact("contexto", (w) => {
