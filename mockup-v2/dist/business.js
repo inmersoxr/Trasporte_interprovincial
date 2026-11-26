@@ -59,9 +59,44 @@ function setBusinessRole() {
     view.role = "operador";
   } else view.role = e.type;
 }
+
+function desktopDashboard() {
+  const t=tenant(), trips=ownServices().filter(s=>s.type==="viaje"), fleet=entities("vehiculo").filter(v=>v.owner===t.id), drivers=entities("conductor").filter(d=>d.owner===t.id);
+  const list=nonCancelled().filter(b=>b.date===world.date), sales=nonCancelled().filter(b=>String(b.at||"").slice(0,10)===world.date);
+  const running=world.trip.status==="running"||world.trip.status==="paused";
+  const routeTrip=trips.find(s=>world.trip.route==="legacy"?s.origin==="Cuenca"&&s.destinationName==="Guayaquil":s.origin==="Quito"&&s.destinationName==="Baños de Agua Santa");
+  const active=running&&routeTrip?1:0, done=world.trip.status==="arrived"&&routeTrip?1:0;
+  const capacity=trips.reduce((n,s)=>n+s.capacity,0), sold=list.reduce((n,b)=>n+b.qty,0);
+  const maintenance=fleet.filter(v=>v.state==="mantenimiento").length;
+  const alerts=(routeTrip?world.trip.alerts:[]).filter(a=>a.status!=="closed");
+  const card=(i,label,value,detail,route)=>link(route,icon(i)+'<div><small>'+label+'</small><strong>'+value+'</strong><small>'+detail+'</small></div>',"dd-card dd-kpi");
+  const panel=(title,body,extra="")=>'<section class="dd-card"><div class="dd-title"><b>'+title+'</b>'+extra+'</div>'+body+'</section>';
+  const departures=trips.filter(s=>s.state!=="pausado"&&!(done&&s.id===routeTrip?.id)&&!(active&&s.id===routeTrip?.id)).sort((a,b)=>String(a.time).localeCompare(String(b.time))).slice(0,3);
+  setTimeout(async()=>{
+    const el=document.getElementById("dd-map"); if(!el||!window.L)return;
+    const map=L.map(el,{scrollWheelZoom:false}).setView([-1.8,-79],7);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap",maxZoom:18}).addTo(map);
+    if(!routeTrip)return;
+    try{
+      const data=await (await fetch(world.trip.route==="legacy"?"shared/route.json":"shared/quito-banos.json")).json();
+      const {prepareRoad,tripSnapshot}=await import("./shared/trip-core.mjs");
+      const road=prepareRoad(data); if(!el.isConnected)return;
+      const line=L.polyline(road.coordinates.map(([lng,lat])=>[lat,lng]),{color:"#ffd12b",weight:5}).addTo(map);
+      map.fitBounds(line.getBounds(),{padding:[20,20]});
+      const marker=L.circleMarker(line.getLatLngs()[0],{radius:8,color:"#111",fillColor:"#ffd12b",fillOpacity:1}).addTo(map).bindPopup(esc(entity(routeTrip.vehicle)?.name||routeTrip.name));
+      const tick=()=>{if(!el.isConnected){clearInterval(timer);map.remove();return;}const s=tripSnapshot(world.trip,road);marker.setLatLng([s.position.lat,s.position.lng]);const info=document.getElementById("dd-progress");if(info)info.textContent=Math.round(s.progress*100)+"% · "+(s.remainingMeters/1000).toFixed(1)+" km restantes";};
+      const timer=setInterval(tick,1000);tick();
+    }catch{el.insertAdjacentHTML("beforeend",'<small class="dd-map-error">Ruta simulada no disponible</small>');}
+  },80);
+  return `<style>
+  .dd-shell{background:#111317;color:#f4f4f5;display:grid;grid-template-columns:205px minmax(0,1fr);gap:16px;padding:16px;min-height:calc(100vh - 85px);font-size:14px}
+  .dd-shell a{color:inherit;text-decoration:none}.dd-side{background:#191c22;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}.dd-side a{padding:13px;border-radius:9px;display:flex;align-items:center;gap:10px}.dd-side a:hover,.dd-side .active{background:#ffd12b;color:#111}.dd-side h3{margin:12px 0}.dd-main{min-width:0}.dd-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px}.dd-head h1{font-size:29px;margin:0;color:#fff}.dd-head small,.dd-card small{color:#b9bbc3;display:block}.dd-card{background:#202329;border:1px solid #343740;border-radius:13px;padding:14px;min-width:0;color:#f4f4f5}.dd-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}.dd-kpi{display:flex;align-items:center;gap:12px}.dd-kpi .icon{color:#ffd12b;width:32px;height:32px;flex-shrink:0}.dd-kpi strong{font-size:30px;display:block;line-height:1.3}.dd-middle{display:grid;grid-template-columns:1.8fr 1fr;gap:12px;margin-bottom:12px}.dd-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;font-size:16px}.dd-title a{font-size:12px;color:#ffd12b}.dd-map{height:260px;border-radius:9px;background:#293b36;overflow:hidden}.dd-map .leaflet-tile-pane{filter:brightness(.65) saturate(.75)}.dd-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #3b3e45}.dd-row:last-child{border:0}.dd-row img{width:52px;height:36px;object-fit:cover;border-radius:5px}.dd-row strong{color:#ffd12b}.dd-row .dd-grow{flex:1;min-width:0}.dd-bottom{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.dd-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#72cc69;margin-right:6px}.dd-ring{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;border:9px solid #ffd12b;margin:8px auto;font-size:24px;font-weight:700}.dd-side select{max-width:100%;color:#fff;background:#252830}.dd-shell a:focus-visible{outline:2px solid #ffd12b}.dd-mobile{display:none}@media(max-width:1023px){.dd-shell{display:none}.dd-mobile{display:block}}@media(min-width:1024px) and (max-width:1250px){.dd-shell{grid-template-columns:165px minmax(0,1fr)}.dd-kpi strong{font-size:23px}.dd-bottom{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  </style><div class="dd-mobile container">${link("business/overview","Volver al resumen empresarial","button secondary")}</div><div class="dd-shell"><aside class="dd-side"><h2 style="color:#ffd12b;margin:0">RutasEC</h2><small>Conecta Ecuador</small><h3>${esc(t.name)}</h3><select id="tenant-picker" aria-label="Operadora">${entities("operador").map(e=>'<option value="'+esc(e.id)+'" '+(e.id===t.id?'selected':'')+'>'+esc(e.name)+'</option>').join("")}</select>${[["dashboard","home","Inicio"],["calendar","pin","Operación"],["operations","bus","Flota"],["staff","user","Equipo"],["finance","grid","Gestión"],["bookings","ticket","Reservas y QR"],["overview","compass","Resumen general"]].map(([r,i,n])=>link("business/"+r,icon(i)+n,r==="dashboard"?"active":"")).join("")}<small style="margin-top:auto">Datos de demostración · ${esc(world.date)}</small></aside><div class="dd-main"><div class="dd-head"><div><h1>Inicio</h1><small>Centro de operaciones</small></div><small>${esc(world.date)} · ${new Date().toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"})} · Administrador demo</small></div><div class="dd-kpis">${card("pin","Viajes programados",trips.length,active+" en curso · "+done+" finalizados","business/calendar")}${card("bus","Vehículos en servicio",active+"/"+fleet.length,maintenance+" en mantenimiento","business/operations")}${card("ticket","Reservas",list.length,(capacity?Math.round(sold/capacity*100):0)+"% ocupación del catálogo","business/bookings")}${card("grid","Ventas del día",money(sales.reduce((n,b)=>n+b.amount,0)),sales.reduce((n,b)=>n+b.qty,0)+" unidades vendidas","business/finance")}</div><div class="dd-middle">${panel("Flota en vivo · simulación",'<div id="dd-map" class="dd-map"></div><small id="dd-progress">'+(routeTrip?esc(routeTrip.name):"Sin ruta de seguimiento asignada a esta operadora")+'</small>',link("tracking","Ver seguimiento ↗"))}${panel("Próximas salidas",departures.map(s=>link("entity/"+s.id,'<strong>'+esc(s.time)+'</strong><div class="dd-grow"><b>'+esc(s.name)+'</b><small>'+esc(entity(s.vehicle)?.name||"Sin vehículo")+'</small></div><small>'+(s.capacity-available(world,s.id,world.date))+'/'+s.capacity+'</small>',"dd-row")).join("")||"<small>Sin salidas disponibles</small>",link("business/calendar","Ver programación →"))}</div><div class="dd-bottom">${panel("Viajes de hoy",'<div class="dd-ring">'+trips.length+'</div><small>En curso: '+active+' · Finalizados: '+done+'</small><small>Catálogo programado: '+Math.max(0,trips.length-active-done)+'</small>')}${panel("Conductores asignados",drivers.slice(0,4).map(d=>'<div class="dd-row">'+icon("user")+'<div><b>'+esc(d.name)+'</b><small>'+esc(entity(d.vehicle)?.plate||"Sin placa")+'</small></div></div>').join("")||"<small>Sin conductores asignados</small>",link("business/staff","Ver equipo"))}${panel("Estado de flota",'<div class="dd-row"><span class="dd-dot"></span>En ruta <b class="right">'+active+'</b></div><div class="dd-row">Disponibles <b class="right">'+fleet.filter(v=>v.state==="disponible"&&!(active&&v.id===routeTrip?.vehicle)).length+'</b></div><div class="dd-row">Mantenimiento <b class="right">'+maintenance+'</b></div>',link("business/operations","Ver flota"))}${panel("Alertas operativas",alerts.map(a=>'<div class="dd-row">'+icon("bell")+'<small>'+esc(a.message||a.type||"Alerta de seguimiento")+'</small></div>').join("")||"<small>Sin alertas activas registradas</small>",link("safety","Seguridad"))}</div></div></div>`;
+}
+
 function sidebar() {
   const t = tenant();
-  return `<aside class="sidebar"><h3>${esc(t.name)}</h3><p>Espacio empresarial · ${t.mode === "premium" ? "Premium" : "Marketplace"} demo</p>${tabs.map(([id, i, n]) => link("business/" + id, icon(i) + n, id === view.tab ? "active" : "")).join("")}</aside>`;
+  return `<aside class="sidebar"><h3>${esc(t.name)}</h3><p>Espacio empresarial · ${t.mode === "premium" ? "Premium" : "Marketplace"} demo</p>${t.type === "operador" ? '<a class="dd-entry" href="#/business/dashboard">Dashboard desktop</a><style>@media(max-width:1023px){.dd-entry{display:none!important}}</style>' : ""}${tabs.map(([id, i, n]) => link("business/" + id, icon(i) + n, id === view.tab ? "active" : "")).join("")}</aside>`;
 }
 function companyPicker() {
   return `<div class="toolbar"><label>Empresa de demostración<select id="tenant-picker">${entities(
@@ -513,6 +548,7 @@ export async function renderBusiness(route, arg) {
   }
   setBusinessRole();
   view.tab = arg || "overview";
+  if(view.tab==="dashboard" && tenant().type==="operador") return desktopDashboard();
   let html;
   if (view.tab === "campaigns" || view.tab === "reputation") {
     const m = await import("./promotion.js");
