@@ -230,6 +230,7 @@ export function contextBanner() {
   return `<div class="banner">${icon(world.context.stage === "llegada" ? "sun" : "compass")}<div><h3>${world.context.stage === "llegada" ? "¡Bienvenido a tu destino!" : "Tu viaje a "+(entity(world.context.destination)?.name||"tu destino")+" ya comenzó."}</h3><p>${bookings().some((b) => entity(b.service)?.type === "habitacion" && b.state !== "cancelada" && entity(b.service)?.destination===world.context.destination) ? "Ya tienes dónde descansar. Descubre qué hacer y dónde comer." : "Encuentra tu lugar para descansar y tu próxima aventura."}</p></div>${link("entity/" + world.context.destination, "Descubrir mi destino", "button secondary")}</div>`;
 }
 async function page(route, arg) {
+  if (route === "planner") return (await import("./planner.js")).planner(arg);
   if (route === "home") return home();
   if (route === "transport") return transport();
   if (route === "directory") return directory(arg?.split("?")[0]);
