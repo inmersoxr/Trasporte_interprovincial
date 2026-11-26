@@ -1,3 +1,4 @@
+import { passengerPass } from "./world.js";
 import {
   world,
   entity,
@@ -36,7 +37,7 @@ function bar(){document.querySelectorAll('[data-action="presentation"]').forEach
 async function click(el){if(!el)throw Error("Control no disponible");el.scrollIntoView({block:"center",behavior:"smooth"});el.style.outline="2px solid #ffcc32";await wait(750);el.click();await wait(1100);}
 const booking=id=>bookings().filter(b=>b.service===id&&b.state!=="cancelada").at(-1);
 async function buy(id,qty=2){if(booking(id))return booking(id);profile();view.search.qty=qty;const {checkout}=await import("./marketplace.js");checkout(id);await wait(1800);const f=document.querySelector("#booking-form");if(!f)throw Error("Reserva no disponible");if(f.querySelector("#seat-picker")){for(let i=0;i<qty;i++)await click(f.querySelector(".seat:not(:disabled):not(.selected)"));}await click(f.querySelector('button[type="submit"]'));await wait(2000);const b=booking(id);if(!b)throw Error("No se confirmó la reserva");close();return b;}
-async function scan(id,role){const b=booking(id);if(!b||b.state!=="confirmada")return;await page("business/bookings",role,b.owner);const {scanner}=await import("./operations.js");scanner();await wait(1300);const f=document.querySelector("#scanner-form");f.elements.token.value=b.token;await wait(900);await click(f.querySelector("button"));await wait(1000);}
+async function scan(id,role){const b=booking(id);if(!b||b.state!=="confirmada")return;await page("business/bookings",role,b.owner);const {scanner}=await import("./operations.js");scanner();await wait(1300);const f=document.querySelector("#scanner-form");f.elements.token.value=passengerPass(b);await wait(900);await click(f.querySelector("button"));await wait(1000);}
 const rafting=()=>entities("tour").find(e=>/rafting/i.test(e.name)&&e.bookable)?.id||"tour-0";
 const steps=[
  ["Viajar",async()=>{profile();Object.assign(view.search,{origin:"Quito",destination:"Baños de Agua Santa",date:today(),qty:2,modality:"compartido"});await page("home");const f=document.querySelector('form');if(f){await wait(1000);}await page("transport");}],
