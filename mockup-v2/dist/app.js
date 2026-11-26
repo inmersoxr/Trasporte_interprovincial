@@ -75,7 +75,7 @@ const nav = [
   ["saved", "heart", "Guardados"],
 ];
 function header() {
-  return `<header class="topbar">${link("home", '<img src="assets/icon-192.png" alt="">Rutas<b>EC</b>', "brand")}<nav class="main-nav" aria-label="Principal">${nav.map(([r, i, n]) => link(r, n, view.page === r ? "active" : "")).join("")}</nav><div class="header-actions">${btn("notifications", icon("bell") + `<span class="notification-count">${Math.min(9, world.notifications.length)}</span>`, "", "icon-button")}<div class="avatar">EC</div><select id="profile" class="profile-select" aria-label="Perfil de demostración">${[
+  return `<header class="topbar">${link("home", '<img src="assets/icon-192.png" alt="">Rutas<b>EC</b>', "brand")}<nav class="main-nav" aria-label="Principal">${nav.map(([r, i, n]) => link(r, n, view.page === r ? "active" : "")).join("")}</nav><div class="header-actions">${btn("presentation", icon("play"), "", "icon-button")}${btn("notifications", icon("bell") + `<span class="notification-count">${Math.min(9, world.notifications.length)}</span>`, "", "icon-button")}<div class="avatar">EC</div><select id="profile" class="profile-select" aria-label="Perfil de demostración">${[
     ["pasajero", "Pasajero"],
     ["operador", "Operador"],
     ["hotel", "Hotel"],
@@ -280,6 +280,7 @@ export async function render() {
     `<main id="main">${content}</main>` +
     `<nav class="bottom-nav" aria-label="Navegación móvil">${[...nav.slice(0, 3), ["safety", "shield", "Seguridad"], ["business", "grid", "Empresas"]].map(([r, i, t]) => link(r, icon(i) + t, route === r ? "active" : "")).join("")}</nav>`;
   mountTourismHero();
+  actions.presentationBar?.();
   
   if (view.compare.length) {
     const el = document.createElement("div");
