@@ -220,3 +220,37 @@ export function mountMap(id, coords = [-1.3964, -78.4245], markers = []) {
     );
   }, 30);
 }
+
+/* Product-facing copy only. Internal identifiers and transaction states stay intact. */
+export function cleanProductCopy(root=document.body){
+ const pairs=[
+ [/Esta operación es una simulación\. No introduzcas datos personales ni bancarios reales\./gi,"No se realizará ningún cargo ni se solicitarán datos bancarios."],
+ [/Pago de demostración\. No se solicitarán datos bancarios\./gi,"No se realizará ningún cargo."],
+ [/PAGO SIMULADO CONFIRMADO/gi,"RESERVA CONFIRMADA"],
+ [/Confirmar pago simulado/gi,"Confirmar reserva"],
+ [/SOS es una simulación\. No realiza llamadas, envía mensajes ni activa servicios[^.]*\./gi,"Esta función no contacta servicios de emergencia."],
+ [/GPS simulado sobre ruta vial de referencia\.[^.]*\./gi,"Ruta vial de referencia. Sin conexión GPS en tiempo real."],
+ [/Simulación · Ruta OSRM · Sin GPS real/gi,"Ruta de referencia · Sin GPS en tiempo real"],
+ [/Simulación autónoma compartida\.[^.]*\./gi,"Vista compartida del recorrido. Sin sincronización en tiempo real."],
+ [/Proveedor ficticio y oferta simulada para el demo\./gi,"Consulta las opciones disponibles."],
+ [/Lugar de referencia del directorio local\.[^.]*\. No existe afiliación comercial\./gi,"Lugar de referencia del directorio local."],
+ [/Tarifas, inventario, reservas y opiniones son simulados\.[^.]*\./gi,"Imágenes ilustrativas."],
+ [/Opinión de ejemplo para la presentación\. Esta valoración es simulada\./gi,""],
+ [/Modo inversionista/gi,"Presentación"],
+ [/\b(?:mockup\s*v?2?|demo|demostración|simulación)\b/gi,""],
+ [/\b(?:simulado|simulada|simulados|simuladas|ficticio|ficticia|ficticios|ficticias)\b/gi,""],
+ [/\b(?:para la presentación|para inversionistas|de presentación)\b/gi,""],
+ [/\b(?:de|del|en la|en el|para la)\s*(?=[.,;:]|$)/gi,""],
+ [/\s*·\s*(?=[.,;:]|$)/g,""],
+ [/ {2,}/g," "]
+ ];
+ const clean=v=>pairs.reduce((t,[r,n])=>t.replace(r,n),v).trim();
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let node;
+ while(node=walker.nextNode()){if(node.parentElement?.closest("script,style,code,pre"))continue;const v=node.nodeValue;if(/demo|simula|mockup|fictici|inversionista|presentación/i.test(v))node.nodeValue=clean(v);}
+ for(const el of root.querySelectorAll("[placeholder],[aria-label],[title],input[value],textarea")){
+ for(const attr of ["placeholder","aria-label","title"]){const v=el.getAttribute(attr);if(v&&/demo|simula|mockup|fictici|inversionista/i.test(v))el.setAttribute(attr,clean(v));}
+ if(el.matches('input[type="text"],input:not([type]),textarea')&&/demo|simula|mockup|fictici/i.test(el.value)&&!el.matches('[name="token"],[name="plate"]'))el.value=clean(el.value);
+ }
+}
+let copyQueued=false;
+new MutationObserver(()=>{if(copyQueued)return;copyQueued=true;queueMicrotask(()=>{copyQueued=false;cleanProductCopy();});}).observe(document.body,{childList:true,subtree:true});
