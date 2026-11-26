@@ -221,7 +221,7 @@ export function reserveIn(
       at: new Date().toISOString(),
     });
     for (const c of w.campaigns)
-      if (c.active && (!c.category || c.category === e.type)) c.conversions++;
+      if (c.active && c.owner === e.owner && (!c.destination || c.destination === e.destination) && (!c.context || c.context === w.context.stage)) c.conversions++;
   }
   return result;
 }
