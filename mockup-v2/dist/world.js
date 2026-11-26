@@ -1,3 +1,4 @@
+import {addCircuitCatalog} from "./circuit-catalog.js";
 // Entity-inspired demo world. Original implementation; no Entity code redistributed.
 // Entity reference: 5ce25196fe3377fc811b54e22390b8d585248533.
 import { seedWorld, addManta } from "./seed.js";
@@ -11,12 +12,12 @@ export const today = () =>
     day: "2-digit",
   }).format(new Date());
 export function fresh() {
-  return seedWorld(today());
+  return addCircuitCatalog(seedWorld(today()));
 }
 export function load() {
   try {
     const v = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (v?.version === 4) return addManta(v,today());
+    if (v?.version === 4) return addCircuitCatalog(addManta(v,today()));
   } catch {}
   return fresh();
 }
