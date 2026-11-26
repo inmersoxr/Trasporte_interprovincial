@@ -75,7 +75,7 @@ const nav = [
   ["saved", "heart", "Guardados"],
 ];
 function header() {
-  return `<header class="topbar">${link("home", '<img src="assets/icon-192.png" alt="">Rutas<b>EC</b>', "brand")}<nav class="main-nav" aria-label="Principal">${nav.map(([r, i, n]) => link(r, n, view.page === r ? "active" : "")).join("")}</nav><div class="header-actions">${btn("presentation", icon("play"), "", "icon-button")}${btn("notifications", icon("bell") + `<span class="notification-count">${Math.min(9, world.notifications.length)}</span>`, "", "icon-button")}<div class="avatar">EC</div><select id="profile" class="profile-select" aria-label="Perfil de demostración">${[
+  return `<header class="topbar">${link("home", '<img src="assets/icon-192.png" alt="">Rutas<b>EC</b>', "brand")}<nav class="main-nav" aria-label="Principal">${nav.map(([r, i, n]) => link(r, n, view.page === r ? "active" : "")).join("")}</nav><div class="header-actions">${btn("notifications", icon("bell") + `<span class="notification-count">${Math.min(9, world.notifications.length)}</span>`, "", "icon-button")}<div class="avatar">EC</div><select id="profile" class="profile-select" aria-label="Perfil de demostración">${[
     ["pasajero", "Pasajero"],
     ["operador", "Operador"],
     ["hotel", "Hotel"],
@@ -90,17 +90,17 @@ function header() {
     )
     .join(
       "",
-    )}</select></div></header><div class="demo-ribbon"><strong>MOCKUP V2</strong> · Operaciones, tarifas, inventario y pagos simulados · Presentación para inversionistas</div>`;
+    )}</select></div></header>`;
 }
 function footer() {
-  return `<footer class="footer"><div>${link("home", "Rutas<b>EC</b>", "brand")}<p>Conectamos el viaje. Activamos el destino.</p><small>Demostración independiente · Datos persistidos en este navegador</small></div><nav>${link("directory/operador", "Guía de transporte")}${btn("install", "Instalar app")}${btn("sources", "Fuentes y créditos")}${btn("presentation", "Modo inversionista")}</nav></footer>`;
+  return `<footer class="footer"><div>${link("home", "Rutas<b>EC</b>", "brand")}<p>Conectamos el viaje. Activamos el destino.</p></div><nav>${link("directory/operador", "Guía de transporte")}${btn("install", "Instalar app")}${btn("sources", "Fuentes y créditos")}</nav></footer>`;
 }
 export let promoTimer;
 function tourismHero(){
  const slides=[["manta","Manta","Playas, sabores manabitas y experiencias frente al Pacífico.","Manabí","manta-cinematic"],["banos","Baños de Agua Santa","Cascadas, aventura y bienestar entre montañas.","Tungurahua","banos"]];
  return `<section class="hero tourism-hero" aria-label="Destinos promocionados" style="display:block"><style>
  .tourism-hero:before{display:none}.tourism-hero .promo-slide{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity 1.1s,visibility 1.1s;display:flex;align-items:center;background-size:cover;background-position:center;color:white;text-decoration:none}.tourism-hero .promo-slide.current{opacity:1;visibility:visible;z-index:1}.tourism-hero .promo-controls{position:absolute;z-index:2;bottom:55px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center}.tourism-hero .promo-controls button{border:1px solid #ffffff88;background:#17201dcc;color:white;border-radius:20px;padding:6px 12px;cursor:pointer}.tourism-hero .promo-controls button[aria-current=true]{background:#f6d344;color:#111}.tourism-hero .promo-slide:focus-visible{outline:3px solid #f6d344;outline-offset:-4px}@media(prefers-reduced-motion:reduce){.tourism-hero .promo-slide{transition:none}}
- </style>${slides.map(([id,name,copy,region,img],i)=>`<a href="#/entity/${id}" class="promo-slide ${i===0?"current":""}" aria-hidden="${i!==0}" tabindex="${i===0?0:-1}" style="background-image:linear-gradient(90deg,rgba(10,20,22,.84),rgba(10,20,22,.15)),url('assets/${img}.webp')"><div class="hero-content"><div class="eyebrow">DESTINO PROMOCIONADO · DEMO</div><h1>Descubre <em>${name}</em></h1><p>${copy}</p><div class="hero-location">${icon("pin")}<div>${name}<small>${region}, Ecuador</small></div></div></div></a>`).join("")}</section>`;
+ </style>${slides.map(([id,name,copy,region,img],i)=>`<a href="#/entity/${id}" class="promo-slide ${i===0?"current":""}" aria-hidden="${i!==0}" tabindex="${i===0?0:-1}" style="background-image:linear-gradient(90deg,rgba(10,20,22,.84),rgba(10,20,22,.15)),url('assets/${img}.webp')"><div class="hero-content"><div class="eyebrow">DESTINO PROMOCIONADO</div><h1>Descubre <em>${name}</em></h1><p>${copy}</p><div class="hero-location">${icon("pin")}<div>${name}<small>${region}, Ecuador</small></div></div></div></a>`).join("")}</section>`;
 }
 function mountTourismHero(){
  clearInterval(promoTimer);
@@ -280,7 +280,7 @@ export async function render() {
     `<main id="main">${content}</main>` +
     `<nav class="bottom-nav" aria-label="Navegación móvil">${[...nav.slice(0, 3), ["safety", "shield", "Seguridad"], ["business", "grid", "Empresas"]].map(([r, i, t]) => link(r, icon(i) + t, route === r ? "active" : "")).join("")}</nav>`;
   mountTourismHero();
-  if (actions.presentationBar) actions.presentationBar();
+  
   if (view.compare.length) {
     const el = document.createElement("div");
     el.className = "compare";
@@ -360,7 +360,7 @@ document.addEventListener("click", async (e) => {
   try {
     const action = actions[el.dataset.action];
     if (action) await action({ ...el.dataset, el });
-    else toast("Esta acción se presenta en el modo inversionista.");
+    else toast("Esta acción no está disponible.");
   } catch (err) {
     toast(err.message);
   }
