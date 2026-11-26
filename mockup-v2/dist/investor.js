@@ -27,223 +27,42 @@ import {
 import { view, go, render } from "./app.js";
 import { command } from "./operations.js";
 import { setStage } from "./journey.js";
-let active = sessionStorage.getItem("rutasec.v2.presenting") === "yes";
-let step = Number(sessionStorage.getItem("rutasec.v2.step") || 0);
-const steps = [
-  ["Todo empieza con un viaje", "Presenta la visión y el buscador."],
-  [
-    "Un boleto abre el destino",
-    "Simula una compra Quito–Baños para dos personas.",
-  ],
-  [
-    "Una estancia conectada",
-    "Reserva una habitación para dos noches en Baños.",
-  ],
-  [
-    "Una aventura por descubrir",
-    "Añade la Ruta de las Cascadas a tu itinerario.",
-  ],
-  ["Los sabores del destino", "Reserva una experiencia gastronómica."],
-  [
-    "Todo se puede combinar",
-    "Abre el configurador de paquetes y sustituye proveedores.",
-  ],
-  [
-    "El viaje está en marcha",
-    "Simula abordaje y movimiento sobre la ruta vial.",
-  ],
-  [
-    "Llegar activa nuevas oportunidades",
-    "Finaliza el trayecto y presenta recomendaciones locales.",
-  ],
-  [
-    "Un QR conecta la operación",
-    "Simula check-in y consulta la recepción del hotel.",
-  ],
-  ["Cada reserva impulsa un negocio", "Abre ventas e inventario del operador."],
-  [
-    "El territorio también participa",
-    "Presenta promoción y métricas agregadas del GAD.",
-  ],
-  [
-    "Un ecosistema. Una sola visión.",
-    "Consulta el mundo, las entidades y los eventos en Admin.",
-  ],
+let active=false,paused=false,step=0,epoch=0;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function wait(ms=1800){const e=epoch;for(let n=0;n<ms;n+=100){while(paused&&active&&e===epoch)await sleep(100);if(!active||e!==epoch)throw Error("Recorrido detenido");await sleep(100);}}
+function profile(role="pasajero",tenant="op-rutas"){view.role=role;view.tenant=tenant;}
+async function page(route,role,tenant){if(role)profile(role,tenant);close();go(route);await wait(1700);}
+function bar(){document.querySelectorAll('[data-action="presentation"]').forEach(b=>{b.innerHTML=icon(active&&!paused?"pause":"play");b.setAttribute("aria-label",active&&!paused?"Pausar recorrido":"Reproducir recorrido");});}
+async function click(el){if(!el)throw Error("Control no disponible");el.scrollIntoView({block:"center",behavior:"smooth"});el.style.outline="2px solid #ffcc32";await wait(750);el.click();await wait(1100);}
+const booking=id=>bookings().filter(b=>b.service===id&&b.state!=="cancelada").at(-1);
+async function buy(id,qty=2){if(booking(id))return booking(id);profile();view.search.qty=qty;const {checkout}=await import("./marketplace.js");checkout(id);await wait(1800);const f=document.querySelector("#booking-form");if(!f)throw Error("Reserva no disponible");if(f.querySelector("#seat-picker")){for(let i=0;i<qty;i++)await click(f.querySelector(".seat:not(:disabled):not(.selected)"));}await click(f.querySelector('button[type="submit"]'));await wait(2000);const b=booking(id);if(!b)throw Error("No se confirmó la reserva");close();return b;}
+async function scan(id,role){const b=booking(id);if(!b||b.state!=="confirmada")return;await page("business/bookings",role,b.owner);const {scanner}=await import("./operations.js");scanner();await wait(1300);const f=document.querySelector("#scanner-form");f.elements.token.value=b.token;await wait(900);await click(f.querySelector("button"));await wait(1000);}
+const rafting=()=>entities("tour").find(e=>/rafting/i.test(e.name)&&e.bookable)?.id||"tour-0";
+const steps=[
+ ["Viajar",async()=>{profile();Object.assign(view.search,{origin:"Quito",destination:"Baños de Agua Santa",date:today(),qty:2,modality:"compartido"});await page("home");const f=document.querySelector('form');if(f){await wait(1000);}await page("transport");}],
+ ["Viajar",async()=>{await buy("ride-0");await page("ticket/"+booking("ride-0").id);}],
+ ["Vivir el destino",async()=>{await page("entity/banos","pasajero");await page("entity/hotel-0");await buy("room-0-0",1);}],
+ ["Viajar",async()=>{await scan("ride-0","operador");await page("tracking","pasajero");if(world.trip.status==="arrived")await command("reset");await command("start");await command("speed");await wait(4500);}],
+ ["Viajar",async()=>{await page("safety");const b=document.querySelector('[data-action="shareTracking"]');if(b){await click(b);await wait(2200);close();}await command("finish");}],
+ ["Vivir el destino",async()=>{await scan("room-0-0","hotel");await page("itinerary","pasajero");await page("entity/rest-0");await buy("table-0-0");await scan("table-0-0","restaurante");}],
+ ["Vivir el destino",async()=>{await page("directory/tour?destination=banos","pasajero");const id=rafting();await page("entity/"+id);await buy(id);await scan(id,"agencia");await page("itinerary","pasajero");}],
+ ["Explorar Ecuador",async()=>{await page("discover","pasajero");for(const id of ["Pacífico","Andes","Amazonía"]){const b=[...document.querySelectorAll('[data-action="region"]')].find(x=>x.dataset.id===id);if(b)await click(b);await wait(1200);}}],
+ ["Planificar",async()=>{await page("packages","pasajero");await wait(4000);}],
+ ["Operar",async()=>{await page("business/dashboard","operador","op-rutas");await page("business/bookings");await page("business/pos");await page("business/finance");}],
+ ["Operar",async()=>{await page("business/operations","hotel","hotel-0");await page("business/operations","restaurante","rest-0");await page("business/operations","agencia","agency-0");}],
+ ["Activar el territorio",async()=>{await page("gad","gad","gad-banos");await wait(2500);await page("admin","admin","admin-rutas");await wait(2500);await page("home","pasajero");}]
 ];
-function setProfile(role, tenant) {
-  view.role = role;
-  view.tenant = tenant;
-}
-export function bar() {
-  const old = $("#presentation-bar");
-  old?.remove();
-  if (!active) return;
-  const el = document.createElement("div");
-  el.id = "presentation-bar";
-  el.className = "presentation";
-  el.innerHTML = `<div class="label">${step + 1} / ${steps.length} · Modo inversionista<small>${esc(steps[step][0])}</small></div>${btn("investorPrevious", "Anterior", "", "plain")}${btn("investorNext", step === steps.length - 1 ? "Reiniciar recorrido" : "Siguiente")}${btn("presentation", "☰", "", "plain")}`;
-  document.body.append(el);
-}
-function ensureTrip() {
-  if (
-    !bookings().some((b) => b.service === "ride-0" && b.state !== "cancelada")
-  )
-    reserve([{ service: "ride-0", date: today(), qty: 2, seats: [1, 2] }], {
-      key: "investor-ride",
-    });
-}
-async function applyStep(n) {
-  step = Math.max(0, Math.min(steps.length - 1, n));
-  sessionStorage.setItem("rutasec.v2.step", String(step));
-  view.search.date = today();
-  if (step === 0) {
-    setProfile("pasajero", "op-rutas");
-    go("home");
-  }
-  if (step === 1) {
-    setProfile("pasajero", "op-rutas");
-    ensureTrip();
-    go("itinerary");
-  }
-  if (step === 2) {
-    setProfile("pasajero", "op-rutas");
-    if (
-      !bookings().some(
-        (b) => b.service === "room-0-0" && b.state !== "cancelada",
-      )
-    )
-      reserve(
-        [
-          {
-            service: "room-0-0",
-            date: today(),
-            end: datePlus(today(), 2),
-            qty: 1,
-          },
-        ],
-        { key: "investor-hotel" },
-      );
-    go("entity/hotel-0");
-  }
-  if (step === 3) {
-    setProfile("pasajero", "op-rutas");
-    if (
-      !bookings().some((b) => b.service === "tour-0" && b.state !== "cancelada")
-    )
-      reserve([{ service: "tour-0", date: today(), qty: 2 }], {
-        key: "investor-tour",
-      });
-    go("entity/tour-0");
-  }
-  if (step === 4) {
-    setProfile("pasajero", "op-rutas");
-    if (
-      !bookings().some(
-        (b) => b.service === "table-0-0" && b.state !== "cancelada",
-      )
-    )
-      reserve(
-        [{ service: "table-0-0", date: today(), time: "13:00", qty: 2 }],
-        { key: "investor-meal" },
-      );
-    go("entity/rest-0");
-  }
-  if (step === 5) {
-    setProfile("pasajero", "op-rutas");
-    go("packages");
-  }
-  if (step === 6) {
-    ensureTrip();
-    setProfile("operador", "op-rutas");
-    bookings()
-      .filter((b) => b.service === "ride-0" && b.state === "confirmada")
-      .forEach((b) =>
-        transition(b.id, "abordar", { role: "operador", tenant: "op-rutas" }),
-      );
-    if (world.trip.status === "arrived") await command("reset");
-    await command("start");
-    await command("speed");
-    go("tracking");
-  }
-  if (step === 7) {
-    await command("finish");
-    setProfile("pasajero", "op-rutas");
-    go("itinerary");
-  }
-  if (step === 8) {
-    const b = bookings().find(
-      (b) => b.service === "room-0-0" && b.state === "confirmada",
-    );
-    setProfile("hotel", "hotel-0");
-    if (b) transition(b.id, "entrada", { role: "hotel", tenant: "hotel-0" });
-    go("business/operations");
-  }
-  if (step === 9) {
-    setProfile("operador", "op-rutas");
-    go("business/finance");
-  }
-  if (step === 10) {
-    setProfile("gad", "gad-banos");
-    transact("escenarioCampana", (w) => {
-      const c = w.campaigns[0];
-      if (!w.events.some((e) => e.type === "inversionista.campana")) {
-        c.impressions += 100;
-        c.clicks += 12;
-        c.conversions += 3;
-        event(w, "inversionista.campana", c.id);
-      }
-    });
-    go("gad");
-  }
-  if (step === 11) {
-    setProfile("admin", "admin-rutas");
-    go("admin");
-  }
-  bar();
-  toast(steps[step][1]);
-}
-function presentation() {
-  modal(
-    `<div class="eyebrow">LA VISIÓN, EN UNA EXPERIENCIA</div><h2>Conectamos el viaje.<br>Activamos el destino.</h2><p>Recorrido controlado de 12 escenas. Puedes salir, explorar libremente y volver en cualquier momento.</p><div class="notice yellow">Solo simulaciones para una muestra. Sin cobros, operación turística real ni integración con producción.</div><div class="toolbar">${btn("investorStart", active ? "Continuar presentación" : "Comenzar presentación", "", "primary")}${btn("investorStop", "Navegar libremente", "", "secondary")}${btn("resetDialog", "Restablecer datos demo", "", "secondary")}</div><div class="activity">${steps.map(([name, desc], i) => `<div class="list-item"><div><strong>${i + 1}. ${name}</strong><small>${desc}</small></div>${btn("investorStep", "Mostrar", String(i), "chip right")}</div>`).join("")}</div><div class="toolbar">${btn("controlledTime", "Cambiar tiempo demo", "", "secondary")}${btn("quickQR", "Validar QR demo", "", "secondary")}${btn("demoCheckout", "Simular check-out", "", "secondary")}</div>`,
-  );
-}
+async function togglePlay(){if(active){paused=!paused;bar();return;}active=true;paused=false;epoch++;step=0;bar();try{for(;step<steps.length;step++){await steps[step][1]();await wait(1800);}}catch(e){toast(e.message);}finally{active=false;paused=false;bar();}}
 Object.assign(actions, {
-  presentation,
+  presentation: togglePlay,
   presentationBar: bar,
-  investorStart: async () => {
-    active = true;
-    sessionStorage.setItem("rutasec.v2.presenting", "yes");
-    close();
-    await applyStep(step);
-  },
-  investorStop: () => {
-    active = false;
-    sessionStorage.setItem("rutasec.v2.presenting", "no");
-    close();
-    bar();
-    toast("Navegación libre activada");
-  },
-  investorStep: async ({ id }) => {
-    active = true;
-    sessionStorage.setItem("rutasec.v2.presenting", "yes");
-    close();
-    await applyStep(Number(id));
-  },
-  investorNext: async () => {
-    if (step === steps.length - 1) {
-      step = 0;
-      await applyStep(0);
-    } else await applyStep(step + 1);
-  },
-  investorPrevious: async () => applyStep(step - 1),
   resetDialog: () =>
     modal(
       `<h2>Una historia nueva, desde el comienzo.</h2><p>Esto restablece únicamente las reservas, ventas, contenidos y eventos ficticios de este mockup en el navegador. Conserva el catálogo inicial.</p><div class="form-actions">${btn("close", "Conservar demo", "", "secondary")}${btn("resetWorld", "Restablecer escenario demo", "", "primary")}</div>`,
     ),
   resetWorld: () => {
     reset();
-    step = 0;
-    sessionStorage.setItem("rutasec.v2.step", "0");
+    active=false; paused=false; epoch++; step=0;
     setProfile("pasajero", "op-rutas");
     view.search.date = today();
     close();
