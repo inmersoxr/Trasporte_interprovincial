@@ -1,6 +1,6 @@
 // Entity-inspired demo world. Original implementation; no Entity code redistributed.
 // Entity reference: 5ce25196fe3377fc811b54e22390b8d585248533.
-import { seedWorld } from "./seed.js";
+import { seedWorld, addManta } from "./seed.js";
 export const STORAGE_KEY = "rutasec.mockup-v2.world.4";
 export const uid = (prefix = "e") => `${prefix}-${crypto.randomUUID()}`;
 export const today = () =>
@@ -16,7 +16,7 @@ export function fresh() {
 export function load() {
   try {
     const v = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (v?.version === 4) return v;
+    if (v?.version === 4) return addManta(v,today());
   } catch {}
   return fresh();
 }
@@ -212,8 +212,8 @@ export function reserveIn(
     if (packageId) relation(w, packageId, b.id, "incluye");
     event(w, "reserva.confirmada", b.id, { service: e.id, amount, channel });
     result.push(b);
-    if (e.destination)
-      w.context = { destination: e.destination, stage: "antes", date };
+    if (e.type === "viaje" && e.destination && channel !== "pos")
+      w.context = { destination: e.destination, stage: "antes", date, booking: b.id };
     w.notifications.unshift({
       id: uid("not"),
       text: `Reserva confirmada: ${e.name}. Tu QR demo está en Mi viaje.`,
@@ -258,6 +258,7 @@ export function transition(id, action, actor) {
       requireDemo(service.type === "viaje", "El boleto no es de transporte");
     b.state = to;
     b.updatedAt = new Date().toISOString();
+    if (action === "abordar" && w.context.booking === b.id) w.context.stage = "durante";
     if (action === "entrada") service.roomState = "ocupada";
     if (action === "salida") service.roomState = "limpieza";
     if (action === "cancelar") b.refund = "reembolso simulado";
