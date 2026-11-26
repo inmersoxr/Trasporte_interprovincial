@@ -1,4 +1,4 @@
-const CACHE = "rutasec-mockup-v2-4";
+const CACHE = "rutasec-mockup-v2-5";
 const CORE = [
   "./",
   "index.html",
@@ -18,6 +18,8 @@ const CORE = [
   "territory.js",
   "discover.js",
   "investor.js",
+  "planner.js",
+  "circuit-catalog.js",
   "manifest.webmanifest",
   "vendor/leaflet/leaflet.js",
   "vendor/leaflet/leaflet.css",
