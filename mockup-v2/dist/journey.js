@@ -38,3 +38,7 @@ export function setStage(stage) {
     event(w, "viaje.contexto", w.context.destination, { stage });
   });
 }
+
+export function contextualCampaigns(){if(!world.context.booking)return [];return world.campaigns.filter(c=>c.active&&c.destination===world.context.destination&&(!c.context||c.context===world.context.stage)&&entity(c.owner));}
+export function sponsoredMarkup(){return contextualCampaigns().map(c=>'<section class="panel"><div class="eyebrow">PATROCINADO</div><h3>'+safe(c.name)+'</h3><p>'+safe(entity(c.owner).name)+'</p><button class="secondary" data-action="sponsoredVisit" data-id="'+safe(c.id)+'">Ver oferta</button></section>').join("");}
+function safe(v){return String(v||"").replace(/[&<>"']/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[x]));}
