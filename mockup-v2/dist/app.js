@@ -2,7 +2,7 @@ import "./marketplace.js";
 import "./operations.js";
 import { recordPlacement } from "./promotion.js";
 import "./investor.js";
-import { recommendations } from "./journey.js";
+import { recommendations, sponsoredMarkup, contextualCampaigns } from "./journey.js";
 import {
   world,
   entity,
@@ -280,6 +280,7 @@ export async function render() {
     header() +
     `<main id="main">${content}</main>` +
     `<nav class="bottom-nav" aria-label="Navegación móvil">${[...nav.slice(0, 3), ["safety", "shield", "Seguridad"], ["business", "grid", "Empresas"]].map(([r, i, t]) => link(r, icon(i) + t, route === r ? "active" : "")).join("")}</nav>`;
+  if(view.role==="pasajero"&&["home","itinerary","entity"].includes(route)){const html=sponsoredMarkup();if(html){document.querySelector("#main").insertAdjacentHTML("beforeend",`<div class="container">${html}</div>`);for(const c of contextualCampaigns()){const k="placement:"+c.id+":"+world.context.booking+":"+world.context.stage+":"+route;if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");c.impressions++;}}}}
   mountTourismHero();
   actions.presentationBar?.();
   
@@ -291,6 +292,7 @@ export async function render() {
   }
 }
 Object.assign(actions, {
+  sponsoredVisit: ({id})=>{const c=world.campaigns.find(x=>x.id===id);if(c){transact("campana.click",w=>{w.campaigns.find(x=>x.id===id).clicks++;});go("entity/"+c.owner);}},
   modality: ({ id }) => {
     view.search.modality = id;
     render();
