@@ -1,4 +1,4 @@
-import {world,entity,bookings,reset,today,transition,passengerPass} from "./world.js";
+import {world,entity,entities,bookings,reset,today,transition,passengerPass} from "./world.js";
 import {esc,icon,btn,modal,close,toast,actions} from "./ui.js";
 import {view,go,render} from "./app.js";
 import {setStage} from "./journey.js";
@@ -46,7 +46,29 @@ else if(step===18&&bookings().some(b=>!baseline.has(b.id)&&b.packageId)){advance
 window.addEventListener("worldchange",()=>queueMicrotask(check));
 window.addEventListener("hashchange",()=>{if(!active)return;const route=location.hash;if(step===0&&route.includes("/transport"))advance(1);if(step===17&&route.includes("/planner"))advance(18);});
 document.addEventListener("click",e=>{if(!active)return;const b=e.target.closest("[data-action]");if(!b)return;if(b.dataset.action==="book"){const type=entity(b.dataset.id)?.type;if(step===1&&type==="viaje"){pending=b.dataset.id;advance(entity(pending).modality==="compartido"?2:3);}if(step===9&&type==="habitacion")advance(10);}if(step===2&&b.dataset.action==="seat")queueMicrotask(()=>{const f=document.querySelector("#booking-form");if(f&&f.querySelectorAll(".seat.selected").length>=Number(f.elements.qty.value))advance(3);});},true);
-async function navigateGuide(n){if(n>=steps.length){active=false;bar();return;}advance(Math.max(0,n));const b=get("ride"),h=get("hotel");try{switch(step){case 0:passenger("home");break;case 1:passenger("transport");break;case 2:case 3:if(!document.querySelector("#booking-form"))passenger("transport");break;case 4:passenger(b?"ticket/"+b.id:"itinerary");break;case 5:if(b)await scannerFor("ride","operador");else passenger("itinerary");break;case 6:case 7:passenger("tracking");break;case 8:passenger("entity/"+destination());break;case 9:case 10:if(!document.querySelector("#booking-form"))directory("hotel");break;case 11:passenger(h?"ticket/"+h.id:"itinerary");break;case 12:if(h)await scannerFor("hotel","hotel");else directory("hotel");break;case 13:directory("restaurante");break;case 14:if(get("food"))await scannerFor("food","restaurante");else passenger("itinerary");break;case 15:directory("tour");break;case 16:if(get("tour"))await scannerFor("tour","agencia");else passenger("itinerary");break;case 17:passenger("discover");break;case 18:passenger("planner/pacifico");break;case 19:passenger("itinerary");break;}}catch(e){toast(e.message);}finally{bar();}}
+async function openStageBooking(type){const dest=destination();const service=entity(pending)?.type===type?entity(pending):entities(type).find(e=>e.bookable&&e.destination===dest)||entities(type).find(e=>e.bookable);if(!service)return;pending=service.id;const m=await import("./marketplace.js");m.checkout(service.id);}
+function previewQR(title){modal('<h2>'+esc(title)+'</h2><p>El pase digital aparece al confirmar una reserva. Puedes continuar el recorrido sin realizar la compra.</p>'+btn("guideSkip","Siguiente paso","","primary"));}
+let navigating=false;
+async function navigateGuide(n){if(navigating)return;if(n>=steps.length){active=false;close();bar();return;}navigating=true;advance(Math.max(0,n));const b=get("ride"),h=get("hotel");try{switch(step){
+case 0:passenger("home");break;
+case 1:passenger("transport");break;
+case 2:case 3:if(!document.querySelector("#booking-form")||step===2){passenger("transport");await openStageBooking("viaje");}if(step===3)document.querySelector('#booking-form select[name="payment"]')?.scrollIntoView({block:"center"});break;
+case 4:passenger(b?"ticket/"+b.id:"itinerary");if(!b)previewQR("Tu boleto QR");break;
+case 5:if(b)await scannerFor("ride","operador");else{passenger("itinerary");previewQR("Validación de abordaje");}break;
+case 6:case 7:passenger("tracking");break;
+case 8:passenger("entity/"+destination());break;
+case 9:directory("hotel");break;
+case 10:directory("hotel");await openStageBooking("habitacion");break;
+case 11:passenger(h?"ticket/"+h.id:"itinerary");if(!h)previewQR("Pase digital del hotel");break;
+case 12:if(h)await scannerFor("hotel","hotel");else{directory("hotel");previewQR("Recepción · Check-in");}break;
+case 13:directory("restaurante");break;
+case 14:if(get("food"))await scannerFor("food","restaurante");else{directory("restaurante");previewQR("Validación en restaurante");}break;
+case 15:directory("tour");break;
+case 16:if(get("tour"))await scannerFor("tour","agencia");else{directory("tour");previewQR("Validación de experiencia");}break;
+case 17:passenger("discover");break;
+case 18:passenger("planner/pacifico");break;
+case 19:passenger("itinerary");break;
+}}catch(e){toast(e.message);}finally{navigating=false;bar();}}
 Object.assign(actions,{
  guideSkip:()=>navigateGuide(step+1),guidePrevious:()=>navigateGuide(step-1),
  presentation:start,presentationBar:bar,guideStop:()=>{active=false;bar();},guideMin:()=>document.getElementById("guided-tour")?.classList.toggle("minimized"),
