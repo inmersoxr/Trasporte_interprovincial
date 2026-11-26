@@ -288,7 +288,8 @@ Object.assign(actions, {
         type: "viaje",
         name: r.origin + " · " + r.destination + " personalizado",
         origin: r.origin,
-        destination: "banos",
+        destination: Object.values(w.entities).find(e=>e.type==="destino"&&e.name.toLowerCase()===r.destination.trim().toLowerCase())?.id,
+        destinationName: r.destination,
         owner: o.owner,
         modality: "privado",
         capacity: 1,
@@ -356,7 +357,7 @@ document.addEventListener("submit", (e) => {
       go("itinerary");
       setTimeout(() => {
         modal(
-          `<div class="eyebrow">¡TU PRÓXIMO RECUERDO EMPIEZA AQUÍ!</div><h2>Reserva demo confirmada</h2>${ticket(result[0].id)}<div class="form-actions">${btn("close", "Seguir explorando", "", "secondary")}${link("entity/banos", "Descubrir Baños", "button primary")}</div>`,
+          `<div class="eyebrow">¡TU PRÓXIMO RECUERDO EMPIEZA AQUÍ!</div><h2>Reserva demo confirmada</h2>${ticket(result[0].id)}<div class="form-actions">${btn("close", "Seguir explorando", "", "secondary")}${link("entity/"+(service.destination||world.context.destination), "Descubrir "+(entity(service.destination)?.name||"mi destino"), "button primary")}</div>`,
         );
       }, 60);
     }
