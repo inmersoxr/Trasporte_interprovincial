@@ -1,3 +1,4 @@
+import { passengerPass } from "./world.js";
 import {
   world,
   entity,
@@ -102,14 +103,14 @@ export function ticket(id) {
     if (el) {
       el.innerHTML = "";
       new QRCode(el, {
-        text: b.token,
+        text: passengerPass(b),
         width: 170,
         height: 170,
         correctLevel: QRCode.CorrectLevel.M,
       });
     }
   }, 40);
-  return `<article class="ticket"><div class="ticket-head"><div><div class="eyebrow" style="color:#b9cebc">RUTASEC · COMPROBANTE DE DEMOSTRACIÓN</div><h3>${esc(s.name)}</h3></div>${badge(b.state, "yellow")}</div><div class="ticket-body"><div class="grid-2"><div><p><strong>${esc(entity(b.owner)?.name || "Proveedor demo")}</strong></p><p>${esc(b.date)} ${b.end ? " · Salida " + esc(b.end) : " · " + esc(b.time)}<br>${b.qty} ${s.type === "habitacion" ? "habitaciones" : "personas/unidades"} ${b.seats?.length ? " · Asientos " + b.seats.join(", ") : ""}</p><p class="invoice-total">${money(b.amount)}</p><p>${badge("PAGO SIMULADO CONFIRMADO", "green")}</p><small class="muted">${esc(b.id)}<br>Canal: ${b.channel === "pos" ? "Venta directa · POS" : "Marketplace"}<br>${b.refund || "No es un comprobante fiscal ni un derecho de acceso real."}</small></div><div class="qr"><div id="ticket-qr"></div><p><small>QR único de demostración</small></p><code style="font-size:.6rem;overflow-wrap:anywhere">${esc(b.token)}</code></div></div><div class="ticket-actions">${btn("print", "Imprimir boleto", id, "secondary")}${btn("copyQR", "Copiar código QR", id, "secondary")}${s.type === "viaje" ? link("tracking", "Seguimiento demo", "button primary") : ""}${b.state === "confirmada" ? btn("cancelBooking", "Cancelar reserva", id, "secondary") : ""}</div></div></article>`;
+  return `<article class="ticket"><div class="ticket-head"><div><div class="eyebrow" style="color:#b9cebc">RUTASEC · COMPROBANTE DE DEMOSTRACIÓN</div><h3>${esc(s.name)}</h3></div>${badge(b.state, "yellow")}</div><div class="ticket-body"><div class="grid-2"><div><p><strong>${esc(entity(b.owner)?.name || "Proveedor demo")}</strong></p><p>${esc(b.date)} ${b.end ? " · Salida " + esc(b.end) : " · " + esc(b.time)}<br>${b.qty} ${s.type === "habitacion" ? "habitaciones" : "personas/unidades"} ${b.seats?.length ? " · Asientos " + b.seats.join(", ") : ""}</p><p class="invoice-total">${money(b.amount)}</p><p>${badge("PAGO SIMULADO CONFIRMADO", "green")}</p><small class="muted">${esc(b.id)}<br>Canal: ${b.channel === "pos" ? "Venta directa · POS" : "Marketplace"}<br>${b.refund || "No es un comprobante fiscal ni un derecho de acceso real."}</small></div><div class="qr"><div id="ticket-qr"></div><p><small>Pase digital RutasEC</small></p><code style="font-size:.6rem;overflow-wrap:anywhere">${esc(passengerPass(b))}</code></div></div><div class="ticket-actions">${btn("print", "Imprimir boleto", id, "secondary")}${btn("copyQR", "Copiar código QR", id, "secondary")}${s.type === "viaje" ? link("tracking", "Seguimiento demo", "button primary") : ""}${b.state === "confirmada" ? btn("cancelBooking", "Cancelar reserva", id, "secondary") : ""}</div></div></article>`;
 }
 function itinerary() {
   const list = bookings()
@@ -226,7 +227,7 @@ Object.assign(actions, {
   ticket: ({ id }) => modal(ticket(id)),
   copyQR: async ({ id }) => {
     try {
-      await navigator.clipboard.writeText(entity(id).token);
+      await navigator.clipboard.writeText(passengerPass(entity(id)));
       toast("Código QR copiado");
     } catch {
       toast("Copia el código visible en el boleto");
