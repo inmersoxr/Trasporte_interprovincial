@@ -111,7 +111,7 @@ function searchForm() {
     "Gualaceo",
     "Playas",
   ];
-  return `<form id="search-form" class="search-card"><div class="search-tabs"><span class="active">${icon("bus")}Viajes</span>${link("directory/hotel", icon("bed") + " Hospedaje")}${link("directory/tour", icon("mountain") + " Experiencias")}</div><div class="search-fields"><label>ORIGEN<select name="origin">${cities.map((n) => `<option ${view.search.origin === n ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>DESTINO<select name="destination">${cities.map((n) => `<option ${view.search.destination === n ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>FECHA DE SALIDA<input type="date" name="date" required min="${today()}" value="${view.search.date}"></label><label>PASAJEROS<select name="qty">${[1, 2, 3, 4, 5, 6].map((n) => `<option ${view.search.qty == n ? "selected" : ""} value="${n}">${n} ${n === 1 ? "persona" : "personas"}</option>`).join("")}</select></label><button class="primary" type="submit">${icon("search")}Buscar viaje</button></div></form>`;
+  return `<form id="search-form" class="search-card"><div class="search-tabs"><span class="active">${icon("bus")}Viajes</span>${link("directory/hotel", icon("bed") + " Hospedaje")}${link("directory/tour", icon("mountain") + " Experiencias")}</div><div class="toolbar" role="group" aria-label="Modalidad de viaje">${[["compartido","Compartido"],["privado","Privado"],["personalizado","Personalizado"]].map(([v,n])=>`<label class="chip"><input type="radio" name="modality" value="${v}" ${view.search.modality===v?"checked":""}> ${n}</label>`).join("")}</div><div class="search-fields"><label>ORIGEN<select name="origin">${cities.map((n) => `<option ${view.search.origin === n ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>DESTINO<select name="destination">${cities.map((n) => `<option ${view.search.destination === n ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>FECHA DE SALIDA<input type="date" name="date" required min="${today()}" value="${view.search.date}"></label><label>PASAJEROS<select name="qty">${[1, 2, 3, 4, 5, 6].map((n) => `<option ${view.search.qty == n ? "selected" : ""} value="${n}">${n} ${n === 1 ? "persona" : "personas"}</option>`).join("")}</select></label><button class="primary" type="submit">${icon("search")}Buscar viaje</button></div></form>`;
 }
 export function transport() {
   let list = entities("viaje").filter(
@@ -127,6 +127,8 @@ export function transport() {
     list = entities("viaje").filter(
       (e) =>
         e.modality === "privado" &&
+        available(world,e.id,view.search.date)>0 &&
+        (entity(e.vehicle)?.capacity||1)>=Number(view.search.qty) &&
         e.origin === view.search.origin &&
         e.destinationName === view.search.destination,
     );
@@ -346,13 +348,14 @@ document.addEventListener("click", async (e) => {
     toast(err.message);
   }
 });
-document.addEventListener("submit", (e) => {
+document.addEventListener("submit", async (e) => {
   if (e.target.id === "search-form") {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target));
     if (data.origin === data.destination)
       return toast("Elige ciudades de origen y destino diferentes.");
     view.search = { ...view.search, ...data };
+    if(data.modality==="personalizado"){ (await import("./marketplace.js")).privateRequest(); return; }
     go("transport");
   }
 });
